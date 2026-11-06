@@ -2,7 +2,7 @@
 import jsQR from 'jsqr'
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button, ButtonLink } from '@/components/ui/button'
 import { SignaturePad } from '@/components/domain/signature-pad'
 import { Checkbox, Input } from '@/components/ui/fields'
 import { SignatureStatement } from './signature-statement'
@@ -538,9 +538,14 @@ export function SignUpForm() {
             </div>
           </div>
         )}
-        <Button type="button" onClick={goNext} disabled={!step1Ready} className="w-full">
-          Next
-        </Button>
+        <div className="flex gap-2">
+          <ButtonLink href="/" variant="secondary" data-testid="signup-back-home">
+            Back
+          </ButtonLink>
+          <Button type="button" onClick={goNext} disabled={!step1Ready} className="flex-1">
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* The signature box stays on the page (hidden) so a drawn signature is not lost when moving between steps. */}
