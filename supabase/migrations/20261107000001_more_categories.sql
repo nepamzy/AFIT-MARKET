@@ -7,6 +7,10 @@ update public.categories set name = 'Gadgets' where slug = 'gadgets' and name = 
 update public.categories set name = 'Games' where slug = 'games' and name = 'games';
 
 insert into public.categories (slug, name, sort_order, is_active) values
+  ('clothing', 'Clothing', 35, true),
+  ('accessories', 'Accessories', 36, true),
+  ('gadgets', 'Gadgets', 37, true),
+  ('games', 'Games', 38, true),
   ('groceries', 'Groceries and provisions', 50, true),
   ('fruits-vegetables', 'Fruits and vegetables', 60, true),
   ('bakery', 'Bakery and pastries', 70, true),

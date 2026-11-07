@@ -6,7 +6,7 @@ import { Button, ButtonLink } from '@/components/ui/button'
 import { SignaturePad } from '@/components/domain/signature-pad'
 import { Checkbox, Input, Select } from '@/components/ui/fields'
 import { SignatureStatement } from './signature-statement'
-import { CustomerArt, RiderArt, VendorArt } from '@/components/landing/illustrations'
+import { RolePhoto } from '@/components/landing/role-photo'
 import { Watermark } from '@/components/landing/watermark'
 import {
   requestPasswordResetAction,
@@ -216,12 +216,6 @@ const TYPE_LABEL: Record<PersonType, string> = {
   other: 'Other',
 }
 
-const ROLE_ART: Record<Intent, (p: { className?: string }) => React.JSX.Element> = {
-  customer: CustomerArt,
-  vendor: VendorArt,
-  rider: RiderArt,
-}
-
 /** Small flat badges for the "I am a" choices. Decorative: the words beside them carry the meaning. */
 function PersonIcon({ kind }: { kind: PersonType }) {
   const common = {
@@ -364,7 +358,6 @@ export function SignUpForm({ categories = [] }: { categories?: SignUpCategory[] 
           </legend>
           <div className="relative z-10 grid gap-2 sm:grid-cols-3">
             {(Object.keys(ROLE_HELP) as Intent[]).map((value) => {
-              const Art = ROLE_ART[value]
               return (
                 <label
                   key={value}
@@ -381,7 +374,10 @@ export function SignUpForm({ categories = [] }: { categories?: SignUpCategory[] 
                     }}
                     className="absolute inset-0 z-10 m-0 size-full cursor-pointer opacity-0"
                   />
-                  <Art className="h-20 w-16 shrink-0 transition-transform duration-300 group-hover:scale-105 group-has-[:checked]:scale-110 sm:h-28 sm:w-24" />
+                  <RolePhoto
+                    kind={value}
+                    className="size-20 shrink-0 transition-transform duration-300 group-hover:scale-105 group-has-[:checked]:scale-105 sm:size-28"
+                  />
                   <span>
                     <span className="block font-bold text-navy-900">{ROLE_HELP[value][0]}</span>
                     <span className="block text-sm text-muted">{ROLE_HELP[value][1]}</span>
