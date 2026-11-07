@@ -38,7 +38,13 @@ async function run(req: Request) {
     return 'done'
   })
   await step('dispatch-notifications', () => drainNotifications(40))
-  await step('settle-refunds', () => settleAutoRefunds(20))
+  await step('settle-refunds', async () => {
+    // timers that normally run every minute inside the database: run once a day here as a fallback
+    const ready = await sb.rpc('auto_ready_run')
+    const declined = await sb.rpc('auto_decline_unanswered')
+    const refunds = await settleAutoRefunds(20)
+    return { ready: ready.data ?? 0, declined: declined.data ?? 0, ...refunds }
+  })
   try {
     const r = await releasePayouts(25)
     report['release-payouts'] = r

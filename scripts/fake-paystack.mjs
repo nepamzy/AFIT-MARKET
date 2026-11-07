@@ -12,7 +12,7 @@ const HOOK = process.env.APP_WEBHOOK_URL ?? 'http://127.0.0.1:3000/api/webhooks/
 const txns = new Map()
 const transfers = new Map()
 const refunds = new Map()
-let seq = 4000
+let seq = 4000 + Math.floor(Math.random() * 900000000)
 
 const json = (res, code, body) => {
   res.writeHead(code, { 'content-type': 'application/json' })

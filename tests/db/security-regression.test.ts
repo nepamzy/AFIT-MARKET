@@ -135,6 +135,7 @@ describe('catalogue-wide authorisation regression', () => {
           "my_data_requests",
           "my_delivery_fee_payments",
           "my_notification_delivery_summary",
+          "my_rider_link",
           "my_roles",
           "my_vendor",
           "notification_mark_read",

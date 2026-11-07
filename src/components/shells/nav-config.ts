@@ -17,6 +17,7 @@ export const VENDOR_NAV: NavItem[] = [
   { href: '/vendor/returns', label: 'Returns', icon: 'return', group: 'Sell' },
   { href: '/vendor/earnings', label: 'Earnings', icon: 'coins', group: 'Money' },
   { href: '/vendor/profile', label: 'Shop', icon: 'store', group: 'Shop' },
+  { href: '/vendor/riders', label: 'My riders', icon: 'truck', group: 'Shop' },
   { href: '/vendor/reviews', label: 'Reviews', icon: 'star', group: 'Shop' },
   { href: '/vendor/help', label: 'Help', icon: 'help', group: 'Shop' },
 ]

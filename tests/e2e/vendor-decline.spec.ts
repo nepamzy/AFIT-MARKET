@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { Pool } from 'pg'
+import { DATABASE_URL } from '../db/helpers'
 import {
   admin,
   clickAndWait,
@@ -141,5 +143,68 @@ test('declining needs a reason, tells the customer why, and refunds the payment 
   await expect(box).toContainText('Sold out today')
   await expect(box).toContainText('has been refunded')
   await v.context.close()
+  await c.context.close()
+})
+
+test('a paid order the shop never answers is declined by the daily job after 15 hours and refunded automatically', async ({
+  browser,
+  request,
+}, info) => {
+  try {
+    process.loadEnvFile('.env.local')
+  } catch {
+    /* already set */
+  }
+  const secret = process.env.JOBS_SECRET
+  test.skip(!secret, 'JOBS_SECRET not configured in this environment')
+  const owner = await createUser('dec3-own', ['vendor_owner'])
+  const shop = await makeShopWithPoint(owner.id, `Fixture dish ${tag()}`)
+  const c = await openSession(browser, info, 'dec3-cust')
+  const o = await paidOrder(shop, c.user.id)
+  // move the payment 16 hours into the past (the history is append-only; the guard is lifted for this one update)
+  const pool = new Pool({ connectionString: DATABASE_URL, max: 1 })
+  const pg = await pool.connect()
+  try {
+    await pg.query(
+      'alter table public.order_status_history disable trigger order_status_history_append_only',
+    )
+    await pg.query(
+      `update public.order_status_history set created_at = now() - interval '16 hours' where order_id = $1 and to_status = 'PAID'`,
+      [o.id],
+    )
+    // the fixture inserted the order directly, so give it the PAID history row the timer reads
+    await pg.query(
+      `insert into public.order_status_history (order_id, from_status, to_status, created_at)
+       select $1, 'PENDING_PAYMENT', 'PAID', now() - interval '16 hours'
+        where not exists (select 1 from public.order_status_history where order_id = $1 and to_status = 'PAID')`,
+      [o.id],
+    )
+  } finally {
+    await pg.query(
+      'alter table public.order_status_history enable trigger order_status_history_append_only',
+    )
+    pg.release()
+    await pool.end()
+  }
+  const res = await request.post('/api/jobs/run-all', {
+    headers: { authorization: `Bearer ${secret}` },
+  })
+  expect(res.ok()).toBe(true)
+  await expect
+    .poll(
+      async () =>
+        (await admin().from('orders').select('status').eq('id', o.id).single()).data?.status,
+    )
+    .toBe('CANCELLED')
+  await expect
+    .poll(
+      async () =>
+        (await admin().from('refunds').select('status, source').eq('order_id', o.id)).data?.[0],
+      { timeout: 20000 },
+    )
+    .toMatchObject({ source: 'auto', status: 'succeeded' })
+  await c.page.goto(`/orders/${o.id}`)
+  await expect(c.page.getByTestId('declined')).toContainText('did not answer in time')
+  await expect(c.page.getByTestId('declined')).toContainText('has been refunded')
   await c.context.close()
 })

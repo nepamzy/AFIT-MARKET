@@ -1,5 +1,6 @@
 import { ActionForm } from '@/components/forms/action-form'
 import { Checkbox, Input, Textarea } from '@/components/ui/fields'
+import { AutoReadyChoice } from '@/components/domain/auto-ready-choice'
 import { VendorChoices, type VendorChoicesState } from '@/components/domain/vendor-choices'
 import { submitApplicationAction } from '@/server/modules/vendors-and-catalogue/actions'
 import type { Category } from '@/server/modules/vendors-and-catalogue/types'
@@ -47,6 +48,7 @@ export function ApplicationForm({
         maxLength={200}
         hint="Describe the pickup spot in words. Do not enter coordinates."
       />
+      <AutoReadyChoice />
       <p
         id="commission-terms"
         className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm"
