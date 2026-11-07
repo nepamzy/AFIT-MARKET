@@ -70,6 +70,12 @@ test('a vendor must pick what the shop sells before signing up goes on, the list
   await expect(select).toHaveCount(0)
 })
 
+test('the first sign-up step has a Back button that returns to the home page', async ({ page }) => {
+  await page.goto('/signup')
+  await page.getByTestId('signup-back-home').click()
+  await expect(page).toHaveURL(/\/$/)
+})
+
 test('signing up as a vendor or rider records the choice; a customer sign-up records none', async ({
   browser,
 }, info) => {
