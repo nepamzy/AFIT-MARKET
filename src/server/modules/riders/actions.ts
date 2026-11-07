@@ -6,7 +6,6 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import type { AccessRequirement } from '@/server/modules/identity-and-access/policy'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
 import { checkFix } from '@/server/modules/location/geo'
@@ -255,25 +254,4 @@ export async function confirmRiderPickupAction(
   revalidatePath('/vendor/orders')
   // The card leaves the list once handed over, so the confirmation is shown on the page instead.
   redirect('/vendor/handover?done=rider')
-}
-
-/** A rider links their account to a shop with the 5-digit code the shop gave them. */
-export async function linkShopCodeAction(_p: ActionState, fd: FormData): Promise<ActionState> {
-  const g = await gate(RIDER)
-  if ('state' in g) return g.state
-  const code = text(fd, 'shopCode', 5)
-  if (!/^[0-9]{5}$/.test(code)) return failed('Enter all 5 digits of the code.')
-  if (!(await rateLimit(`shopcode:${g.who.userId}`, 3600, 10)))
-    return failed('Too many tries. Please wait an hour and try again.')
-  const svc = createSupabaseServiceClient()
-  const { data, error } = await svc.rpc('rider_link_code', { p_user: g.who.userId, p_code: code })
-  if (error) {
-    if (/already_linked/.test(error.message))
-      return failed('Your account is already linked to a shop.')
-    return failed(
-      'That code was not found, or it was already used. Check the digits with the shop.',
-    )
-  }
-  revalidatePath('/rider')
-  return done(`You are now linked to ${(data as { vendor_name: string }).vendor_name}.`)
 }

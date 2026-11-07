@@ -5,7 +5,9 @@ import {
   accept,
   callFails,
   callJson,
+  currentTermsVersion,
   deliveryOrder,
+  installApprovedTerms,
   mkRider,
   mkShop,
   orderStatus,
@@ -182,24 +184,41 @@ describe('paid orders the shop never answers', () => {
   })
 })
 
-describe("a shop's own riders", () => {
-  it('the owner adds a rider and gets a 5-digit code; a stranger and a customer cannot; the code can be claimed once', async () => {
+describe("a shop's own riders (the shop makes the account; the rider signs in with a one-time code)", () => {
+  /** What the app does when the shop adds a rider: reserve a slot, make the account, bind it. */
+  const addRider = async (c: PoolClient, owner: string, vendor: string, name = 'Musa') => {
+    const slot = await callJson(
+      c,
+      AAL2(owner),
+      `select public.vendor_rider_reserve($1,$2,'08031234567',$3) r`,
+      [
+        vendor,
+        name,
+        `${name.toLowerCase()}-${Math.random().toString(36).slice(2, 8)}@example.test`,
+      ],
+    )
+    const user = await createUser(c, 'madebyshop')
+    const email = (await c.query(`select email from auth.users where id=$1`, [user])).rows[0]
+      .email as string
+    await c.query(`select public.vendor_rider_bind($1,$2)`, [slot.id, user])
+    return { ...slot, user, email } as { id: string; code: string; user: string; email: string }
+  }
+
+  it('only the owner can add a rider; the code has 5 digits and is shown while unused', async () => {
     await withTx(async (c) => {
       const s = await mkShop(c)
-      const made = await callJson(
-        c,
-        AAL2(s.owner),
-        `select public.vendor_rider_create($1,'Musa') r`,
-        [s.vendor],
-      )
-      expect(made.code).toMatch(/^[0-9]{5}$/)
-      expect(Number(made.code)).toBeGreaterThanOrEqual(10000)
+      const r = await addRider(c, s.owner, s.vendor)
+      expect(r.code).toMatch(/^[0-9]{5}$/)
+      expect(Number(r.code)).toBeGreaterThanOrEqual(10000)
       const stranger = await createUser(c, 'str2')
       expect(
         (
-          await callFails(c, AAL2(stranger), `select public.vendor_rider_create($1,'Evil')`, [
-            s.vendor,
-          ])
+          await callFails(
+            c,
+            AAL2(stranger),
+            `select public.vendor_rider_reserve($1,'Evil','08031234567','e@example.test')`,
+            [s.vendor],
+          )
         ).code,
       ).toBe('42501')
       expect(
@@ -207,69 +226,162 @@ describe("a shop's own riders", () => {
           .code,
       ).toBe('42501')
       expect(
-        (await c.query(`select public.vendor_rider_code_check($1) r`, [made.code])).rows[0].r,
-      ).toMatchObject({ vendor_id: s.vendor })
-      const r1 = await mkRider(c, { active: false })
-      const linked = (await c.query(`select public.rider_link_code($1,$2) r`, [r1.id, made.code]))
+        (
+          await callFails(
+            c,
+            AAL2(s.owner),
+            `select public.vendor_rider_reserve($1,'X','12','not-an-email')`,
+            [s.vendor],
+          )
+        ).message,
+      ).toMatch(/invalid_/)
+      const list = await callJson(c, AAL2(s.owner), `select public.vendor_rider_list($1) r`, [
+        s.vendor,
+      ])
+      expect(list[0]).toMatchObject({ name: 'Musa', linked: false, code: r.code })
+      expect((await callFails(c, AAL2(s.owner), `select * from public.vendor_riders`)).code).toBe(
+        '42501',
+      )
+      for (const sql of [
+        `select public.vendor_rider_bind(gen_random_uuid(), gen_random_uuid())`,
+        `select public.rider_claim_code(gen_random_uuid(),'12345')`,
+        `select public.rider_code_matches('a@b.co','12345')`,
+      ])
+        expect((await callFails(c, AAL2(s.owner), sql)).code).toBe('42501')
+    })
+  })
+
+  it('the code matches only its own account, makes it a rider linked to the shop once, and cannot be used again', async () => {
+    await withTx(async (c) => {
+      const s = await mkShop(c)
+      const a = await addRider(c, s.owner, s.vendor, 'Musa')
+      const b = await addRider(c, s.owner, s.vendor, 'Ada')
+      const matches = async (email: string, code: string) =>
+        (await c.query(`select public.rider_code_matches($1,$2) m`, [email, code])).rows[0]
+          .m as boolean
+      expect(await matches(a.email, a.code)).toBe(true)
+      expect(await matches(a.email.toUpperCase(), a.code)).toBe(true)
+      expect(await matches(b.email, a.code)).toBe(false) // another rider's account cannot use it
+      expect(await matches(a.email, '00000')).toBe(false)
+      // before the code is used the account is not a rider
+      expect(
+        (
+          await c.query(
+            `select count(*)::int n from public.role_assignments where user_id=$1 and role='rider' and status='active'`,
+            [a.user],
+          )
+        ).rows[0].n,
+      ).toBe(0)
+      const linked = (await c.query(`select public.rider_claim_code($1,$2) r`, [a.user, a.code]))
         .rows[0].r
       expect(linked.vendor_id).toBe(s.vendor)
       expect(
-        (await c.query(`select public.vendor_rider_code_check($1) r`, [made.code])).rows[0].r,
-      ).toBeNull()
-      const r2 = await mkRider(c, { active: false })
+        (
+          await c.query(
+            `select count(*)::int n from public.role_assignments where user_id=$1 and role='rider' and status='active'`,
+            [a.user],
+          )
+        ).rows[0].n,
+      ).toBe(1)
       expect(
-        (await failure(c, `select public.rider_link_code($1,$2)`, [r2.id, made.code])).message,
+        (
+          await c.query(`select status, full_name from public.rider_profiles where user_id=$1`, [
+            a.user,
+          ])
+        ).rows[0],
+      ).toEqual({ status: 'approved', full_name: 'Musa' })
+      expect((await callJson(c, rider(a.user), `select public.my_rider_link() r`)).vendor_id).toBe(
+        s.vendor,
+      )
+      // once only
+      expect(await matches(a.email, a.code)).toBe(false)
+      expect(
+        (await failure(c, `select public.rider_claim_code($1,$2)`, [a.user, a.code])).message,
+      ).toMatch(/code_not_found/)
+      expect(
+        (await failure(c, `select public.rider_claim_code($1,$2)`, [b.user, a.code])).message,
       ).toMatch(/code_not_found/)
       const list = await callJson(c, AAL2(s.owner), `select public.vendor_rider_list($1) r`, [
         s.vendor,
       ])
-      expect(list).toHaveLength(1)
-      expect(list[0]).toMatchObject({ name: 'Musa', linked: true, rider_name: 'Test Rider' })
-      expect((await callJson(c, rider(r1.id), `select public.my_rider_link() r`)).vendor_id).toBe(
-        s.vendor,
-      )
-      // the table itself is closed to browsers
-      expect((await callFails(c, AAL2(s.owner), `select * from public.vendor_riders`)).code).toBe(
-        '42501',
-      )
+      expect(list.find((x: { name: string }) => x.name === 'Musa')).toMatchObject({
+        linked: true,
+        code: null,
+      })
     })
   })
-  it('a rider linked to a shop sees and takes only that shop’s orders; after the shop removes them they are a normal rider again', async () => {
+
+  it('a rider the shop made sees and takes only that shop’s orders; removing them ends their rider access', async () => {
     await withTx(async (c) => {
       const mine = await deliveryOrder(c)
       const other = await deliveryOrder(c)
-      const rid = await mkRider(c)
-      const code = (
-        await callJson(c, AAL2(mine.owner), `select public.vendor_rider_create($1,'Own rider') r`, [
-          mine.vendor,
-        ])
-      ).code as string
-      const free = await mkRider(c) // an ordinary pool rider
-      const both = async (who: string) =>
+      const r = await addRider(c, mine.owner, mine.vendor, 'Own')
+      await c.query(`select public.rider_claim_code($1,$2)`, [r.user, r.code])
+      await installApprovedTerms(c)
+      await c.query(
+        `insert into public.rider_terms_acknowledgements (user_id, version) values ($1,$2)`,
+        [r.user, await currentTermsVersion(c)],
+      )
+      await c.query(`insert into public.rider_shifts (rider_id) values ($1)`, [r.user])
+      const free = await mkRider(c)
+      const ids = async (who: string) =>
         (
           (await callJson(c, rider(who), `select public.list_delivery_offers() r`)) as {
             order_id: string
           }[]
         ).map((x) => x.order_id)
-      expect(await both(rid.id)).toEqual(expect.arrayContaining([mine.order, other.order]))
-      await c.query(`select public.rider_link_code($1,$2)`, [rid.id, code])
-      const seen = await both(rid.id)
+      const seen = await ids(r.user)
       expect(seen).toContain(mine.order)
       expect(seen).not.toContain(other.order)
-      expect(await both(free.id)).toEqual(expect.arrayContaining([mine.order, other.order]))
+      expect(await ids(free.id)).toEqual(expect.arrayContaining([mine.order, other.order]))
       expect(
-        (await callFails(c, rider(rid.id), `select public.rider_accept_order($1)`, [other.order]))
+        (await callFails(c, rider(r.user), `select public.rider_accept_order($1)`, [other.order]))
           .message,
       ).toMatch(/order_unavailable/)
-      expect((await accept(c, rid.id, mine.order)).already_assigned).toBe(false)
-      // the shop removes the link: the rider is ordinary again
+      expect((await accept(c, r.user, mine.order)).already_assigned).toBe(false)
+      // the shop removes the rider: the delivery in progress is flagged, rider access stops
       const id = (
         await callJson(c, AAL2(mine.owner), `select public.vendor_rider_list($1) r`, [mine.vendor])
       )[0].id
       await as(c, AAL2(mine.owner), () =>
         c.query(`select public.vendor_rider_revoke($1,$2)`, [mine.vendor, id]),
       )
-      expect(await both(rid.id)).toContain(other.order)
+      expect(
+        (
+          await c.query(
+            `select count(*)::int n from public.role_assignments where user_id=$1 and role='rider' and status='active'`,
+            [r.user],
+          )
+        ).rows[0].n,
+      ).toBe(0)
+      expect(
+        (await c.query(`select status from public.rider_profiles where user_id=$1`, [r.user]))
+          .rows[0].status,
+      ).toBe('suspended')
+      expect(
+        await callJson(c, AAL2(mine.owner), `select public.vendor_rider_list($1) r`, [mine.vendor]),
+      ).toHaveLength(0)
+    })
+  })
+
+  it('a slot whose account could not be made can be dropped; a bound one cannot', async () => {
+    await withTx(async (c) => {
+      const s = await mkShop(c)
+      const slot = await callJson(
+        c,
+        AAL2(s.owner),
+        `select public.vendor_rider_reserve($1,'Temp','08031234567','temp@example.test') r`,
+        [s.vendor],
+      )
+      await c.query(`select public.vendor_rider_discard($1)`, [slot.id])
+      expect(
+        await callJson(c, AAL2(s.owner), `select public.vendor_rider_list($1) r`, [s.vendor]),
+      ).toHaveLength(0)
+      const kept = await addRider(c, s.owner, s.vendor)
+      await c.query(`select public.vendor_rider_discard($1)`, [kept.id])
+      expect(
+        await callJson(c, AAL2(s.owner), `select public.vendor_rider_list($1) r`, [s.vendor]),
+      ).toHaveLength(1)
     })
   })
 })

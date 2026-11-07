@@ -138,10 +138,11 @@ export async function getAutoReady(
 export type VendorRiderRow = {
   id: string
   name: string
-  code: string
+  email: string | null
+  phone: string | null
+  /** only while the code is unused */
+  code: string | null
   linked: boolean
-  rider_name: string | null
-  rider_status: string | null
 }
 export async function listVendorRiders(vendorId: string): Promise<VendorRiderRow[]> {
   const sb = await createSupabaseServerClient()

@@ -53,6 +53,7 @@ function Notice({ state }: { state: FormState }) {
 /** `staff` is the hidden administrator entrance (/staff-login): it only hides the sign-up link. */
 export function SignInForm({ next, staff = false }: { next: string; staff?: boolean }) {
   const [state, action, pending] = useActionState(signInAction, initial)
+  const [riderCode, setRiderCode] = useState('')
   return (
     <form action={action} className="space-y-4" noValidate>
       <Notice state={state} />
@@ -79,6 +80,29 @@ export function SignInForm({ next, staff = false }: { next: string; staff?: bool
         spellCheck={false}
         required
       />
+      {!staff && (
+        <details
+          className="rounded-[var(--radius-control)] border border-line p-3"
+          data-testid="rider-code"
+        >
+          <summary className="cursor-pointer font-semibold">
+            I am a shop rider and I have a code
+          </summary>
+          <div className="mt-3 space-y-2">
+            <CodeBoxes
+              value={riderCode}
+              onChange={setRiderCode}
+              label="Shop rider code (5 digits)"
+              idPrefix="rider-code"
+            />
+            <p className="text-sm text-muted">
+              Your shop gave you this code with your e-mail and password. Type it the first time you
+              sign in. It works once.
+            </p>
+            <input type="hidden" name="riderCode" value={riderCode} />
+          </div>
+        </details>
+      )}
       <Button type="submit" variant="gold" disabled={pending} className="w-full">
         {pending ? 'Signing in…' : 'Sign in'}
       </Button>
@@ -289,7 +313,6 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
   const [idCard, setIdCard] = useState<string | null>(null)
   const [idBack, setIdBack] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
-  const [shopCode, setShopCode] = useState('')
   const [vendor, setVendor] = useState<VendorChoicesState>({
     vendorType: '',
     categories: [],
@@ -379,7 +402,6 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
       {(isStudent || isRider) && <input type="hidden" name="studentId" value={studentId} />}
       {(isStudent || isRider) && idCard && <input type="hidden" name="idCard" value={idCard} />}
       {isRider && <input type="hidden" name="phone" value={phone} />}
-      {isRider && shopCode && <input type="hidden" name="shopCode" value={shopCode} />}
       {isRider && idBack && <input type="hidden" name="idCardBack" value={idBack} />}
       {isVendor && vendor.vendorType === 'student' && (
         <input type="hidden" name="personType" value="student" />
@@ -524,21 +546,6 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
               onChange={(e) => setPhone(e.target.value)}
               hint="For example 0803 123 4567"
             />
-            <div
-              className="space-y-1 rounded-[var(--radius-control)] bg-brand-50 p-3"
-              data-testid="shop-code"
-            >
-              <CodeBoxes
-                value={shopCode}
-                onChange={setShopCode}
-                label="Shop code (optional)"
-                idPrefix="shop-code"
-              />
-              <p className="text-sm text-muted">
-                Only if a shop gave you a 5-digit rider code. It links you to that shop. Leave it
-                empty to be a normal rider.
-              </p>
-            </div>
             <div className="space-y-1">
               <label htmlFor="rider-id-front" className="text-sm font-semibold">
                 Photo of the FRONT of your new student ID card

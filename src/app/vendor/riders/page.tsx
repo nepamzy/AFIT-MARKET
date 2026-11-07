@@ -25,15 +25,20 @@ export default async function MyRiders() {
       />
       <Card className="mb-6 space-y-2 text-sm">
         <p>
-          <strong>How it works.</strong> Add a rider’s name and you get a permanent 5-digit code for
-          that rider. The rider signs up as a rider in the normal way (same documents, same
-          approval) and types the code in the optional “Shop code” boxes, or later on their Rider
-          page.
+          <strong>How it works.</strong> You create the rider’s account here (name, e-mail, phone).
+          You get a temporary password and a one-time <strong>5-digit rider code</strong>, shown
+          once.
         </p>
         <p>
-          The rider is then <strong>linked to your shop</strong> and sees only your shop’s orders.
-          Riders who are not linked still see every shop’s orders. You can remove a rider at any
-          time.
+          Give the rider the e-mail, the password and the code. When the rider{' '}
+          <strong>signs in</strong> and types the code in the “Shop rider code” boxes, the account
+          becomes a rider account <strong>linked to your shop</strong>. The code works once and only
+          for that account. For another rider, create another account.
+        </p>
+        <p>
+          A rider linked to your shop sees and takes only your shop’s orders. You vouch for them:
+          there is no separate administrator approval. Remove a rider at any time and their rider
+          access stops.
         </p>
       </Card>
       {!ready ? (
@@ -41,7 +46,7 @@ export default async function MyRiders() {
       ) : (
         <div className="space-y-8">
           {owner && (
-            <Section id="add" title="Add a rider">
+            <Section id="add" title="Create a rider account">
               <Card>
                 <AddRiderForm vendorId={me.id} />
               </Card>

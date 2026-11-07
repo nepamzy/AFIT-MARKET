@@ -11,9 +11,22 @@ import type { VendorRiderRow } from '@/server/modules/vendors-and-catalogue/vend
 
 export function AddRiderForm({ vendorId }: { vendorId: string }) {
   return (
-    <ActionForm action={addVendorRiderAction} submitLabel="Add rider" pendingLabel="Adding…">
+    <ActionForm
+      action={addVendorRiderAction}
+      submitLabel="Create rider account"
+      pendingLabel="Creating…"
+    >
       <input type="hidden" name="vendorId" value={vendorId} />
       <Input label="Rider’s name" name="riderName" required minLength={2} maxLength={60} />
+      <Input
+        label="Rider’s e-mail"
+        name="riderEmail"
+        type="email"
+        required
+        autoComplete="off"
+        hint="This becomes the rider’s sign-in e-mail. Use an address that has no AFIT Market account yet."
+      />
+      <Input label="Rider’s phone" name="riderPhone" type="tel" inputMode="tel" required />
     </ActionForm>
   )
 }
@@ -30,23 +43,29 @@ export function RiderCards({ vendorId, riders }: { vendorId: string; riders: Ven
               {r.linked ? (
                 <Badge tone="success">Linked</Badge>
               ) : (
-                <Badge tone="info">Waiting for the rider</Badge>
-              )}
-              {r.linked && r.rider_status && r.rider_status !== 'approved' && (
-                <Badge tone="warning">Application {r.rider_status}</Badge>
+                <Badge tone="info">Waiting for the rider’s first sign-in</Badge>
               )}
             </p>
-            <p>
-              Code:{' '}
-              <strong
-                className="text-2xl tracking-[0.3em]"
-                aria-label={`Rider code ${r.code.split('').join(' ')}`}
-              >
-                {r.code}
-              </strong>
+            <p className="text-sm text-muted">
+              {r.email} · {r.phone}
             </p>
-            {r.linked && r.rider_name && (
-              <p className="text-sm text-muted">Rider account: {r.rider_name}</p>
+            {r.code ? (
+              <p>
+                Rider code:{' '}
+                <strong
+                  className="text-2xl tracking-[0.3em]"
+                  aria-label={`Rider code ${r.code.split('').join(' ')}`}
+                >
+                  {r.code}
+                </strong>
+                <span className="block text-sm text-muted">
+                  The rider types this when signing in for the first time. It works once.
+                </span>
+              </p>
+            ) : (
+              <p className="text-sm text-muted">
+                The code was used. This rider is linked to your shop.
+              </p>
             )}
             <form action={removeVendorRiderAction}>
               <input type="hidden" name="vendorId" value={vendorId} />

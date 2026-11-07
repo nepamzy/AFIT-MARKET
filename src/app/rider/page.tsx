@@ -6,7 +6,6 @@ import { RiderFreeNotice } from '@/components/domain/rider-free-notice'
 import { Card, PageHeader } from '@/components/ui/card'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
 import { EmptyState } from '@/components/ui/states'
-import { LinkShopForm } from '@/components/domain/link-shop-form'
 import { getMyRider, getMyShopLink } from '@/server/modules/riders/queries'
 
 export const metadata: Metadata = { title: 'Rider home' }
@@ -48,28 +47,21 @@ export default async function RiderHome() {
           icon="shield"
         />
       </MetricGrid>
-      <Card className="mb-5 max-w-3xl space-y-3" data-testid="shop-link">
-        {shopLink ? (
-          <>
-            <p className="flex flex-wrap items-center gap-2 text-lg font-semibold">
-              <Badge tone="success">Linked</Badge> You are a rider for {shopLink.vendor_name}
-            </p>
-            <p className="text-sm text-muted">
-              You see and take only {shopLink.vendor_name}’s orders. The shop can remove the link at
-              any time.
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="font-semibold">Did a shop give you a rider code?</p>
-            <p className="text-sm text-muted">
-              Type the 5 digits to link your account to that shop. Without a code you see every
-              shop’s orders.
-            </p>
-            <LinkShopForm />
-          </>
-        )}
-      </Card>
+      {shopLink && (
+        <Card className="mb-5 max-w-3xl space-y-3" data-testid="shop-link">
+          {shopLink ? (
+            <>
+              <p className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+                <Badge tone="success">Linked</Badge> You are a rider for {shopLink.vendor_name}
+              </p>
+              <p className="text-sm text-muted">
+                You see and take only {shopLink.vendor_name}’s orders. The shop can remove the link
+                at any time.
+              </p>
+            </>
+          ) : null}
+        </Card>
+      )}
       <div className="mb-5 max-w-3xl">
         <RiderFreeNotice extra="Delivery fees that are not collected online are paid to you directly by the customer." />
         <p className="mt-2 text-sm">

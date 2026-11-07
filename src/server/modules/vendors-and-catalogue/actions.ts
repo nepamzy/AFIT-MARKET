@@ -22,6 +22,8 @@ import {
 } from '@/server/modules/shared/action-helpers'
 import { STARTER_ITEMS, startersFor } from '@/lib/starter-catalogue'
 import { logger } from '@/lib/logger'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { makeTemporaryPassword } from '@/lib/temp-password'
 import { parseAutoReady } from '@/lib/auto-ready'
 import { buildHoursJson } from './hours'
 import { parseOptionGroups } from './options'
@@ -486,16 +488,53 @@ export async function addVendorRiderAction(_p: ActionState, fd: FormData): Promi
   if ('state' in g) return g.state
   const v = await vendorId(fd)
   const name = text(fd, 'riderName', 60)
+  const email = text(fd, 'riderEmail', 254).toLowerCase()
+  const phone = text(fd, 'riderPhone', 20)
   if (!v) return failed('That shop was not found.')
   if (name.length < 2) return failed('Enter the rider’s name.')
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return failed('Enter the rider’s e-mail address.')
+  if (!/^[0-9+() -]{7,20}$/.test(phone)) return failed('Enter the rider’s phone number.')
   if (!(await rateLimit(`vendor-rider:${g.who.userId}`, 3600, 20)))
     return failed('Too many riders added. Please try again later.')
   const sb = await createSupabaseServerClient()
-  const { data, error } = await sb.rpc('vendor_rider_create', { p_vendor: v, p_name: name })
-  if (error)
-    return dbFailed(error, 'You can have up to 20 riders. Remove one first, or check the name.')
+  const reserved = await sb.rpc('vendor_rider_reserve', {
+    p_vendor: v,
+    p_name: name,
+    p_phone: phone,
+    p_email: email,
+  })
+  if (reserved.error)
+    return dbFailed(
+      reserved.error,
+      'You can have up to 20 riders. Remove one first, or check the details.',
+    )
+  const slot = reserved.data as { id: string; code: string }
+  // the account is made here; a password the shop can hand over is generated and shown once
+  const password = makeTemporaryPassword()
+  const svc = createSupabaseServiceClient()
+  const made = await svc.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { created_by_shop: true },
+  })
+  if (made.error || !made.data.user) {
+    await svc.rpc('vendor_rider_discard', { p_id: slot.id })
+    return failed(
+      /already|registered|exists/i.test(made.error?.message ?? '')
+        ? 'That e-mail already has an account. Use a different e-mail for this rider.'
+        : 'We could not create the account. Please try again.',
+    )
+  }
+  const bound = await svc.rpc('vendor_rider_bind', { p_id: slot.id, p_user: made.data.user.id })
+  if (bound.error) {
+    logger.error('rider account made but not linked', { code: bound.error.code })
+    return failed('The account was made but could not be linked. Please contact support.')
+  }
   revalidatePath('/vendor/riders')
-  return done(`Rider added. Give them this code: ${(data as { code: string }).code}`)
+  return done(
+    `Rider account made. Give the rider these three things (shown only now): E-mail ${email}, temporary password ${password}, rider code ${slot.code}.`,
+  )
 }
 
 export async function removeVendorRiderAction(fd: FormData): Promise<void> {

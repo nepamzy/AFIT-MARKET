@@ -89,7 +89,6 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   let idCard: Buffer | undefined
   // riders: matric number, phone number and the front and back of the NEW student ID card (only it has a QR code)
   let rider: { matric: string; phone: string; front: Buffer; back: Buffer } | undefined
-  let shopCode = ''
   if (intent === 'rider') {
     const matric = String(formData.get('studentId') ?? '').trim()
     if (!validStudentId(matric)) return { error: 'Enter your matric number.' }
@@ -105,22 +104,6 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
           'We could not find the QR code on the front of your ID card. Only the new ID card has one. Use a clear, flat photo of the whole front.',
       }
     rider = { matric, phone, front: front.jpeg, back: back.jpeg }
-    // optional: the 5-digit code a shop gave this rider (links the rider to that shop)
-    shopCode = String(formData.get('shopCode') ?? '').trim()
-    if (shopCode) {
-      if (!/^[0-9]{5}$/.test(shopCode))
-        return { error: 'The shop code is 5 digits. Check it, or leave it empty.' }
-      if (!(await rateLimit(`shopcode:ip:${await clientIp()}`, 3600, 15)))
-        return { error: 'Too many tries. Please wait an hour and try again.' }
-      const ok = await createSupabaseServiceClient().rpc('vendor_rider_code_check', {
-        p_code: shopCode,
-      })
-      if (!ok.data)
-        return {
-          error:
-            'That shop code was not found, or it was already used. Check the digits with the shop, or leave it empty.',
-        }
-    }
   }
   // vendors say who they are (a student, a shop AFIT already knows, or other) and what the shop sells (one or more categories)
   let vendorChoices: Extract<VendorChoices, { ok: true }> | undefined
@@ -238,11 +221,6 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
       await saveSignature(newUserId, String(formData.get('signature') ?? ''))
       if (personType) await saveIdentity(newUserId, { personType, studentId, idCard })
       if (rider) await saveRiderIdentity(newUserId, rider)
-      if (rider && shopCode)
-        await createSupabaseServiceClient().rpc('rider_link_code', {
-          p_user: newUserId,
-          p_code: shopCode,
-        })
     } catch (e) {
       logger.warn('sign-up details not saved', { err: e instanceof Error ? e.name : 'error' })
     }
@@ -275,6 +253,10 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   const email = emailParsed.data
   const emailKey = sha256Hex(email)
   const ip = await clientIp()
+  // optional: the one-time 5-digit code a shop gave a rider it made an account for
+  const riderCode = String(formData.get('riderCode') ?? '').trim()
+  if (riderCode && !/^[0-9]{5}$/.test(riderCode))
+    return { error: 'The rider code is 5 digits. Check it, or leave it empty.', email }
   if (
     !(await rateLimit(`login:ip:${ip}`, 900, 30)) ||
     !(await rateLimit(`login:email:${emailKey}`, 900, 10))
@@ -283,6 +265,23 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
       email_hash: emailKey.slice(0, 16),
     })
     return { error: TOO_MANY, email }
+  }
+  if (riderCode) {
+    if (
+      !(await rateLimit(`ridercode:ip:${ip}`, 3600, 15)) ||
+      !(await rateLimit(`ridercode:email:${emailKey}`, 3600, 8))
+    )
+      return { error: TOO_MANY, email }
+    const ok = await createSupabaseServiceClient().rpc('rider_code_matches', {
+      p_email: email,
+      p_code: riderCode,
+    })
+    if (!ok.data)
+      return {
+        error:
+          'That rider code does not match this account, or it was already used. Ask your shop to check it, or to create a new rider account.',
+        email,
+      }
   }
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -303,6 +302,15 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
     }
   }
   notifySignIn(email, (await headers()).get('user-agent'))
+  if (riderCode) {
+    // the code makes this account a rider linked to the shop; it works once
+    const claimed = await createSupabaseServiceClient().rpc('rider_claim_code', {
+      p_user: data.user.id,
+      p_code: riderCode,
+    })
+    if (claimed.error) logger.warn('rider code not applied', { code: claimed.error.code })
+    else return finishSignIn('/', data.user.user_metadata?.intended_role)
+  }
   return finishSignIn(next, data.user.user_metadata?.intended_role)
 }
 
