@@ -10,7 +10,9 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const sb = await createSupabaseServerClient()
   const { data: u } = await sb.auth.getUser()
-  if (!u.user) return NextResponse.json({ signedIn: false }, { status: 401 })
+  // signed out is a normal answer (200), not an error: it keeps the browser console clean for visitors
+  if (!u.user)
+    return NextResponse.json({ signedIn: false }, { headers: { 'Cache-Control': 'no-store' } })
   const { data } = await sb
     .from('notifications')
     .select('id')

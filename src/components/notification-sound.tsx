@@ -72,8 +72,8 @@ export function NotificationSound() {
       if (document.visibilityState === 'visible') {
         try {
           const r = await fetch('/api/notifications/latest', { cache: 'no-store' })
-          if (r.status === 401) return // signed out: stop checking until the next page load
-          const j = (await r.json()) as { id?: string | null }
+          const j = (await r.json()) as { signedIn?: boolean; id?: string | null }
+          if (j.signedIn === false) return // signed out: stop checking until the next page load
           if (j.id) {
             if (!primed) {
               remember(j.id) // already waiting when the page opened: stay silent
