@@ -130,7 +130,14 @@ createServer(async (req, res) => {
         reference: b.reference,
         amount: b.amount,
         transfer_code: `TRF_fake${++seq}`,
-        status: mode === 'otp' ? 'otp' : mode === 'pending' ? 'pending' : mode === 'failed' ? 'failed' : 'success',
+        status:
+          mode === 'otp'
+            ? 'otp'
+            : mode === 'pending'
+              ? 'pending'
+              : mode === 'failed'
+                ? 'failed'
+                : 'success',
       }
       transfers.set(t.reference, t)
       return json(res, 200, { status: true, message: 'Transfer has been queued', data: t })

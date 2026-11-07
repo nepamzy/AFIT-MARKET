@@ -27,6 +27,9 @@ import {
 
 export const metadata: Metadata = { title: 'Order' }
 
+/** True while the moment is still ahead of the server clock. */
+const isInFuture = (d: Date | null) => d !== null && d.getTime() > Date.now()
+
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
   const found = await getOrder((await params).id)
   if (!found) notFound()
@@ -46,7 +49,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const windowEnds = completedAt
     ? new Date(new Date(completedAt).getTime() + holdHours * 3_600_000)
     : null
-  const windowOpen = windowEnds !== null && windowEnds.getTime() > Date.now()
+  const windowOpen = isInFuture(windowEnds)
   const beforeCompletion =
     !completedAt && !['PENDING_PAYMENT', 'CANCELLED', 'REFUNDED'].includes(order.status)
   const hasReceipt = !['PENDING_PAYMENT', 'CANCELLED'].includes(order.status)
