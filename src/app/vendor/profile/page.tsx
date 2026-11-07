@@ -9,7 +9,12 @@ import { ShopCategoriesForm } from '@/components/domain/shop-categories-form'
 import { listCategories } from '@/server/modules/vendors-and-catalogue/public'
 import { EmptyState } from '@/components/ui/states'
 import { setClosedAction } from '@/server/modules/vendors-and-catalogue/actions'
-import { getMyVendor, getShop } from '@/server/modules/vendors-and-catalogue/vendor-queries'
+import { AutoReadyForm } from '@/components/domain/auto-ready-form'
+import {
+  getAutoReady,
+  getMyVendor,
+  getShop,
+} from '@/server/modules/vendors-and-catalogue/vendor-queries'
 
 export const metadata: Metadata = { title: 'Shop settings' }
 
@@ -21,6 +26,7 @@ export default async function ShopPage() {
   const owner = me.staff_role === 'owner'
   const allCategories = owner ? await listCategories() : []
   const disabled = me.status !== 'approved'
+  const auto = await getAutoReady(me.id)
   return (
     <>
       <PageHeader
@@ -90,6 +96,24 @@ export default async function ShopPage() {
             </Card>
           </Section>
         )}
+        <Section
+          id="auto-ready"
+          title="Automatic ready"
+          description="Let paid orders become ready by themselves after a time you choose."
+        >
+          <Card>
+            {owner ? (
+              <AutoReadyForm
+                vendorId={me.id}
+                enabled={auto.enabled}
+                minutes={auto.minutes}
+                disabled={disabled}
+              />
+            ) : (
+              <p className="text-muted">Only the owner can change automatic ready.</p>
+            )}
+          </Card>
+        </Section>
         <Section
           id="hours"
           title="Opening hours"

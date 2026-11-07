@@ -21,6 +21,8 @@ import {
   type ActionState,
 } from '@/server/modules/shared/action-helpers'
 import { STARTER_ITEMS, startersFor } from '@/lib/starter-catalogue'
+import { logger } from '@/lib/logger'
+import { parseAutoReady } from '@/lib/auto-ready'
 import { buildHoursJson } from './hours'
 import { parseOptionGroups } from './options'
 import { parseVendorChoices } from './vendor-choices'
@@ -42,6 +44,8 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
   const { listCategories } = await import('./public')
   const choices = parseVendorChoices(fd, await listCategories())
   if (!choices.ok) return failed(choices.error)
+  const auto = parseAutoReady(fd)
+  if (!auto.ok) return failed(auto.error)
   const sb = await createSupabaseServerClient()
   const { error } = await sb.rpc('submit_vendor_application', {
     p_business_name: text(fd, 'businessName', 80),
@@ -60,6 +64,14 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
       error,
       'Please check the form: name 2-80 characters, a valid phone number, a description of at least 10 characters.',
     )
+  if (auto.value.enabled) {
+    const saved = await sb.rpc('application_set_auto_ready', {
+      p_enabled: true,
+      p_minutes: auto.value.minutes,
+    })
+    if (saved.error)
+      logger.warn('auto ready not saved with the application', { code: saved.error.code })
+  }
   notifyAdmin({ type: 'vendor_application', businessName: text(fd, 'businessName', 80) })
   notifyApplicationReceived((await sb.auth.getUser()).data.user?.email, 'vendor')
   revalidatePath('/apply')
@@ -447,4 +459,52 @@ export async function saveShopCategoriesAction(
   revalidatePath('/vendor/catalogue/quick-add')
   revalidatePath('/vendors')
   return done('Categories saved.')
+}
+
+// ---------------------------------------------------------------- automatic ready (owner)
+export async function saveAutoReadyAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const g = await gate({ roles: ['vendor_owner'], aal: 'aal2' })
+  if ('state' in g) return g.state
+  const v = await vendorId(fd)
+  if (!v) return failed('That shop was not found.')
+  const auto = parseAutoReady(fd)
+  if (!auto.ok) return failed(auto.error)
+  const sb = await createSupabaseServerClient()
+  const { error } = await sb.rpc('vendor_set_auto_ready', {
+    p_vendor: v,
+    p_enabled: auto.value.enabled,
+    p_minutes: auto.value.minutes,
+  })
+  if (error) return dbFailed(error, 'We could not save this.')
+  revalidatePath('/vendor/profile')
+  return done(auto.value.enabled ? 'Automatic ready is on.' : 'Automatic ready is off.')
+}
+
+// ---------------------------------------------------------------- the shop's own riders (owner)
+export async function addVendorRiderAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const g = await gate({ roles: ['vendor_owner'], aal: 'aal2' })
+  if ('state' in g) return g.state
+  const v = await vendorId(fd)
+  const name = text(fd, 'riderName', 60)
+  if (!v) return failed('That shop was not found.')
+  if (name.length < 2) return failed('Enter the rider’s name.')
+  if (!(await rateLimit(`vendor-rider:${g.who.userId}`, 3600, 20)))
+    return failed('Too many riders added. Please try again later.')
+  const sb = await createSupabaseServerClient()
+  const { data, error } = await sb.rpc('vendor_rider_create', { p_vendor: v, p_name: name })
+  if (error)
+    return dbFailed(error, 'You can have up to 20 riders. Remove one first, or check the name.')
+  revalidatePath('/vendor/riders')
+  return done(`Rider added. Give them this code: ${(data as { code: string }).code}`)
+}
+
+export async function removeVendorRiderAction(fd: FormData): Promise<void> {
+  const g = await gate({ roles: ['vendor_owner'], aal: 'aal2' })
+  if ('state' in g) return
+  const v = await vendorId(fd)
+  const id = String(fd.get('riderId') ?? '')
+  if (!v || !uuid.safeParse(id).success) return
+  const sb = await createSupabaseServerClient()
+  await sb.rpc('vendor_rider_revoke', { p_vendor: v, p_id: id })
+  revalidatePath('/vendor/riders')
 }

@@ -145,3 +145,10 @@ export async function listPendingRiderPickups() {
         assignment_no: number
       }[]) ?? [])
 }
+
+/** The shop this rider is linked to (their own link only), or null. */
+export async function getMyShopLink(): Promise<{ vendor_id: string; vendor_name: string } | null> {
+  const sb = await createSupabaseServerClient()
+  const { data } = await sb.rpc('my_rider_link')
+  return (data as { vendor_id: string; vendor_name: string } | null) ?? null
+}

@@ -118,3 +118,33 @@ export async function getShop(vendorId: string) {
     staff: staff ?? [],
   }
 }
+
+/** The shop's automatic-ready choice (null minutes when it is off). */
+export async function getAutoReady(
+  vendorId: string,
+): Promise<{ enabled: boolean; minutes: number | null }> {
+  const sb = await createSupabaseServerClient()
+  const { data } = await sb
+    .from('vendors')
+    .select('auto_ready_enabled, auto_ready_minutes')
+    .eq('id', vendorId)
+    .maybeSingle()
+  return {
+    enabled: Boolean(data?.auto_ready_enabled),
+    minutes: (data?.auto_ready_minutes as number | null | undefined) ?? null,
+  }
+}
+
+export type VendorRiderRow = {
+  id: string
+  name: string
+  code: string
+  linked: boolean
+  rider_name: string | null
+  rider_status: string | null
+}
+export async function listVendorRiders(vendorId: string): Promise<VendorRiderRow[]> {
+  const sb = await createSupabaseServerClient()
+  const { data } = await sb.rpc('vendor_rider_list', { p_vendor: vendorId })
+  return (data as VendorRiderRow[] | null) ?? []
+}

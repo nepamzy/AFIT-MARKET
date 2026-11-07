@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useActionState, useState } from 'react'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { SignaturePad } from '@/components/domain/signature-pad'
+import { CodeBoxes } from '@/components/domain/code-boxes'
 import { Checkbox, Input } from '@/components/ui/fields'
 import {
   VendorChoices,
@@ -288,6 +289,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
   const [idCard, setIdCard] = useState<string | null>(null)
   const [idBack, setIdBack] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
+  const [shopCode, setShopCode] = useState('')
   const [vendor, setVendor] = useState<VendorChoicesState>({
     vendorType: '',
     categories: [],
@@ -377,6 +379,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
       {(isStudent || isRider) && <input type="hidden" name="studentId" value={studentId} />}
       {(isStudent || isRider) && idCard && <input type="hidden" name="idCard" value={idCard} />}
       {isRider && <input type="hidden" name="phone" value={phone} />}
+      {isRider && shopCode && <input type="hidden" name="shopCode" value={shopCode} />}
       {isRider && idBack && <input type="hidden" name="idCardBack" value={idBack} />}
       {isVendor && vendor.vendorType === 'student' && (
         <input type="hidden" name="personType" value="student" />
@@ -521,6 +524,21 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
               onChange={(e) => setPhone(e.target.value)}
               hint="For example 0803 123 4567"
             />
+            <div
+              className="space-y-1 rounded-[var(--radius-control)] bg-brand-50 p-3"
+              data-testid="shop-code"
+            >
+              <CodeBoxes
+                value={shopCode}
+                onChange={setShopCode}
+                label="Shop code (optional)"
+                idPrefix="shop-code"
+              />
+              <p className="text-sm text-muted">
+                Only if a shop gave you a 5-digit rider code. It links you to that shop. Leave it
+                empty to be a normal rider.
+              </p>
+            </div>
             <div className="space-y-1">
               <label htmlFor="rider-id-front" className="text-sm font-semibold">
                 Photo of the FRONT of your new student ID card

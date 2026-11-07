@@ -89,6 +89,7 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   let idCard: Buffer | undefined
   // riders: matric number, phone number and the front and back of the NEW student ID card (only it has a QR code)
   let rider: { matric: string; phone: string; front: Buffer; back: Buffer } | undefined
+  let shopCode = ''
   if (intent === 'rider') {
     const matric = String(formData.get('studentId') ?? '').trim()
     if (!validStudentId(matric)) return { error: 'Enter your matric number.' }
@@ -104,6 +105,22 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
           'We could not find the QR code on the front of your ID card. Only the new ID card has one. Use a clear, flat photo of the whole front.',
       }
     rider = { matric, phone, front: front.jpeg, back: back.jpeg }
+    // optional: the 5-digit code a shop gave this rider (links the rider to that shop)
+    shopCode = String(formData.get('shopCode') ?? '').trim()
+    if (shopCode) {
+      if (!/^[0-9]{5}$/.test(shopCode))
+        return { error: 'The shop code is 5 digits. Check it, or leave it empty.' }
+      if (!(await rateLimit(`shopcode:ip:${await clientIp()}`, 3600, 15)))
+        return { error: 'Too many tries. Please wait an hour and try again.' }
+      const ok = await createSupabaseServiceClient().rpc('vendor_rider_code_check', {
+        p_code: shopCode,
+      })
+      if (!ok.data)
+        return {
+          error:
+            'That shop code was not found, or it was already used. Check the digits with the shop, or leave it empty.',
+        }
+    }
   }
   // vendors say who they are (a student, a shop AFIT already knows, or other) and what the shop sells (one or more categories)
   let vendorChoices: Extract<VendorChoices, { ok: true }> | undefined
@@ -221,6 +238,11 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
       await saveSignature(newUserId, String(formData.get('signature') ?? ''))
       if (personType) await saveIdentity(newUserId, { personType, studentId, idCard })
       if (rider) await saveRiderIdentity(newUserId, rider)
+      if (rider && shopCode)
+        await createSupabaseServiceClient().rpc('rider_link_code', {
+          p_user: newUserId,
+          p_code: shopCode,
+        })
     } catch (e) {
       logger.warn('sign-up details not saved', { err: e instanceof Error ? e.name : 'error' })
     }
