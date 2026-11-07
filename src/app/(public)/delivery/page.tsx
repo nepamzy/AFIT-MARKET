@@ -30,9 +30,10 @@ export default function Delivery() {
       <section>
         <h2>Delivery fee</h2>
         <p>
-          The delivery fee is shown at checkout. By default it is paid with the rest of your order
-          through Paystack. If direct payment to the rider is ever switched on, your order page says
-          so clearly and you will never be asked to pay the delivery fee twice.
+          The delivery fee is shown at checkout. Right now it is not part of your Paystack payment:
+          you pay it straight to the rider by bank transfer, and your order page shows where to send
+          it. AFIT Market does not hold this money and cannot check your bank, so keep your transfer
+          receipt. You will never be asked to pay the delivery fee twice.
         </p>
       </section>
     </InfoPage>
