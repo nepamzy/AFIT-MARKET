@@ -3,7 +3,6 @@
 import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
 import { notifyApplicationReceived } from '@/server/modules/engagement/dispatch'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { AccessRequirement } from '@/server/modules/identity-and-access/policy'
@@ -99,26 +98,6 @@ export async function acceptOfferAction(_p: ActionState, fd: FormData): Promise<
   if (error) return dbFailed(error)
   revalidatePath('/rider/jobs')
   return done('Delivery accepted.')
-}
-
-export type TokenState = ActionState & { token?: string; expiresAt?: string }
-export async function issueTokenAction(_p: TokenState, fd: FormData): Promise<TokenState> {
-  const id = text(fd, 'assignmentId', 40)
-  if (!uuid.safeParse(id).success) return failed('That delivery was not found.')
-  const g = await gate(RIDER)
-  if ('state' in g) return g.state
-  if (!(await rateLimit(`token:${g.who.userId}`, 300, 20)))
-    return failed('Too many attempts. Please wait a moment.')
-  const sb = await createSupabaseServerClient()
-  const { data, error } = await sb.rpc('rider_issue_handover_token', { p_assignment: id })
-  if (error) return dbFailed(error)
-  const r = data as { token: string; expires_at: string }
-  return {
-    ok: true,
-    token: r.token,
-    expiresAt: r.expires_at,
-    message: 'Show this code to the vendor. It works once.',
-  }
 }
 
 export async function startRouteAction(_p: ActionState, fd: FormData): Promise<ActionState> {
@@ -222,36 +201,49 @@ export async function postLocationAction(input: {
   return { accepted: r.accepted, reason: r.reason }
 }
 
-// ---- vendor side -------------------------------------------------------------------------------
-export async function confirmRiderPickupAction(
-  _p: ActionState,
+// ---- hand-over from the shop: the shop shows a one-time QR code, the rider scans it ----------------------------
+export type PickupTokenState = ActionState & { token?: string; expiresAt?: string }
+
+/** The shop makes a fresh one-time code for the rider who is collecting this order. */
+export async function showPickupQrAction(
+  _p: PickupTokenState,
   fd: FormData,
-): Promise<ActionState> {
+): Promise<PickupTokenState> {
   const orderId = text(fd, 'orderId', 40)
   if (!uuid.safeParse(orderId).success) return failed('That order was not found.')
   const g = await gate({ roles: ['vendor_owner', 'vendor_staff'], aal: 'aal2' })
   if ('state' in g) return g.state
-  if (!(await rateLimit(`ridertoken:${g.who.userId}`, 600, 40)))
-    return failed('Too many attempts. Please wait a few minutes.')
+  if (!(await rateLimit(`pickupqr:${g.who.userId}`, 600, 40)))
+    return failed('Too many codes. Please wait a few minutes.')
   const sb = await createSupabaseServerClient()
-  const { data, error } = await sb.rpc('vendor_confirm_rider_pickup', {
-    p_order: orderId,
-    p_token: text(fd, 'token', 20),
-  })
+  const { data, error } = await sb.rpc('vendor_issue_pickup_token', { p_order: orderId })
+  if (error) return dbFailed(error, 'There is no rider waiting to collect this order any more.')
+  const r = data as { token: string; expires_at: string }
+  return { ok: true, token: r.token, expiresAt: r.expires_at }
+}
+
+/** The rider scans (or types) the shop's code. A correct code completes the hand-over. */
+export async function confirmPickupScanAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const g = await gate(RIDER)
+  if ('state' in g) return g.state
+  const token = text(fd, 'token', 20)
+  if (!token) return failed('Scan the shop’s QR code or type its code.')
+  if (!(await rateLimit(`pickupscan:${g.who.userId}`, 600, 12)))
+    return failed('Too many tries. Please wait a few minutes, then ask the shop for a new code.')
+  const sb = await createSupabaseServerClient()
+  const { data, error } = await sb.rpc('rider_confirm_pickup', { p_token: token })
   if (error) return dbFailed(error)
-  const r = data as { ok: boolean; reason?: string; attempts_left?: number }
+  const r = data as { ok: boolean; reason?: string; order_number?: string }
   if (!r.ok) {
     const msg: Record<string, string> = {
-      wrong_token: `That code is not right. ${r.attempts_left ?? 0} tries left before it locks.`,
-      token_locked: 'Too many wrong codes. Ask the rider to show a new code.',
-      token_expired: 'That code has expired. Ask the rider to show a new code.',
-      token_unavailable: 'The rider has not shown a code yet.',
-      no_pending_pickup: 'There is no rider waiting to collect this order.',
+      wrong_code:
+        'That code is not right, or it is not for one of your deliveries. Ask the shop to show it again.',
+      code_expired: 'That code has expired. Ask the shop to show a new one.',
+      no_pending_pickup: 'This order is not waiting to be collected.',
     }
     return failed(msg[r.reason ?? ''] ?? 'That code is not valid.')
   }
+  revalidatePath('/rider/jobs')
   revalidatePath('/vendor/handover')
-  revalidatePath('/vendor/orders')
-  // The card leaves the list once handed over, so the confirmation is shown on the page instead.
-  redirect('/vendor/handover?done=rider')
+  return done(`Collected ${r.order_number ?? 'the order'}. Now start your route.`)
 }

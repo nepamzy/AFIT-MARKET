@@ -1,9 +1,7 @@
 'use client'
-import { QrImage } from '@/components/domain/qr-image'
 import { lagosTime } from '@/lib/time'
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ActionForm } from '@/components/forms/action-form'
-import { Button } from '@/components/ui/button'
 import { Checkbox, Input, Select } from '@/components/ui/fields'
 import { checkFix } from '@/server/modules/location/geo'
 import {
@@ -11,13 +9,11 @@ import {
   acceptOfferAction,
   goActiveAction,
   goInactiveAction,
-  issueTokenAction,
   postLocationAction,
   reportIssueAction,
   startRouteAction,
   arrivedAction,
   submitRiderApplicationAction,
-  type TokenState,
 } from '@/server/modules/riders/actions'
 import type { ActionState } from '@/server/modules/shared/action-helpers'
 
@@ -136,42 +132,6 @@ export function AcceptButton({ orderId }: { orderId: string }) {
     <ActionForm action={acceptOfferAction} submitLabel="Accept delivery" pendingLabel="Accepting…">
       <input type="hidden" name="orderId" value={orderId} />
     </ActionForm>
-  )
-}
-
-export function TokenCard({ assignmentId }: { assignmentId: string }) {
-  const [state, formAction, pending] = useActionState<TokenState, FormData>(issueTokenAction, {})
-  return (
-    <form action={formAction} className="space-y-2">
-      <input type="hidden" name="assignmentId" value={assignmentId} />
-      {state.error && (
-        <p
-          role="alert"
-          className="rounded-[var(--radius-control)] bg-danger-50 px-3 py-2 font-medium text-danger-700"
-        >
-          {state.error}
-        </p>
-      )}
-      {state.token && (
-        <div role="status" className="rounded-[var(--radius-control)] bg-brand-50 p-3">
-          <p className="text-sm font-semibold">Show this to the vendor</p>
-          <p
-            className="text-3xl font-bold tracking-widest"
-            aria-label={`Handover code ${state.token.split('').join(' ')}`}
-          >
-            {state.token}
-          </p>
-          <QrImage value={`afit-pickup:${state.token}`} label="QR code for the shop to scan" />
-          <p className="text-sm text-muted">
-            The shop can scan this QR code or type the code. It works once and expires. A new code
-            cancels this one.
-          </p>
-        </div>
-      )}
-      <Button type="submit" variant="secondary" disabled={pending}>
-        {state.token ? 'Show a new code' : 'Show handover code to vendor'}
-      </Button>
-    </form>
   )
 }
 

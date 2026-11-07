@@ -8,8 +8,8 @@ import {
   LocationSharing,
   ReportIssueForm,
   StartRouteButton,
-  TokenCard,
 } from '@/components/domain/rider-controls'
+import { PickupScanCard } from '@/components/domain/pickup-scan-card'
 import { RiderJobMap } from '@/components/domain/rider-job-map'
 import { OrderStatusPill } from '@/components/domain/order-status'
 import { Card, PageHeader } from '@/components/ui/card'
@@ -122,7 +122,7 @@ export default async function Jobs() {
                 <strong>Deliver to:</strong> {a.deliver_to}{' '}
                 <span className="text-xs text-muted">(sample point)</span>
               </p>
-              {a.status === 'accepted' && <TokenCard assignmentId={a.assignment_id} />}
+              {a.status === 'accepted' && <PickupScanCard />}
               {a.status === 'picked_up' && <StartRouteButton assignmentId={a.assignment_id} />}
               {a.status === 'en_route' && !a.arrival_detected_at && (
                 <div className="space-y-2">
