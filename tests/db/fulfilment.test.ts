@@ -120,7 +120,8 @@ describe('vendor order state machine', () => {
   it('walks PAID -> ACCEPTED -> PREPARING -> PICKUP_AWAITING_HANDOVER with history for every step', async () => {
     await withTx(async (c) => {
       const o = await paidOrder(c)
-      expect(await act(c, AAL2(o.owner), o.order, 'accept')).toBe('ACCEPTED')
+      // accepting starts preparing at once (the older "start preparing" call is now a no-op)
+      expect(await act(c, AAL2(o.owner), o.order, 'accept')).toBe('PREPARING')
       expect(await act(c, AAL2(o.owner), o.order, 'start_preparing')).toBe('PREPARING')
       expect(await act(c, AAL2(o.owner), o.order, 'mark_ready')).toBe('PICKUP_AWAITING_HANDOVER')
       const h = await c.query(
@@ -196,7 +197,7 @@ describe('vendor order state machine', () => {
     })
   })
 
-  it('rejecting a paid order needs a reason, releases stock and raises a refund flag', async () => {
+  it('declining a paid order needs a reason, releases stock and queues the automatic refund', async () => {
     await withTx(async (c) => {
       const o = await paidOrder(c)
       expect((await actFails(c, AAL2(o.owner), o.order, 'reject', '')).message).toMatch(
@@ -207,14 +208,12 @@ describe('vendor order state machine', () => {
         (await c.query(`select stock_quantity s from public.products where id=$1`, [o.p])).rows[0]
           .s,
       ).toBe(10)
+      // no manual "refund required" flag any more: the automatic refund picks the order up (see vendor-decline.test.ts)
       expect(
-        (
-          await c.query(
-            `select 1 from public.reconciliation_flags where order_id=$1 and reason='vendor_rejected_paid_order'`,
-            [o.order],
-          )
-        ).rowCount,
-      ).toBe(1)
+        ((await c.query(`select public.refund_auto_missing(50) m`)).rows[0].m as string[]).includes(
+          o.order,
+        ),
+      ).toBe(true)
     })
   })
 })
@@ -541,7 +540,7 @@ describe('concurrency', () => {
       const accepts = await Promise.all(
         [1, 2, 3].map(() => run((c) => act(c, AAL2(o.owner), o.order, 'accept'))),
       )
-      expect(accepts.filter((r) => r === 'ACCEPTED')).toHaveLength(1)
+      expect(accepts.filter((r) => r === 'PREPARING')).toHaveLength(1)
       await run((c) => act(c, AAL2(o.owner), o.order, 'start_preparing'))
       await run((c) => act(c, AAL2(o.owner), o.order, 'mark_ready'))
       const code = (await run((c) => getCode(c, AAL2(o.cust), o.order))) as { code: string }

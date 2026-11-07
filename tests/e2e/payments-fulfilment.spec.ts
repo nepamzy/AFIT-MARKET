@@ -124,8 +124,7 @@ test('Paystack test payment -> vendor accepts, prepares, readies -> pickup code 
   await v.goto('/vendor/orders')
   await expect(v.getByText(name).first()).toBeVisible()
   for (const [button, status] of [
-    ['Accept order', 'ACCEPTED'],
-    ['Start preparing', 'PREPARING'],
+    ['Accept order', 'PREPARING'], // accepting starts preparing at once
     ['Mark ready', 'PICKUP_AWAITING_HANDOVER'],
   ] as const) {
     await clickAndWait(v, () => v.getByRole('button', { name: button }).click())
@@ -229,7 +228,7 @@ test('failed payment leaves the order unpaid and payable; webhook signature, rep
 
   // unrelated events are acknowledged and ignored
   const other = JSON.stringify({
-    event: 'transfer.success',
+    event: 'customeridentification.success',
     data: { reference: txn.reference, amount: 1, currency: 'NGN' },
   })
   expect((await (await postWebhook(other, signBody(other, SECRET))).json()).outcome).toBe('ignored')
@@ -255,7 +254,7 @@ test('failed payment leaves the order unpaid and payable; webhook signature, rep
   await buyer.context.close()
 })
 
-test('a vendor who rejects a paid order raises a refund flag that finance resolves', async ({
+test('a vendor who declines a paid order: stock is released and the payment is refunded automatically', async ({
   browser,
 }, info) => {
   test.setTimeout(180000)
@@ -272,7 +271,7 @@ test('a vendor who rejects a paid order raises a refund flag that finance resolv
   const v = vendorUser.page
   await v.goto('/vendor/orders')
   await v.getByLabel('Reason (the customer will see this)').fill('Oven broke down')
-  await clickAndWait(v, () => v.getByRole('button', { name: 'Reject order' }).click())
+  await clickAndWait(v, () => v.getByRole('button', { name: 'Decline order' }).click())
   await expect.poll(async () => (await orderRow(orderId)).status).toBe('CANCELLED')
   const { data: prod } = await admin()
     .from('products')
@@ -281,20 +280,18 @@ test('a vendor who rejects a paid order raises a refund flag that finance resolv
     .single()
   expect(prod!.stock_quantity).toBe(5) // stock released
 
-  const fin = await openSession(browser, info, 'fin', ['finance_admin'])
-  const f = fin.page
-  await f.goto('/admin/payments')
-  const order = await orderRow(orderId)
-  await expect(f.getByText(order.order_number).first()).toBeVisible()
-  await expect(f.getByText(/vendor rejected paid order/i).first()).toBeVisible()
-  await f
-    .getByLabel('Resolution note')
-    .first()
-    .fill('Refund to be sent manually after provider confirmation')
-  await clickAndWait(f, () => f.getByRole('button', { name: 'Mark resolved' }).first().click())
-  await f.goto('/admin/payments')
-  await expect(f.getByText(order.order_number)).toHaveCount(0)
-  await Promise.all([buyer.context.close(), vendorUser.context.close(), fin.context.close()])
+  // no finance step: the refund was started by the system and Paystack (the local fake) finished it
+  await expect
+    .poll(
+      async () =>
+        (await admin().from('refunds').select('status, source').eq('order_id', orderId)).data?.[0],
+      { timeout: 20000 },
+    )
+    .toMatchObject({ source: 'auto', status: 'succeeded' })
+  await buyer.page.goto(`/orders/${orderId}`)
+  await expect(buyer.page.getByTestId('declined')).toContainText('Oven broke down')
+  await expect(buyer.page.getByTestId('declined')).toContainText('has been refunded')
+  await Promise.all([buyer.context.close(), vendorUser.context.close()])
 })
 
 test('payments admin and the scheduled expiry job are protected', async ({ browser }, info) => {

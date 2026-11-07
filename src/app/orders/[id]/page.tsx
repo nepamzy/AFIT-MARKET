@@ -12,6 +12,7 @@ import { Card, PageHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
 import { Timeline } from '@/components/ui/timeline'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ReviewForm } from '@/components/domain/engagement-forms'
 import { myOrderReview } from '@/server/modules/engagement/queries'
 import { deliveryFeeForOrder } from '@/server/modules/delivery-fee/queries'
@@ -35,6 +36,25 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   if (!found) notFound()
   const { order, items, history, payments } = found
   const unpaid = order.status === 'PENDING_PAYMENT'
+  // a shop that declined a paid order: show its reason and where the refund stands (this customer's own order only)
+  const declined =
+    order.status === 'CANCELLED'
+      ? [...history]
+          .reverse()
+          .find((h) => h.to_status === 'CANCELLED' && h.reason?.startsWith('vendor_rejected'))
+      : undefined
+  const declineReason = declined?.reason?.replace(/^vendor_rejected:?\s*/, '') ?? ''
+  const autoRefund = declined
+    ? (
+        await createSupabaseServiceClient()
+          .from('refunds')
+          .select('status, amount_kobo')
+          .eq('order_id', order.id)
+          .eq('source', 'auto')
+          .order('created_at', { ascending: false })
+          .limit(1)
+      ).data?.[0]
+    : undefined
   const paystack = paystackConfig() !== null
   const pickup = order.status === 'PICKUP_AWAITING_HANDOVER' ? await getPickupCode(order.id) : null
   const txns = await listPaymentTransactions(order.id)
@@ -73,6 +93,17 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <Alert tone="info" className="mb-5">
         {ORDER_STATES.find((s) => s.code === order.status)?.meaning}
       </Alert>
+
+      {declined && (
+        <div data-testid="declined">
+          <Alert tone="warning" className="mb-5" title="The shop declined this order">
+            {declineReason && <>Reason: “{declineReason}”. </>}
+            {autoRefund?.status === 'succeeded'
+              ? 'Your payment has been refunded. Your bank may take a few days to show it.'
+              : 'Your money is being refunded to the card or bank you paid with. We started it as soon as the shop declined. Your bank may take a few days to show it.'}
+          </Alert>
+        </div>
+      )}
 
       {(beforeCompletion || windowEnds) && (
         <div data-testid="payment-window">

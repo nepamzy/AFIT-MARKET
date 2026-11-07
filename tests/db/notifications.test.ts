@@ -135,16 +135,12 @@ describe('notifications are written with the event, once, and say very little', 
         `create trigger boom before insert on public.notifications for each row execute function pg_temp.boom()`,
       )
       const errs = await countRows(c, `select count(*)::int n from public.notification_errors`)
-      expect(await act(c, o.owner, o.order, 'accept')).toBe('ACCEPTED')
+      expect(await act(c, o.owner, o.order, 'accept')).toBe('PREPARING')
       await c.query(`drop trigger boom on public.notifications`)
       expect(
-        await countRows(
-          c,
-          `select status='ACCEPTED' as n from public.orders where id=$1`
-            .replace('as n', 'as n')
-            .replace("select status='ACCEPTED' as n", "select (status='ACCEPTED')::int as n"),
-          [o.order],
-        ),
+        await countRows(c, `select (status='PREPARING')::int as n from public.orders where id=$1`, [
+          o.order,
+        ]),
       ).toBe(1)
       expect(
         await countRows(c, `select count(*)::int n from public.notification_errors`),

@@ -9,7 +9,7 @@ const commonHeaders = [
 ]
 const POLICY = (geo: string) => ({
   key: 'Permissions-Policy',
-  value: `camera=(), microphone=(), geolocation=${geo}, payment=()`,
+  value: `camera=(self), microphone=(), geolocation=${geo}, payment=()`,
 })
 
 const nextConfig: NextConfig = {

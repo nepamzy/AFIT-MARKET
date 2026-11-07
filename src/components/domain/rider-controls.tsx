@@ -1,4 +1,5 @@
 'use client'
+import { QrImage } from '@/components/domain/qr-image'
 import { lagosTime } from '@/lib/time'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { ActionForm } from '@/components/forms/action-form'
@@ -153,14 +154,18 @@ export function TokenCard({ assignmentId }: { assignmentId: string }) {
       )}
       {state.token && (
         <div role="status" className="rounded-[var(--radius-control)] bg-brand-50 p-3">
-          <p className="text-sm font-semibold">Show this code to the vendor</p>
+          <p className="text-sm font-semibold">Show this to the vendor</p>
           <p
             className="text-3xl font-bold tracking-widest"
             aria-label={`Handover code ${state.token.split('').join(' ')}`}
           >
             {state.token}
           </p>
-          <p className="text-sm text-muted">Works once and expires. A new code cancels this one.</p>
+          <QrImage value={`afit-pickup:${state.token}`} label="QR code for the shop to scan" />
+          <p className="text-sm text-muted">
+            The shop can scan this QR code or type the code. It works once and expires. A new code
+            cancels this one.
+          </p>
         </div>
       )}
       <Button type="submit" variant="secondary" disabled={pending}>
