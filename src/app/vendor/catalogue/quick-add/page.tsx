@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { QuickAdd } from '@/components/domain/quick-add'
 import { forgetPickAction } from '@/server/modules/vendors-and-catalogue/actions'
 import { PageHeader } from '@/components/ui/card'
@@ -50,6 +51,14 @@ export default async function QuickAddPage() {
           </ButtonLink>
         }
       />
+      <p className="mb-4 text-sm text-muted">
+        Showing ready-made items for {categoryName}. Sell other things too, like clothes, gadgets or
+        games?{' '}
+        <Link href="/vendor/profile#categories" className="font-semibold text-brand-700 underline">
+          Add more categories
+        </Link>
+        .
+      </p>
       {items.length === 0 ? (
         <EmptyState
           title="No ready-made list for your category yet"

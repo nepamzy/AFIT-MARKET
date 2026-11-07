@@ -1,20 +1,12 @@
 import { lagosDateTime } from '@/lib/time'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MarkReadButton, PreferenceForm } from '@/components/domain/engagement-forms'
-import { PushToggle } from '@/components/domain/push-toggle'
-import { pushConfig } from '@/server/modules/engagement/push'
+import { MarkReadButton } from '@/components/domain/engagement-forms'
 import { Badge } from '@/components/ui/badge'
 import { Card, PageHeader } from '@/components/ui/card'
 import { Pager } from '@/components/ui/pager'
 import { EmptyState } from '@/components/ui/states'
-import {
-  PAGE_SIZE,
-  getNotificationPreferences,
-  myDeliverySummary,
-  listNotifications,
-  pageParam,
-} from '@/server/modules/engagement/queries'
+import { PAGE_SIZE, listNotifications, pageParam } from '@/server/modules/engagement/queries'
 
 export const metadata: Metadata = { title: 'Notifications' }
 
@@ -24,18 +16,13 @@ export default async function Notifications({
   searchParams: Promise<{ page?: string }>
 }) {
   const page = pageParam((await searchParams).page)
-  const [data, prefs, summary] = await Promise.all([
-    listNotifications(page),
-    getNotificationPreferences(),
-    myDeliverySummary(),
-  ])
+  const data = await listNotifications(page)
   const items = data?.items ?? []
-  const pushKey = pushConfig()?.publicKey ?? null
   return (
     <>
       <PageHeader
         title="Notifications"
-        subtitle="Updates about your orders, reports and refunds. They contain no payment details, codes or locations."
+        subtitle="Updates about your orders, reports and refunds."
       />
       {data && data.unread > 0 && (
         <Card className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -74,28 +61,6 @@ export default async function Notifications({
         </ul>
       )}
       <Pager basePath="/notifications" page={page} hasMore={items.length === PAGE_SIZE} />
-      <section className="mt-8" aria-labelledby="prefs">
-        <h2 id="prefs" className="mb-2 text-lg font-bold">
-          Copies
-        </h2>
-        <Card className="space-y-3">
-          <PreferenceForm emailEnabled={!prefs.saved || prefs.email_enabled} />
-          {pushKey && <PushToggle publicKey={pushKey} />}
-          {summary && (
-            <div>
-              <h3 className="font-semibold">Older copy requests (last 30 days)</h3>
-              <ul className="mt-1 list-disc pl-5 text-sm">
-                <li>Waiting to be processed: {summary.queued}</li>
-                <li>Failed after several tries: {summary.failed}</li>
-              </ul>
-              <p className="mt-1 text-sm text-muted">
-                Messages shown at the top of this page are always in your account, whether or not an
-                email or pop-up reaches you.
-              </p>
-            </div>
-          )}
-        </Card>
-      </section>
     </>
   )
 }

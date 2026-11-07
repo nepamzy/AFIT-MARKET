@@ -153,28 +153,27 @@ test('top bar: notification states in plain words (blocked, not supported, sign 
   await out.c.close()
 })
 
-test('signed in: Alerts switch, Mute switch, sound plays once, remembered after reload', async ({
+test('signed in: notifications from the top bar, sound plays once, muted device stays silent, real notification rings', async ({
   browser,
 }, info) => {
   const s = await openSession(browser, info, 'alerts')
   const p = s.page
   await p.context().addInitScript(FAKE_PUSH + SPY_AUDIO)
   await p.goto('/notifications')
-  const state = p.getByTestId('alerts-state')
-  await expect(state).toContainText('Phone alerts are off')
-  // turning on: top bar button, then the badge
+  // the Notifications page carries no e-mail / alerts / sound settings any more
+  await expect(p.getByText('Copies')).toHaveCount(0)
+  await expect(p.getByRole('switch')).toHaveCount(0)
   const bar = p.getByTestId('app-bar')
   await bar.getByRole('button', { name: 'Turn on notifications' }).click()
-  await expect(state).toContainText('Phone alerts are on')
-  await expect(p.getByRole('switch', { name: 'Alerts' })).toBeChecked()
-  await shot(p, 'notifications-page-on')
+  await expect(bar.getByText('✓ Notifications on')).toBeVisible()
+  await shot(p, 'bar-notifications-on')
   await p.reload()
-  await expect(p.getByTestId('alerts-state')).toContainText('Phone alerts are on')
-  // switch off and on from the page
-  await p.getByRole('switch', { name: 'Alerts' }).click()
-  await expect(p.getByTestId('alerts-state')).toContainText('Phone alerts are off')
-  await p.getByRole('switch', { name: 'Alerts' }).click()
-  await expect(p.getByTestId('alerts-state')).toContainText('Phone alerts are on')
+  await expect(bar.getByText('✓ Notifications on')).toBeVisible()
+  // turn off from the bar, then on again
+  await bar.getByRole('button', { name: 'Turn off' }).click()
+  await expect(bar.getByRole('button', { name: 'Turn on notifications' })).toBeVisible()
+  await bar.getByRole('button', { name: 'Turn on notifications' }).click()
+  await expect(bar.getByText('✓ Notifications on')).toBeVisible()
 
   // sound: needs one touch first; same id twice plays once
   const id = randomUUID()
@@ -193,19 +192,13 @@ test('signed in: Alerts switch, Mute switch, sound plays once, remembered after 
   await ping(randomUUID())
   expect(await plays(p)).toBe(2)
 
-  // mute: silent, and remembered after a reload
-  await p.getByRole('switch', { name: 'Mute sound' }).check()
-  await shot(p, 'notifications-page-muted')
+  // a device that has sound switched off (saved on the device) stays silent
+  await p.evaluate(() => localStorage.setItem('afit.sound.muted', '1'))
   await ping(randomUUID())
   expect(await plays(p)).toBe(2)
-  await p.reload()
-  await expect(p.getByRole('switch', { name: 'Mute sound' })).toBeChecked()
-  await p.locator('main').click({ position: { x: 5, y: 5 } })
-  await ping(randomUUID())
-  expect(await plays(p)).toBe(0)
+  await p.evaluate(() => localStorage.removeItem('afit.sound.muted'))
 
   // a real new notification reaches an open, un-muted page through the 30-second check
-  await p.getByRole('switch', { name: 'Mute sound' }).uncheck()
   await p.locator('main').click({ position: { x: 5, y: 5 } })
   const before = await plays(p)
   const { error } = await admin()
@@ -229,7 +222,7 @@ test('a person cannot register a phone for someone else', async ({ browser }, in
   await a.page.context().addInitScript(FAKE_PUSH)
   await a.page.goto('/notifications')
   await a.page.getByTestId('app-bar').getByRole('button', { name: 'Turn on notifications' }).click()
-  await expect(a.page.getByTestId('alerts-state')).toContainText('Phone alerts are on')
+  await expect(a.page.getByText('✓ Notifications on')).toBeVisible()
   const rows = await admin().from('push_subscriptions').select('user_id').eq('user_id', a.user.id)
   expect(rows.data).toHaveLength(1)
   const other = await admin().from('push_subscriptions').select('user_id').eq('user_id', b.user.id)

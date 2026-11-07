@@ -47,18 +47,6 @@ test('notifications: generic in-app notices, private to their owner, keyboard op
   ])
   await expect(c.getByText('1 unread')).toHaveCount(0)
 
-  // preference: e-mail copies are on unless the person turns them off; the page says what is and is not emailed
-  await expect(c.getByText(/Emails never contain payment details/)).toBeVisible()
-  await c.getByLabel(/Email me about/).check()
-  await clickAndWait(c, () => c.getByRole('button', { name: 'Save' }).click())
-  await expect(statusIn(c)).toContainText(/we will email you/)
-  const pref = await admin()
-    .from('notification_preferences')
-    .select('email_enabled')
-    .eq('user_id', customer.user.id)
-    .single()
-  expect(pref.data?.email_enabled).toBe(true)
-
   // another user sees none of it
   await stranger.page.goto('/notifications')
   await expect(stranger.page.getByText('Order complete')).toHaveCount(0)
@@ -192,12 +180,10 @@ test('jobs: every worker route rejects callers without the secret, and the notif
   const owner = await openSession(browser, info, 'jowner', ['vendor_owner'])
   const shop = await makeShopWithPoint(owner.user.id, `Fixture dish ${tag()}`)
   const o = await seedPaidCompletedOrder(shop, customer.user.id)
-  // the customer opts in to the local sink, then something happens to their order
-  await customer.page.goto('/notifications')
-  await customer.page.getByLabel(/Email me about/).check()
-  await clickAndWait(customer.page, () =>
-    customer.page.getByRole('button', { name: 'Save' }).click(),
-  )
+  // the older outbox only queues for a saved "yes"; the live delivery (e-mail + pop-ups) needs no setting at all
+  await admin()
+    .from('notification_preferences')
+    .upsert({ user_id: customer.user.id, email_enabled: true })
   await admin()
     .from('order_status_history')
     .insert({ order_id: o.id, from_status: 'PAID', to_status: 'COMPLETED' })
