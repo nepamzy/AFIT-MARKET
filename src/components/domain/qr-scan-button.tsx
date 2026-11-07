@@ -3,7 +3,7 @@ import jsQR from 'jsqr'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
-/** The text inside the rider's QR code is `afit-pickup:` followed by the one-time code. */
+/** The text inside the shop's hand-over QR code is `afit-pickup:` followed by the one-time code. */
 export const PICKUP_QR_PREFIX = 'afit-pickup:'
 export const codeFromQr = (text: string): string | null => {
   const t = text.trim()
@@ -13,7 +13,7 @@ export const codeFromQr = (text: string): string | null => {
 }
 
 /**
- * Opens the phone camera, reads the rider's QR code and hands the code to `onCode`. The camera is only switched on after
+ * Opens the phone camera, reads the shop's QR code and hands the code to `onCode`. The camera is only switched on after
  * the tap and is always switched off again. Where the camera is not available the shop can still type the code.
  */
 export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
@@ -76,7 +76,7 @@ export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
           setOpen((o) => !o)
         }}
       >
-        {open ? 'Close camera' : 'Scan rider’s QR code'}
+        {open ? 'Close camera' : 'Scan the shop’s QR code'}
       </Button>
       {open && (
         <video
@@ -84,7 +84,7 @@ export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
           muted
           playsInline
           className="aspect-square w-full max-w-xs rounded-[var(--radius-control)] bg-black object-cover"
-          aria-label="Camera view. Point it at the rider’s QR code."
+          aria-label="Camera view. Point it at the shop’s QR code."
         />
       )}
       {msg && (
