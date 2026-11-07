@@ -85,6 +85,7 @@ begin
     on conflict (order_id) do nothing;
   return new;
 end $$;
+revoke all on function app_private.schedule_payout() from public, anon, authenticated;
 -- fires after order_status_history_settle (triggers run in name order), so the settlement line already exists
 create trigger order_status_history_zz_payout after insert on public.order_status_history
   for each row execute function app_private.schedule_payout();
@@ -210,10 +211,15 @@ grant execute on function public.admin_payout_retry(uuid) to authenticated, serv
 
 -- How many hours a customer has to report a problem (shown on the order pages).
 create function public.payout_hold_hours() returns int
-language sql stable security definer set search_path = ''
-as $$ select app_private.setting_int('payout_hold_hours', 24)::int $$;
-revoke all on function public.payout_hold_hours() from public;
-grant execute on function public.payout_hold_hours() to anon, authenticated, service_role;
+language plpgsql stable security definer set search_path = ''
+as $$
+begin
+  if (select auth.uid()) is null then raise exception 'authentication required' using errcode = '28000'; end if;
+  if not app_private.is_aal2() then raise exception 'MFA (aal2) required' using errcode = '42501'; end if;
+  return app_private.setting_int('payout_hold_hours', 24)::int;
+end $$;
+revoke all on function public.payout_hold_hours() from public, anon;
+grant execute on function public.payout_hold_hours() to authenticated, service_role;
 
 -- The shop's own earnings page now says what will happen and what has happened.
 create or replace function public.vendor_settlement_summary(p_vendor uuid) returns jsonb
