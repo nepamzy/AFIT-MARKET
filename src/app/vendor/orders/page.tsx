@@ -50,6 +50,9 @@ function OrdersTable({
           <Td>{lagosDateTime(o.created_at)}</Td>
           <Td>
             <OrderStatusPill code={o.status} />
+            {!['PENDING_PAYMENT', 'CANCELLED'].includes(o.status) && (
+              <p className="mt-1 text-xs font-semibold text-success-700">✓ Payment confirmed</p>
+            )}
           </Td>
           <Td>
             <VendorOrderActions orderId={o.id} status={o.status} />
@@ -84,7 +87,7 @@ export default async function VendorOrders({
       <PageHeader
         breadcrumbs={[{ label: 'Shop', href: '/vendor' }, { label: 'Orders' }]}
         title="Orders"
-        subtitle="Accept paid orders, prepare them and mark them ready."
+        subtitle="Paid orders are already confirmed by Paystack. Accept or decline, then mark ready."
       />
       <MetricGrid>
         <MetricCard

@@ -233,3 +233,70 @@ export async function finalizeTestTransfer(code: string): Promise<TransferOutcom
     return { state: transferState(r.body.data?.status), code, message: null }
   return { state: 'failed', code, message: (r.body?.message ?? 'otp not accepted').slice(0, 200) }
 }
+
+// ---- refunds (return a customer's payment) -------------------------------------------------------------------------------
+const refundEnvelope = z.object({
+  status: z.boolean(),
+  message: z.string().optional(),
+  data: z
+    .object({ id: z.union([z.number(), z.string()]).optional(), status: z.string().optional() })
+    .passthrough()
+    .nullish(),
+})
+export type RefundOutcome = { state: 'processed' | 'pending' | 'failed'; ref: string | null }
+/** Paystack said no (a 4xx answer): retrying the same call will not help. */
+export class RefundRejected extends Error {}
+
+export function refundState(s: unknown): RefundOutcome['state'] {
+  const v = typeof s === 'string' ? s.toLowerCase() : ''
+  if (v === 'processed') return 'processed'
+  if (v === 'failed') return 'failed'
+  return 'pending' // pending, processing, needs-attention: wait for the webhook / the next check
+}
+
+async function refundCall(path: string, method: 'GET' | 'POST', json?: unknown) {
+  const cfg = paystackConfig()
+  if (!cfg) throw new PaymentsUnavailable('Paystack is not configured')
+  const res = await fetch(cfg.baseUrl + path, {
+    method,
+    headers: {
+      Authorization: `Bearer ${cfg.secretKey}`,
+      ...(json ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: json ? JSON.stringify(json) : undefined,
+    signal: AbortSignal.timeout(15_000),
+    cache: 'no-store',
+  })
+  const parsed = refundEnvelope.safeParse(await res.json().catch(() => null))
+  const body = parsed.success ? parsed.data : null
+  if (res.status >= 400 && res.status < 500)
+    throw new RefundRejected((body?.message ?? `Paystack answered ${res.status}`).slice(0, 200))
+  if (!res.ok || !body?.status) throw new Error(`Paystack responded ${res.status}`)
+  return body
+}
+
+/** Ask Paystack to return `amountKobo` of the payment with this reference to the customer. */
+export async function createRefund(a: {
+  reference: string
+  amountKobo: number
+  note: string
+}): Promise<RefundOutcome> {
+  const body = await refundCall('/refund', 'POST', {
+    transaction: a.reference,
+    amount: a.amountKobo,
+    customer_note: a.note.slice(0, 200),
+    merchant_note: 'AFIT Market automatic refund',
+  })
+  const id = body.data?.id
+  return {
+    state: refundState(body.data?.status),
+    ref: id !== undefined && id !== null ? `paystack-refund-${id}` : null,
+  }
+}
+
+/** What Paystack says about a refund we asked for earlier (by the id it gave us). */
+export async function fetchRefund(providerRef: string): Promise<RefundOutcome> {
+  const id = providerRef.replace(/^paystack-refund-/, '')
+  const body = await refundCall(`/refund/${encodeURIComponent(id)}`, 'GET')
+  return { state: refundState(body.data?.status), ref: providerRef }
+}

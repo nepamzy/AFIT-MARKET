@@ -249,11 +249,11 @@ test('vendor order actions: wrong states, repeats, customers and unpaid orders a
   expect(
     (await vc.rpc('vendor_transition_order', { p_order: paid, p_action: 'accept' })).error,
   ).toBeNull()
-  expect(await status(paid)).toBe('ACCEPTED')
+  expect(await status(paid)).toBe('PREPARING')
   expect(
     (await vc.rpc('vendor_transition_order', { p_order: paid, p_action: 'accept' })).error,
   ).not.toBeNull()
-  expect(await status(paid)).toBe('ACCEPTED')
+  expect(await status(paid)).toBe('PREPARING')
   expect(
     (await vc.rpc('vendor_transition_order', { p_order: paid, p_action: 'start_preparing' })).error,
   ).toBeNull()

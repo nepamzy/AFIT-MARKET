@@ -11,6 +11,7 @@ const SECRET = process.env.PAYSTACK_SECRET_KEY ?? 'sk_test_local_fake_key_for_de
 const HOOK = process.env.APP_WEBHOOK_URL ?? 'http://127.0.0.1:3000/api/webhooks/paystack'
 const txns = new Map()
 const transfers = new Map()
+const refunds = new Map()
 let seq = 4000
 
 const json = (res, code, body) => {
@@ -109,6 +110,35 @@ createServer(async (req, res) => {
       return res.end(
         `<!doctype html><html lang="en"><meta charset="utf-8"><title>Fake Paystack checkout</title><body style="font-family:sans-serif;padding:24px"><h1>Fake Paystack (test)</h1><p>Reference ${t.reference}</p><p>Amount NGN ${(t.amount / 100).toFixed(2)}</p><form method="post"><button name="outcome" value="success">Simulate successful payment</button> <button name="outcome" value="failed">Simulate failed payment</button></form></body></html>`,
       )
+    }
+    // ---- refunds. FAKE_REFUND_MODE: processed (default) | pending | failed | rejected
+    if (req.method === 'POST' && url.pathname === '/refund') {
+      if (!authorised(req)) return json(res, 401, { status: false, message: 'Invalid key' })
+      const b = JSON.parse(await readBody(req))
+      const mode = process.env.FAKE_REFUND_MODE ?? 'processed'
+      if (mode === 'rejected' || (!txns.has(b.transaction) && !b.transaction))
+        return json(res, 400, {
+          status: false,
+          message: 'Transaction has already been fully reversed',
+        })
+      const id = ++seq
+      refunds.set(String(id), { id, transaction: b.transaction, amount: b.amount, status: mode })
+      return json(res, 200, {
+        status: true,
+        message: 'Refund has been queued for processing',
+        data: {
+          id,
+          status: mode === 'processed' ? 'processed' : mode,
+          amount: b.amount,
+          transaction: { reference: b.transaction },
+        },
+      })
+    }
+    if (req.method === 'GET' && url.pathname.startsWith('/refund/')) {
+      if (!authorised(req)) return json(res, 401, { status: false, message: 'Invalid key' })
+      const r = refunds.get(url.pathname.split('/')[2])
+      if (!r) return json(res, 404, { status: false, message: 'Refund not found' })
+      return json(res, 200, { status: true, data: { id: r.id, status: 'processed' } })
     }
     // ---- transfers (paying shops). FAKE_TRANSFER_MODE: success (default) | pending | failed | otp
     if (req.method === 'POST' && url.pathname === '/transferrecipient') {

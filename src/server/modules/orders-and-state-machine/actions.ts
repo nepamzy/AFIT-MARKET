@@ -1,7 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { redirect } from 'next/navigation'
+import { startAutoRefund } from '@/server/modules/refunds/auto'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -50,9 +52,26 @@ export async function vendorOrderAction(_p: ActionState, fd: FormData): Promise<
       logger.error('pickup code registration failed', { err: String(e) })
     }
   }
+  if (action === 'reject') {
+    // The customer's money goes back the same day: start the refund right away (the daily check repeats it if this fails).
+    const run = async () => {
+      try {
+        await startAutoRefund(orderId)
+      } catch (e) {
+        logger.error('auto refund failed to start', { err: String(e).slice(0, 120) })
+      }
+    }
+    try {
+      after(run)
+    } catch {
+      void run()
+    }
+  }
   revalidatePath('/vendor/orders')
   revalidatePath('/vendor/handover')
-  return done('Order updated.')
+  return done(
+    action === 'reject' ? 'Order declined. The customer is being refunded.' : 'Order updated.',
+  )
 }
 
 export async function typedSignatureEnabled(): Promise<boolean> {

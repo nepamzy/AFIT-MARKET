@@ -1,3 +1,4 @@
+import QRCode from 'qrcode'
 import { expect, test } from '@playwright/test'
 import {
   a11yClean,
@@ -82,8 +83,7 @@ test('rider journey: apply -> approve -> terms -> Go Active -> accept -> handove
   const v = vendor.page
   await v.goto('/vendor/orders')
   for (const [button, expected] of [
-    ['Accept order', 'ACCEPTED'],
-    ['Start preparing', 'PREPARING'],
+    ['Accept order', 'PREPARING'], // accepting starts preparing at once
     ['Mark ready', 'AWAITING_RIDER'],
   ] as const) {
     await clickAndWait(v, () => v.getByRole('button', { name: button }).click())
@@ -196,14 +196,27 @@ test('rider journey: apply -> approve -> terms -> Go Active -> accept -> handove
 
   await v.goto('/vendor/handover')
   await expect(v.getByText('Assigned rider:')).toContainText(fullName)
-  await v.getByLabel('Code shown on the rider’s phone').fill('WRONGCODE1')
+  await v.getByLabel('Or type the code shown on the rider’s phone').fill('WRONGCODE1')
   await clickAndWait(v, () => v.getByRole('button', { name: 'Hand parcel to rider' }).click())
   await expect(alertIn(v)).toContainText(/not right/)
   expect(await status()).toBe('RIDER_ASSIGNED')
   await a11yClean(v, '/vendor/handover (rider pickup)')
-  await v.getByLabel('Code shown on the rider’s phone').fill(code.toLowerCase())
-  await clickAndWait(v, () => v.getByRole('button', { name: 'Hand parcel to rider' }).click())
-  await expect.poll(status).toBe('PICKED_UP_BY_RIDER')
+  // the rider's phone also shows the code as a QR code; the shop scans it (the camera is replaced by a picture of that QR)
+  await expect(r.getByAltText('QR code for the shop to scan')).toBeVisible()
+  const qr = await QRCode.toDataURL(`afit-pickup:${code}`, { margin: 4, width: 400 })
+  await v.evaluate(async (url) => {
+    const img = new Image()
+    img.src = url
+    await img.decode()
+    const canvas = document.createElement('canvas')
+    canvas.width = img.width
+    canvas.height = img.height
+    const g = canvas.getContext('2d')!
+    setInterval(() => g.drawImage(img, 0, 0), 50)
+    navigator.mediaDevices.getUserMedia = async () => canvas.captureStream(15)
+  }, qr)
+  await v.getByRole('button', { name: 'Scan rider’s QR code' }).click()
+  await expect.poll(status, { timeout: 30000 }).toBe('PICKED_UP_BY_RIDER')
 
   // ---- rider starts the route; reports a GPS problem (never an arrival) ----
   await r.goto('/rider/jobs')

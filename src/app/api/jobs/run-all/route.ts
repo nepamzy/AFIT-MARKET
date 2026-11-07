@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { jobAuthorized } from '@/server/jobs/auth'
 import { drainNotifications } from '@/server/modules/engagement/dispatch'
+import { settleAutoRefunds } from '@/server/modules/refunds/auto'
 import { releasePayouts } from '@/server/modules/payouts/release'
 
 export const dynamic = 'force-dynamic'
@@ -37,6 +38,7 @@ async function run(req: Request) {
     return 'done'
   })
   await step('dispatch-notifications', () => drainNotifications(40))
+  await step('settle-refunds', () => settleAutoRefunds(20))
   try {
     const r = await releasePayouts(25)
     report['release-payouts'] = r

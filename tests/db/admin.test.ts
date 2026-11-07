@@ -174,6 +174,7 @@ describe('job log and health', () => {
         'process-notifications',
         'purge-location',
         'release-payouts',
+        'settle-refunds',
       ])
       expect(h.note).toMatch(/does not schedule/i)
       for (const who of [support, finance])

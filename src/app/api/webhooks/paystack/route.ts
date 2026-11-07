@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { paystackConfig } from '@/lib/env'
 import { logger } from '@/lib/logger'
+import { applyRefundEvent } from '@/server/modules/refunds/auto'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { applyPaymentEvent } from '@/server/modules/payments/apply'
 import { webhookToCall } from '@/server/modules/payments/events'
@@ -62,6 +63,28 @@ export async function POST(req: Request) {
       }
     }
     return NextResponse.json({ ok: true, outcome: 'transfer' })
+  }
+  if (typeof ev.event === 'string' && ev.event.startsWith('refund.')) {
+    const d = (
+      ev as { data?: { transaction_reference?: unknown; refund_reference?: unknown; id?: unknown } }
+    ).data
+    const reference = typeof d?.transaction_reference === 'string' ? d.transaction_reference : ''
+    const outcome =
+      ev.event === 'refund.processed' ? 'succeeded' : ev.event === 'refund.failed' ? 'failed' : null
+    if (reference && outcome) {
+      const id = d?.refund_reference ?? d?.id
+      try {
+        await applyRefundEvent({
+          reference,
+          outcome,
+          providerRef: id !== undefined && id !== null ? `paystack-refund-${String(id)}` : null,
+        })
+      } catch (e) {
+        logger.error('refund webhook failed', { err: String(e).slice(0, 120) })
+        return NextResponse.json({ error: 'processing_failed' }, { status: 500 })
+      }
+    }
+    return NextResponse.json({ ok: true, outcome: 'refund' })
   }
   const call = webhookToCall(body)
   if (call === 'invalid') return NextResponse.json({ error: 'invalid_payload' }, { status: 400 })

@@ -27,7 +27,13 @@ async function clean(c: PoolClient) {
   await c.query(`delete from public.notification_errors`)
   await c.query(`set local session_replication_role = origin`)
 }
-const JOBS = ['expire-orders', 'process-notifications', 'purge-location', 'release-payouts']
+const JOBS = [
+  'expire-orders',
+  'process-notifications',
+  'purge-location',
+  'release-payouts',
+  'settle-refunds',
+]
 const run = (c: PoolClient, job: string, ok: boolean, ageMin = 0) =>
   c.query(
     `insert into public.job_runs (job, ok, finished_at) values ($1, $2, now() - make_interval(mins => $3))`,
@@ -43,6 +49,7 @@ describe('job health check: a job that stopped, keeps failing or piles up work i
         'process-notifications:never_run',
         'purge-location:never_run',
         'release-payouts:never_run',
+        'settle-refunds:never_run',
       ])
       for (const j of JOBS) await run(c, j, true)
       expect(await problems(c)).toEqual([])
@@ -59,6 +66,7 @@ describe('job health check: a job that stopped, keeps failing or piles up work i
       await run(c, 'process-notifications', true, 1559)
       await run(c, 'purge-location', true, 1559)
       await run(c, 'release-payouts', true, 1559)
+      await run(c, 'settle-refunds', true, 1559)
       expect(await problems(c)).toEqual([
         { job: 'expire-orders', kind: 'stale', last_ok_at: expect.any(String) },
       ])
@@ -136,7 +144,7 @@ describe('job health check: a job that stopped, keeps failing or piles up work i
         jobs: { max_age_minutes: number }[]
       }
       expect(h.problems.map((p) => p.kind)).toContain('never_run')
-      expect(h.jobs.map((j) => j.max_age_minutes)).toEqual([1560, 1560, 1560, 1560])
+      expect(h.jobs.map((j) => j.max_age_minutes)).toEqual([1560, 1560, 1560, 1560, 1560])
       void as
       void svc
     })
