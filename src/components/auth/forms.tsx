@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useActionState, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { SignaturePad } from '@/components/domain/signature-pad'
-import { Checkbox, Input } from '@/components/ui/fields'
+import { Checkbox, Input, Select } from '@/components/ui/fields'
 import { SignatureStatement } from './signature-statement'
 import { CustomerArt, RiderArt, VendorArt } from '@/components/landing/illustrations'
 import {
@@ -272,7 +272,9 @@ function PersonIcon({ kind }: { kind: PersonType }) {
   )
 }
 
-export function SignUpForm() {
+export type SignUpCategory = { id: string; name: string }
+
+export function SignUpForm({ categories = [] }: { categories?: SignUpCategory[] }) {
   const [state, action, pending] = useActionState(signUpAction, initial)
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [intent, setIntent] = useState<Intent>('customer')
@@ -281,6 +283,7 @@ export function SignUpForm() {
   const [idCard, setIdCard] = useState<string | null>(null)
   const [idBack, setIdBack] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
+  const [category, setCategory] = useState('')
   const [frontQr, setFrontQr] = useState<'none' | 'ok' | 'noqr'>('none')
   const [signed, setSigned] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
@@ -288,6 +291,7 @@ export function SignUpForm() {
 
   const isStudent = intent === 'customer' && personType === 'student'
   const isRider = intent === 'rider'
+  const isVendor = intent === 'vendor'
   const riderReady =
     studentId.trim().length >= 3 &&
     looksLikePhone(phone) &&
@@ -296,11 +300,14 @@ export function SignUpForm() {
     frontQr === 'ok'
   const step1Ready = isRider
     ? riderReady
-    : intent !== 'customer' ||
-      (personType !== null && (personType !== 'student' || studentId.trim().length >= 3))
+    : isVendor
+      ? category !== ''
+      : intent !== 'customer' ||
+        (personType !== null && (personType !== 'student' || studentId.trim().length >= 3))
   const goNext = () => {
     setProblem(null)
     if (step === 1) {
+      if (isVendor && !category) return setProblem('Choose what your shop will sell.')
       if (intent === 'customer' && !personType)
         return setProblem('Choose whether you are a student, military, a lecturer or other.')
       if (isStudent && studentId.trim().length < 3) return setProblem('Enter your matric number.')
@@ -346,6 +353,7 @@ export function SignUpForm() {
       {(isStudent || isRider) && idCard && <input type="hidden" name="idCard" value={idCard} />}
       {isRider && <input type="hidden" name="phone" value={phone} />}
       {isRider && idBack && <input type="hidden" name="idCardBack" value={idBack} />}
+      {isVendor && category && <input type="hidden" name="category" value={category} />}
 
       <div className={step === 1 ? 'space-y-4' : 'hidden'}>
         <fieldset className="rounded-[var(--radius-control)] border border-line bg-accent-50/60 p-3">
@@ -418,6 +426,30 @@ export function SignUpForm() {
               ))}
             </div>
           </fieldset>
+        )}
+
+        {isVendor && (
+          <div className="space-y-2 rounded-[var(--radius-control)] border border-line p-3">
+            <Select
+              label="What will your shop sell? (required)"
+              name="categoryChoice"
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value)
+                setProblem(null)
+              }}
+              hint="Pick the one that fits best. After you are approved, you can add ready-made items for this category with their pictures."
+            >
+              <option value="" disabled>
+                Choose a category
+              </option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </div>
         )}
 
         {isStudent && (

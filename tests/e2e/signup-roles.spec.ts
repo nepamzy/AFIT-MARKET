@@ -36,6 +36,40 @@ test('the public pages never mention the administrator, and sign-up offers custo
   await expect(group.getByRole('radio', { name: /Rider/ })).not.toBeChecked()
 })
 
+test('a vendor must pick what the shop sells before signing up goes on, the list has the shop categories, and the choice is waiting on the application', async ({
+  page,
+}) => {
+  await page.goto('/signup')
+  await page
+    .getByRole('group', { name: 'I want to use AFIT Market as a' })
+    .getByRole('radio', { name: /Vendor/ })
+    .check()
+  const select = page.getByLabel('What will your shop sell? (required)')
+  await expect(select).toBeVisible()
+  // nothing chosen: Next is not available
+  await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled()
+  const labels = await select.locator('option').allTextContents()
+  for (const wanted of [
+    'Food',
+    'Drinks',
+    'Clothing',
+    'Accessories',
+    'Gadgets',
+    'Games',
+    'Books and textbooks',
+  ])
+    expect(labels).toContain(wanted)
+  expect(labels.join('|')).not.toMatch(/acccessories/i)
+  await select.selectOption({ label: 'Clothing' })
+  await expect(page.getByRole('button', { name: 'Next' })).toBeEnabled()
+  // customers and riders are not asked
+  await page
+    .getByRole('group', { name: 'I want to use AFIT Market as a' })
+    .getByRole('radio', { name: /Customer/ })
+    .check()
+  await expect(select).toHaveCount(0)
+})
+
 test('signing up as a vendor or rider records the choice; a customer sign-up records none', async ({
   browser,
 }, info) => {
