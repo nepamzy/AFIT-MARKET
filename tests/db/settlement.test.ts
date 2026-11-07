@@ -285,7 +285,7 @@ describe('who can read settlement data, and what they see', () => {
       })
       expect(s.pending).toMatchObject({ orders: 0, gross_sales_kobo: 0 })
       expect(s.payout.status).toBe('automatic')
-      expect(s.payout.hold_hours).toBe(24)
+      expect((s.payout as unknown as { hold_hours: number }).hold_hours).toBe(24)
       expect(s.recent[0]!.payable_kobo).toBe(143250)
     })
   })
