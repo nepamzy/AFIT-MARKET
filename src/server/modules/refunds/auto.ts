@@ -32,7 +32,7 @@ export async function startAutoRefund(orderId: string): Promise<AutoRefundResult
   const sb = createSupabaseServiceClient()
   const { data, error } = await sb.rpc('refund_auto_start', {
     p_order: orderId,
-    p_mode: 'paystack_test',
+    p_mode: cfg.mode === 'live' ? 'paystack_live' : 'paystack_test',
   })
   if (error) {
     logger.error('auto refund could not start', { code: error.code })

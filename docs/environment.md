@@ -23,7 +23,7 @@ Dev-script env: `SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io` (set by `scripts/*.
 
 | Variable              | Purpose                                                                                                                   |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `PAYSTACK_SECRET_KEY` | Paystack **test** secret (`sk_test_...`). Unset or any other value disables online payment. Also signs/verifies webhooks. |
+| `PAYSTACK_SECRET_KEY` | Paystack secret. `sk_test_...` works anywhere; `sk_live_...` is accepted ONLY when `APP_ENV=production` (refused elsewhere). Unset or any other value disables online payment. Also signs/verifies webhooks. |
 | `PAYSTACK_BASE_URL`   | Local fake provider (`http://127.0.0.1:3002`). Ignored unless `APP_ENV=local`.                                            |
 | `JOBS_SECRET`         | Bearer secret for `POST /api/jobs/expire-orders` (16+ characters).                                                        |
 

@@ -134,7 +134,7 @@ test('refund journey: request -> review -> approval (not paid) -> FAKE execution
   await expect(group(f, r1.id).getByText('FAKE provider: no real money')).toBeVisible()
   await c.reload()
   await expect(c.getByText('Paid back')).toBeVisible()
-  await expect(c.getByText('Test mode: no real money moved')).toBeVisible()
+  await expect(c.getByText('Rehearsal: no real money moved')).toBeVisible()
   await a11yClean(c, '/orders/[id]/help (after refund)')
 
   // ---- a second refund whose (fake) provider does not answer needs reconciliation ----

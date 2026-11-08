@@ -121,7 +121,7 @@ export default async function OrderHelp({ params }: { params: Promise<{ id: stri
                       <Money kobo={r.amount_kobo} className="font-bold" />
                       <Badge tone={tone}>{label}</Badge>
                       {r.provider_mode === 'fake' && (
-                        <Badge tone="warning">Test mode: no real money moved</Badge>
+                        <Badge tone="warning">Rehearsal: no real money moved</Badge>
                       )}
                     </p>
                     <p className="text-sm text-muted">{r.reason}</p>

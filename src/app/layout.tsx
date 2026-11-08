@@ -25,7 +25,6 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: 'AFIT Market' },
   manifest: '/manifest.webmanifest',
   applicationName: 'AFIT Market',
-  robots: { index: false, follow: false }, // pre-launch: not for search engines
 }
 export const viewport: Viewport = { themeColor: '#0b2a5c', width: 'device-width', initialScale: 1 }
 

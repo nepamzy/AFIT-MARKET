@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Vendor help' }
 const STEPS: [string, string][] = [
   [
     'A customer pays',
-    'Orders only reach you after payment. Unpaid orders are never shown as work to do. (This test version uses Paystack test mode, so no real money moves.)',
+    'Orders only reach you after payment. Unpaid orders are never shown as work to do.',
   ],
   [
     'You accept and prepare',

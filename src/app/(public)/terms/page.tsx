@@ -5,11 +5,7 @@ export const metadata: Metadata = { title: 'Terms summary' }
 
 export default function Terms() {
   return (
-    <InfoPage
-      title="Terms: how AFIT Market works"
-      intro="The basic rules in plain language."
-      draftNotice
-    >
+    <InfoPage title="Terms: how AFIT Market works" intro="The basic rules in plain language.">
       <section>
         <h2>Who can use it</h2>
         <ul>

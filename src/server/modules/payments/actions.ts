@@ -10,7 +10,7 @@ import { rateLimit } from '@/server/modules/identity-and-access/security'
 import { dbFailed, failed, gate, type ActionState } from '@/server/modules/shared/action-helpers'
 import { initializeTransaction } from './paystack'
 
-/** Starts a Paystack (TEST mode) payment for an unpaid order. The amount is read from the database, not the form. */
+/** Starts a Paystack payment for an unpaid order. The amount is read from the database, not the form. */
 export async function payWithPaystackAction(_p: ActionState, fd: FormData): Promise<ActionState> {
   const orderId = String(fd.get('orderId') ?? '')
   if (!z.uuid().safeParse(orderId).success) return failed('That order was not found.')

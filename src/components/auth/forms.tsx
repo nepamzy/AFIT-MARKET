@@ -666,8 +666,15 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         <Checkbox name="adult" label="I confirm that I am 18 years old or older." required />
         <p className="text-sm text-muted">
           AFIT Market is only for people aged 18 and over. This is your own confirmation: we record
-          that you made it, but we do not check your age. The terms and privacy notice are drafts
-          awaiting review and are not published yet.
+          that you made it, but we do not check your age. By creating an account you agree to the{' '}
+          <a href="/terms" className="underline">
+            terms
+          </a>{' '}
+          and the{' '}
+          <a href="/privacy" className="underline">
+            privacy notice
+          </a>
+          .
         </p>
         <div className="flex gap-2">
           <Button type="button" variant="secondary" onClick={() => setStep(2)}>

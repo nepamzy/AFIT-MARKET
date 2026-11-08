@@ -119,8 +119,7 @@ export default async function Jobs() {
                 {a.pickup ? ` · ${a.pickup}` : ''}
               </p>
               <p>
-                <strong>Deliver to:</strong> {a.deliver_to}{' '}
-                <span className="text-xs text-muted">(sample point)</span>
+                <strong>Deliver to:</strong> {a.deliver_to}
               </p>
               {a.status === 'accepted' && <PickupScanCard />}
               {a.status === 'picked_up' && <StartRouteButton assignmentId={a.assignment_id} />}

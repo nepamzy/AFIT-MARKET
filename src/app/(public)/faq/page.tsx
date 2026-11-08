@@ -12,7 +12,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'How do I pay?',
-    a: 'Payment is online through Paystack. The total is calculated by the server and shown before you pay. Right now payments are in test mode, so no real money moves.',
+    a: 'Payment is online through Paystack. The total is calculated by the server and shown before you pay.',
   },
   {
     q: 'Do I have to use an authenticator app?',

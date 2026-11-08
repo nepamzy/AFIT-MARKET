@@ -31,17 +31,30 @@ export const mockPaymentsAllowed = () => appEnv() === 'local'
 
 const PAYSTACK_DEFAULT_URL = 'https://api.paystack.co'
 /**
- * Paystack TEST mode only. Returns null (payments unavailable, fail closed) unless PAYSTACK_SECRET_KEY is a test
- * key (`sk_test_...`); a live key is never accepted. A custom base URL (the local fake provider) is honoured only
- * when APP_ENV=local.
+ * Paystack config. Fails closed (returns null, payments unavailable) unless PAYSTACK_SECRET_KEY is a well-formed key.
+ * A test key (`sk_test_...`) works everywhere; a LIVE key (`sk_live_...`) is accepted only when APP_ENV=production,
+ * so a live key pasted into a local or preview environment can never move real money. A custom base URL (the local
+ * fake provider) is honoured only when APP_ENV=local.
  */
-export function paystackConfig(): { secretKey: string; baseUrl: string } | null {
+export function paystackConfig(): {
+  secretKey: string
+  baseUrl: string
+  mode: 'test' | 'live'
+} | null {
   const secretKey = process.env.PAYSTACK_SECRET_KEY ?? ''
-  if (!/^sk_test_[A-Za-z0-9_]{8,}$/.test(secretKey)) return null
+  const mode = /^sk_test_[A-Za-z0-9_]{8,}$/.test(secretKey)
+    ? 'test'
+    : /^sk_live_[A-Za-z0-9_]{8,}$/.test(secretKey) && appEnv() === 'production'
+      ? 'live'
+      : null
+  if (!mode) return null
   const custom = process.env.PAYSTACK_BASE_URL
   const baseUrl = custom && appEnv() === 'local' ? custom.replace(/\/+$/, '') : PAYSTACK_DEFAULT_URL
-  return { secretKey, baseUrl }
+  return { secretKey, baseUrl, mode }
 }
+
+/** 'live' only when a real-money key is configured in production; otherwise 'test'. Used to word the screens. */
+export const paystackIsLive = () => paystackConfig()?.mode === 'live'
 
 /**
  * Server-only secret from which pickup codes are derived (HMAC). Never stored in the database, never sent to the

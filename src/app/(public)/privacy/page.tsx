@@ -6,11 +6,7 @@ export const metadata: Metadata = { title: 'Privacy summary' }
 
 export default function Privacy() {
   return (
-    <InfoPage
-      title="Privacy summary"
-      intro="What we keep and who can see it, in plain language."
-      draftNotice
-    >
+    <InfoPage title="Privacy summary" intro="What we keep and who can see it, in plain language.">
       <section>
         <h2>What we keep</h2>
         <ul>

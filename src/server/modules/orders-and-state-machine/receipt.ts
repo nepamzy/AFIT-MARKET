@@ -85,6 +85,8 @@ export async function buildReceiptPdf(a: {
   order: OrderRow
   items: OrderItemRow[]
   history: HistoryRow[]
+  /** Shows the "rehearsal" banner. Only true while payments are not live. */
+  rehearsal?: boolean
   evidence: {
     recipient: string
     completedAt: string
@@ -181,14 +183,18 @@ export async function buildReceiptPdf(a: {
   right(a.order.order_number, R, H - 72, { f: bold, size: 20, color: WHITE })
   y = H - 108 - 22
 
-  // ---- test-mode note ----
-  rect(M, y - 18, R - M, 22, WARN_TINT)
-  text('TEST MODE: this is a rehearsal order. No real money was moved.', M + 10, y - 11, {
-    f: bold,
-    size: 8.5,
-    color: WARN,
-  })
-  y -= 40
+  // ---- rehearsal note (only while payments are not live) ----
+  if (a.rehearsal) {
+    rect(M, y - 18, R - M, 22, WARN_TINT)
+    text('TEST MODE: this is a rehearsal order. No real money was moved.', M + 10, y - 11, {
+      f: bold,
+      size: 8.5,
+      color: WARN,
+    })
+    y -= 40
+  } else {
+    y -= 8
+  }
 
   // ---- order facts, two columns ----
   const colB = M + (R - M) / 2 + 10

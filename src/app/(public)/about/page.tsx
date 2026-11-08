@@ -52,12 +52,8 @@ export default function About() {
         ))}
       </ul>
       <section>
-        <h2>Where things stand</h2>
-        <p>
-          AFIT Market is a pre-launch preview. Payments run in Paystack test mode, so no real money
-          moves. It is not yet an official AFIT service and uses its own provisional colours and
-          mark.
-        </p>
+        <h2>Who we are</h2>
+        <p>AFIT Market is a marketplace for the Kaduna campus community.</p>
       </section>
       <div className="flex flex-wrap gap-3">
         <ButtonLink href="/products" variant="gold">

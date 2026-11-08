@@ -110,7 +110,7 @@ async function payOne(
       started = known
     }
     if (started.state === 'otp') {
-      // Test mode asks for a code on every transfer; live mode must have "confirm transfers" switched off in Paystack settings.
+      // Test mode asks for a code on every transfer; live mode needs "confirm transfers" switched off in Paystack settings.
       const code = started.code
       if (!code) throw new Error('otp without a transfer code')
       started = await finalizeTestTransfer(code)

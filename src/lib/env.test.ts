@@ -48,13 +48,13 @@ describe('env validation', () => {
     expect(mockPaymentsAllowed()).toBe(true)
   })
 
-  it('Paystack: only test keys are accepted; live or malformed keys disable payments', () => {
+  it('Paystack: malformed keys disable payments; a live key works only in production', () => {
     process.env.APP_ENV = 'production'
     delete process.env.PAYSTACK_BASE_URL
     for (const bad of [
       undefined,
       '',
-      'sk_live_abc_defg_hijkl',
+      'pk_live_abc_defg_hijkl',
       'pk_test_abc_defg_hijkl',
       'sk_test_',
       'sk_test_short',
@@ -67,7 +67,14 @@ describe('env validation', () => {
     expect(paystackConfig()).toEqual({
       secretKey: 'sk_test_abc_defg_hijkl',
       baseUrl: 'https://api.paystack.co',
+      mode: 'test',
     })
+    process.env.PAYSTACK_SECRET_KEY = 'sk_live_abc_defg_hijkl'
+    expect(paystackConfig()?.mode).toBe('live')
+    for (const env of ['staging', 'local']) {
+      process.env.APP_ENV = env
+      expect(paystackConfig()).toBeNull() // a live key is refused outside production
+    }
   })
   it('Paystack: a custom base URL is honoured only when APP_ENV=local', () => {
     process.env.PAYSTACK_SECRET_KEY = 'sk_test_abc_defg_hijkl'
