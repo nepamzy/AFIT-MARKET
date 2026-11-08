@@ -103,8 +103,7 @@ export function PublicFooter() {
       </div>
       <div className="border-t border-white/10">
         <p className="mx-auto max-w-6xl px-4 py-4 text-xs">
-          Pre-launch preview. AFIT Market uses its own provisional colours and mark; it is not
-          official AFIT branding.
+          AFIT Market is a student marketplace for the Kaduna campus community.
         </p>
       </div>
     </footer>

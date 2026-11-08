@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: 'Payments' }
 
 export default function Payments() {
   return (
-    <InfoPage title="Payments" intro="How you pay and what you see." draftNotice>
+    <InfoPage title="Payments" intro="How you pay and what you see.">
       <section>
         <h2>How you pay</h2>
         <p>
@@ -20,13 +20,6 @@ export default function Payments() {
           completed. During those 24 hours you can report a problem from your order page and ask for
           your money back. A complaint that is still open holds the shop&apos;s payment until it is
           settled.
-        </p>
-      </section>
-      <section>
-        <h2>Test mode</h2>
-        <p>
-          While AFIT Market is a pre-launch preview, payments run in test mode. No real money moves
-          and test payments are not real purchases.
         </p>
       </section>
       <section>

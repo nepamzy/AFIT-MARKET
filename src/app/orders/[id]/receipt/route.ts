@@ -1,5 +1,6 @@
 import { checkAccess } from '@/server/modules/identity-and-access/guard'
 import { getHandoverEvidence, getOrder } from '@/server/modules/orders-and-state-machine/queries'
+import { paystackIsLive } from '@/lib/env'
 import { buildReceiptPdf } from '@/server/modules/orders-and-state-machine/receipt'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
         arrivalAt: ev.arrival_detected_at,
       }
     : null
-  const pdf = await buildReceiptPdf({ order, items, history, evidence })
+  const pdf = await buildReceiptPdf({ order, items, history, evidence, rehearsal: !paystackIsLive() })
   return new Response(Buffer.from(pdf), {
     headers: {
       'Content-Type': 'application/pdf',

@@ -5,11 +5,7 @@ export const metadata: Metadata = { title: 'Refunds and returns' }
 
 export default function Refunds() {
   return (
-    <InfoPage
-      title="Refunds and returns"
-      intro="How a problem with a paid order is handled."
-      draftNotice
-    >
+    <InfoPage title="Refunds and returns" intro="How a problem with a paid order is handled.">
       <section>
         <h2>How to ask</h2>
         <ol>

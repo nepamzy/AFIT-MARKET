@@ -17,7 +17,7 @@ import { ReviewForm } from '@/components/domain/engagement-forms'
 import { myOrderReview } from '@/server/modules/engagement/queries'
 import { deliveryFeeForOrder } from '@/server/modules/delivery-fee/queries'
 import { ActionForm } from '@/components/forms/action-form'
-import { mockPaymentsAllowed, paystackConfig } from '@/lib/env'
+import { mockPaymentsAllowed, paystackConfig, paystackIsLive } from '@/lib/env'
 import { cancelOrderAction, mockPayAction } from '@/server/modules/cart-and-checkout/actions'
 import { payWithPaystackAction } from '@/server/modules/payments/actions'
 import {
@@ -157,7 +157,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             {paystack && (
               <ActionForm
                 action={payWithPaystackAction}
-                submitLabel="Pay with Paystack (test mode)"
+                submitLabel={
+                  paystackIsLive() ? 'Pay with Paystack' : 'Pay with Paystack (test mode)'
+                }
                 pendingLabel="Opening payment…"
               >
                 <input type="hidden" name="orderId" value={order.id} />
@@ -372,7 +374,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           )}
           {txns.length > 0 && (
             <p className="text-sm text-muted">
-              Card payment (test mode): {txns.map((t) => t.status).join(', ')}
+              Card payment: {txns.map((t) => t.status).join(', ')}
             </p>
           )}
           {payments.length > 0 && (

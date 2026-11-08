@@ -93,7 +93,7 @@ export function CheckoutForm({
             name="point"
             required
             defaultValue={defaultPoint ?? points[0]?.id}
-            hint="Delivery goes only to approved points. In this test version the points are fictional samples."
+            hint="Delivery goes only to approved points."
           >
             {points.map((p) => (
               <option key={p.id} value={p.id}>
@@ -104,8 +104,7 @@ export function CheckoutForm({
         )}
         <p className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm text-brand-800">
           <Icon name="lock" size={14} className="mr-1 inline" />
-          You pay on the next screen. In this test version payment is a clearly-marked test and no
-          real money is taken.
+          You pay securely with Paystack on the next screen.
         </p>
       </div>
       <aside

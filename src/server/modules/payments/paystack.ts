@@ -25,7 +25,7 @@ const verifyResponse = z.object({
 
 async function call(path: string, init: RequestInit & { json?: unknown } = {}) {
   const cfg = paystackConfig()
-  if (!cfg) throw new PaymentsUnavailable('Paystack is not configured for test mode')
+  if (!cfg) throw new PaymentsUnavailable('Paystack is not configured')
   const res = await fetch(cfg.baseUrl + path, {
     method: init.method ?? 'GET',
     headers: {
@@ -97,7 +97,7 @@ export async function listBanks(): Promise<Bank[]> {
 /** The name the bank has on file for this account, or null when Paystack cannot find it. */
 export async function resolveAccountName(number: string, bankCode: string): Promise<string | null> {
   const cfg = paystackConfig()
-  if (!cfg) throw new PaymentsUnavailable('Paystack is not configured for test mode')
+  if (!cfg) throw new PaymentsUnavailable('Paystack is not configured')
   const res = await fetch(
     `${cfg.baseUrl}/bank/resolve?account_number=${encodeURIComponent(number)}&bank_code=${encodeURIComponent(bankCode)}`,
     {
@@ -223,8 +223,14 @@ export async function verifyTransfer(reference: string): Promise<TransferOutcome
   }
 }
 
-/** Test mode only: Paystack asks for a one-time code on a transfer; in test mode the code is always 123456. */
+/** Test mode only (refused in live mode): Paystack asks for a one-time code on a transfer; in test mode the code is always 123456. */
 export async function finalizeTestTransfer(code: string): Promise<TransferOutcome> {
+  if (paystackConfig()?.mode !== 'test')
+    return {
+      state: 'failed',
+      code,
+      message: 'transfer needs a code; switch off "confirm transfers" in Paystack settings',
+    }
   const r = await raw('/transfer/finalize_transfer', 'POST', {
     transfer_code: code,
     otp: '123456',
