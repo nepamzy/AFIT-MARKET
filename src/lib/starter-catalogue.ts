@@ -3,14 +3,7 @@
  * are filled in and can be changed; the owner always sets the price. Photos live in public/catalogue/<slug>.jpg.
  */
 export type StarterCategory =
-  | 'food'
-  | 'drinks'
-  | 'printing'
-  | 'souvenirs'
-  | 'clothing'
-  | 'accessories'
-  | 'gadgets'
-  | 'games'
+  'food' | 'drinks' | 'printing' | 'souvenirs' | 'clothing' | 'accessories' | 'gadgets' | 'games'
 
 export type StarterItem = {
   slug: string
@@ -273,6 +266,55 @@ const HAS_PHOTO = new Set([
   'souvenir-cap',
   'lanyard',
   'sticker-pack',
+  'sandals',
+  'long-sleeve-shirt',
+  'sweatshirt',
+  'jersey',
+  'crop-top',
+  'kaftan',
+  'senator-top',
+  'chinos',
+  'shorts',
+  'skirt',
+  'leggings',
+  'leather-shoes',
+  'running-shoes',
+  'heels',
+  'wristband',
+  'bracelet',
+  'earrings',
+  'ring',
+  'face-cap',
+  'scarf',
+  'handbag',
+  'tote-bag',
+  'umbrella',
+  'perfume',
+  'usb-cable',
+  'wireless-earbuds',
+  'headphones',
+  'smart-watch',
+  'phone-stand',
+  'ring-light',
+  'memory-card',
+  'laptop-stand',
+  'keyboard',
+  'webcam',
+  'screen-protector',
+  'calculator',
+  'uno-cards',
+  'jenga',
+  'ayo-board',
+  'badminton-set',
+  'basketball',
+  'game-controller',
+  'exercise-book',
+  'highlighters',
+  'geometry-set',
+  'campus-hoodie',
+  'water-bottle',
+  'notebook',
+  'souvenir-mug',
 ])
 
 const mk = (
@@ -375,8 +417,8 @@ STARTER_ITEMS.push(
     ['draughts', 'Draughts', 'Draughts board with pieces.'],
     ['football', 'Football', 'Size 5 football.'],
     ['table-tennis-set', 'Table tennis set', 'Two bats and balls.'],
-    ['monopoly', 'Monopoly', 'Property trading board game.'],
-    ['uno-cards', 'Uno cards', 'A pack of Uno cards.'],
+    ['monopoly', 'Property trading board game', 'Board game for buying and trading properties.'],
+    ['uno-cards', 'Colour matching card game', 'A pack of colour and number matching cards.'],
     ['jenga', 'Jenga', 'Wooden block tower game.'],
     ['ayo-board', 'Ayo board', 'Traditional ayo board with seeds.'],
     ['badminton-set', 'Badminton set', 'Rackets and shuttlecocks.'],
