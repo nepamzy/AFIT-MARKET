@@ -3,7 +3,14 @@
  * are filled in and can be changed; the owner always sets the price. Photos live in public/catalogue/<slug>.jpg.
  */
 export type StarterCategory =
-  'food' | 'drinks' | 'printing' | 'souvenirs' | 'clothing' | 'accessories' | 'gadgets' | 'games'
+  | 'food'
+  | 'drinks'
+  | 'printing'
+  | 'souvenirs'
+  | 'clothing'
+  | 'accessories'
+  | 'gadgets'
+  | 'games'
 
 export type StarterItem = {
   slug: string
@@ -288,14 +295,34 @@ STARTER_ITEMS.push(
     ['polo-shirt', 'Polo shirt', 'Neat collared polo shirt.'],
     ['hoodie', 'Hoodie', 'Warm pullover hoodie.'],
     ['ankara-shirt', 'Ankara shirt', 'Colourful Ankara print shirt.'],
+    [
+      'long-sleeve-shirt',
+      'Long-sleeve shirt',
+      'Smart long-sleeve shirt. Say which sizes you have.',
+    ],
+    ['sweatshirt', 'Sweatshirt', 'Warm crew-neck sweatshirt.'],
+    ['jersey', 'Jersey', 'Sports jersey. Say the team and sizes.'],
+    ['crop-top', 'Crop top', 'Light crop top. Say which sizes you have.'],
+    ['kaftan', 'Kaftan', 'Loose kaftan top.'],
+    ['senator-top', 'Senator top', 'Neat senator-style top.'],
   ]),
   ...mk('clothing', 'Bottoms', [
     ['jeans', 'Jeans', 'Denim jeans. Say which sizes you have.'],
     ['jogging-pants', 'Jogging pants', 'Comfortable jogging pants.'],
+    ['chinos', 'Chinos', 'Smart chino trousers. Say which sizes you have.'],
+    ['shorts', 'Shorts', 'Comfortable shorts.'],
+    ['skirt', 'Skirt', 'Skirt in your colours and sizes.'],
+    ['leggings', 'Leggings', 'Stretch leggings.'],
+    ['ankara-trousers', 'Ankara trousers', 'Trousers in Ankara print.'],
   ]),
   ...mk('clothing', 'Shoes', [
     ['canvas-sneakers', 'Canvas sneakers', 'Light canvas sneakers.'],
     ['slippers', 'Slippers', 'Comfortable everyday slippers.'],
+    ['leather-shoes', 'Leather shoes', 'Smart leather shoes. Say which sizes you have.'],
+    ['sandals', 'Sandals', 'Open everyday sandals.'],
+    ['heels', 'Heels', 'Heeled shoes. Say which sizes you have.'],
+    ['running-shoes', 'Running shoes', 'Light running shoes.'],
+    ['socks-pack', 'Socks (pack)', 'A pack of socks.'],
   ]),
   ...mk('accessories', 'Accessories', [
     ['wrist-watch', 'Wrist watch', 'Simple everyday wrist watch.'],
@@ -304,6 +331,17 @@ STARTER_ITEMS.push(
     ['leather-belt', 'Belt', 'Strong belt in black or brown.'],
     ['wallet', 'Wallet', 'Slim wallet with card slots.'],
     ['necklace', 'Necklace', 'Light fashion necklace.'],
+    ['wristband', 'Wristband', 'Fashion wristband.'],
+    ['bracelet', 'Bracelet', 'Light bracelet.'],
+    ['earrings', 'Earrings', 'A pair of earrings.'],
+    ['ring', 'Ring', 'Fashion ring. Say which sizes you have.'],
+    ['face-cap', 'Face cap', 'Adjustable cap.'],
+    ['scarf', 'Scarf', 'Soft scarf or head wrap.'],
+    ['handbag', 'Handbag', 'Handbag in your colours.'],
+    ['tote-bag', 'Tote bag', 'Roomy tote bag.'],
+    ['umbrella', 'Umbrella', 'Folding umbrella.'],
+    ['hair-accessories', 'Hair accessories', 'Hair bands, clips and ties.'],
+    ['perfume', 'Perfume', 'Body spray or perfume.'],
   ]),
   ...mk('gadgets', 'Gadgets', [
     ['phone-charger', 'Phone charger', 'Fast charger with cable.'],
@@ -314,6 +352,19 @@ STARTER_ITEMS.push(
     ['phone-case', 'Phone case', 'Protective case. Say which phone it fits.'],
     ['laptop-sleeve', 'Laptop sleeve', 'Padded sleeve for a laptop.'],
     ['computer-mouse', 'Computer mouse', 'Wireless mouse.'],
+    ['usb-cable', 'Charging cable', 'Phone charging cable. Say the type.'],
+    ['wireless-earbuds', 'Wireless earbuds', 'Bluetooth earbuds with charging case.'],
+    ['headphones', 'Headphones', 'Over-ear headphones.'],
+    ['smart-watch', 'Smart watch', 'Fitness and notification watch.'],
+    ['phone-stand', 'Phone stand', 'Stand for watching on your desk.'],
+    ['ring-light', 'Ring light', 'Light for photos and video calls.'],
+    ['memory-card', 'Memory card', 'Memory card for phone or camera.'],
+    ['extension-socket', 'Extension socket', 'Multi-plug extension for your room.'],
+    ['laptop-stand', 'Laptop stand', 'Raised stand for a laptop.'],
+    ['keyboard', 'Keyboard', 'USB or wireless keyboard.'],
+    ['webcam', 'Webcam', 'Webcam for classes and calls.'],
+    ['screen-protector', 'Screen protector', 'Tempered glass. Say which phone it fits.'],
+    ['calculator', 'Scientific calculator', 'Scientific calculator for lectures and exams.'],
   ]),
   ...mk('games', 'Games', [
     ['ludo-board', 'Ludo board', 'Ludo board with pieces and dice.'],
@@ -324,6 +375,14 @@ STARTER_ITEMS.push(
     ['draughts', 'Draughts', 'Draughts board with pieces.'],
     ['football', 'Football', 'Size 5 football.'],
     ['table-tennis-set', 'Table tennis set', 'Two bats and balls.'],
+    ['monopoly', 'Monopoly', 'Property trading board game.'],
+    ['uno-cards', 'Uno cards', 'A pack of Uno cards.'],
+    ['jenga', 'Jenga', 'Wooden block tower game.'],
+    ['ayo-board', 'Ayo board', 'Traditional ayo board with seeds.'],
+    ['badminton-set', 'Badminton set', 'Rackets and shuttlecocks.'],
+    ['basketball', 'Basketball', 'Size 7 basketball.'],
+    ['skipping-rope', 'Skipping rope', 'Skipping rope for exercise.'],
+    ['game-controller', 'Game controller', 'Controller for phone or console.'],
   ]),
   ...mk('printing', 'Printing', [
     [
@@ -343,6 +402,13 @@ STARTER_ITEMS.push(
     ['notebook', 'Notebook', 'Ruled notebook.'],
     ['biro-pen-pack', 'Pens (pack)', 'A pack of ballpoint pens.'],
     ['a4-paper-ream', 'A4 paper (ream)', 'A ream of A4 paper.'],
+    ['exercise-book', 'Exercise book', 'Exercise book for lectures.'],
+    ['highlighters', 'Highlighters (pack)', 'A pack of highlighters.'],
+    ['geometry-set', 'Geometry set', 'Ruler, protractor, compass and set squares.'],
+    ['sticky-notes', 'Sticky notes', 'A pack of sticky notes.'],
+    ['folder', 'Folder', 'Document folder.'],
+    ['stapler', 'Stapler', 'Stapler with staples.'],
+    ['flash-cards', 'Flash cards', 'Pack of study flash cards.'],
   ]),
   ...mk('souvenirs', 'Souvenirs', [
     ['campus-keyring', 'Campus keyring', 'Keyring to remember your campus.'],
@@ -351,6 +417,11 @@ STARTER_ITEMS.push(
     ['souvenir-cap', 'Souvenir cap', 'Cap printed for the campus.'],
     ['lanyard', 'Lanyard', 'Neck strap for your ID card.'],
     ['sticker-pack', 'Sticker pack', 'A pack of stickers.'],
+    ['campus-hoodie', 'Campus hoodie', 'Hoodie printed for the campus.'],
+    ['water-bottle', 'Water bottle', 'Reusable bottle.'],
+    ['tote-souvenir', 'Campus tote bag', 'Tote bag printed for the campus.'],
+    ['wristband-souvenir', 'Campus wristband', 'Wristband printed for the campus.'],
+    ['notebook-souvenir', 'Campus notebook', 'Notebook with a campus cover.'],
   ]),
 )
 
