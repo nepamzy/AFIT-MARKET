@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { MoreFilters } from '@/components/domain/more-filters'
 import { Icon } from '@/components/ui/icons'
 import type { BrowseFilters } from '@/server/modules/vendors-and-catalogue/public'
 import type { Category } from '@/server/modules/vendors-and-catalogue/types'
@@ -30,6 +31,8 @@ export function ShopFilters({
   showSort?: boolean
   showPrice?: boolean
 }) {
+  const extrasActive =
+    Boolean(filters.max) || filters.open === '1' || filters.sort !== 'recommended'
   return (
     <details
       className="group mb-5 rounded-[var(--radius-card)] border border-line bg-card shadow-[var(--shadow-card)] md:open:block"
@@ -65,40 +68,42 @@ export function ShopFilters({
             ))}
           </select>
         </label>
-        {showSort && (
-          <label className="text-sm font-semibold">
-            Sort by
-            <select name="sort" defaultValue={filters.sort} className={field}>
-              {SORTS.map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        {showPrice && (
-          <label className="text-sm font-semibold">
-            Highest price (naira)
+        <MoreFilters defaultOpen={extrasActive}>
+          {showSort && (
+            <label className="text-sm font-semibold">
+              Sort by
+              <select name="sort" defaultValue={filters.sort} className={field}>
+                {SORTS.map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {showPrice && (
+            <label className="text-sm font-semibold">
+              Highest price (naira)
+              <input
+                name="maxn"
+                inputMode="numeric"
+                defaultValue={filters.max ? String(Math.round(filters.max / 100)) : ''}
+                placeholder="No limit"
+                className={field}
+              />
+            </label>
+          )}
+          <label className="touch-target flex items-center gap-2 text-sm font-semibold">
             <input
-              name="maxn"
-              inputMode="numeric"
-              defaultValue={filters.max ? String(Math.round(filters.max / 100)) : ''}
-              placeholder="No limit"
-              className={field}
+              type="checkbox"
+              name="open"
+              value="1"
+              defaultChecked={filters.open === '1'}
+              className="size-5"
             />
+            Open now only
           </label>
-        )}
-        <label className="touch-target flex items-center gap-2 text-sm font-semibold">
-          <input
-            type="checkbox"
-            name="open"
-            value="1"
-            defaultChecked={filters.open === '1'}
-            className="size-5"
-          />
-          Open now only
-        </label>
+        </MoreFilters>
         <Button type="submit" variant="gold">
           Apply
         </Button>
