@@ -3,14 +3,7 @@
  * are filled in and can be changed; the owner always sets the price. Photos live in public/catalogue/<slug>.jpg.
  */
 export type StarterCategory =
-  | 'food'
-  | 'drinks'
-  | 'printing'
-  | 'souvenirs'
-  | 'clothing'
-  | 'accessories'
-  | 'gadgets'
-  | 'games'
+  'food' | 'drinks' | 'printing' | 'souvenirs' | 'clothing' | 'accessories' | 'gadgets' | 'games'
 
 export type StarterItem = {
   slug: string
