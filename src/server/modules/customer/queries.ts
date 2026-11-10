@@ -30,6 +30,16 @@ export const isWishlisted = async (productId: string) =>
   (await rpc<boolean>('wishlist_contains', { p_product: productId })) === true
 export const listSavedPlaces = async () => (await rpc<SavedPlace[]>('saved_places_list')) ?? []
 
+export type PrivateLetter = {
+  sender: string
+  title: string | null
+  body: string
+  created_at: string
+}
+/** True only for the one signed-in person a letter was written for (the database matches their confirmed email). */
+export const hasPrivateLetter = async () => (await rpc<boolean>('my_letter_exists')) === true
+export const getPrivateLetter = async () => rpc<PrivateLetter | null>('my_letter')
+
 export async function myProfile(): Promise<{
   email: string | null
   displayName: string | null
