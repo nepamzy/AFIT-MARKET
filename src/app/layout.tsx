@@ -1,3 +1,6 @@
+import { Analytics } from '@vercel/analytics/next'
+import { GoogleTag } from '@/components/analytics/google-tag'
+import { Tracker } from '@/components/analytics/tracker'
 import type { Metadata, Viewport } from 'next'
 import { connection } from 'next/server'
 import type { ReactNode } from 'react'
@@ -44,6 +47,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <NotificationSound />
         <RegisterServiceWorker />
         <ToastProvider>{children}</ToastProvider>
+        <Analytics />
+        <GoogleTag />
+        <Tracker />
       </body>
     </html>
   )
