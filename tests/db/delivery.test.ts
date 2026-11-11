@@ -607,8 +607,11 @@ describe('Phase 9: who may and may not complete a delivery', () => {
       'case_close',
       'complete_delivery',
       'complete_pickup',
+      'complete_pickup_qr', // the shop scans or types the customer's pickup code: no signature
       'create_review',
+      'customer_pickup_qr_confirm', // the customer scans the shop's QR code
       'customer_qr_confirm', // the customer scans the rider's QR code (signed in, aal2, must be the customer)
+      'customer_qr_open', // the customer opens their own code for the rider to scan; completes nothing
       'customer_request_refund',
       'customer_request_return',
       'delivery_proof_begin',
@@ -617,6 +620,7 @@ describe('Phase 9: who may and may not complete a delivery', () => {
       'ops_handle_delivery_exception',
       'rider_delivery_complete', // service role only: the app compares the customer's signature first (see riders.test.ts)
       'rider_qr_open', // opens a ten-minute code for an ARRIVED delivery; completes nothing
+      'rider_qr_scan', // the assigned rider scans the customer's code and the delivery is confirmed
       'staff_decide_return',
     ])
   })

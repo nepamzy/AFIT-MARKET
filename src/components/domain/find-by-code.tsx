@@ -53,7 +53,7 @@ export function FindByCode() {
                 >
                   Go to this order to complete the handover
                 </a>{' '}
-                (the customer must still sign).
+                .
               </p>
             </>
           ) : (

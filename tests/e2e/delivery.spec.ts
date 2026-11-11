@@ -1,11 +1,9 @@
-import { expect, test, type Page } from '@playwright/test'
-import { PNG } from 'pngjs'
+import { expect, test } from '@playwright/test'
 import {
   a11yClean,
   admin,
   alertIn,
   clickAndWait,
-  drawSignature,
   makeShopWithPoint,
   openAnonymous,
   openSession,
@@ -31,14 +29,6 @@ const evidence = async (id: string) =>
       .eq('order_id', id)
   ).data!
 
-/** React resets a form after every action, so the name and the tick are filled again before each try. */
-const refill = async (page: Page) => {
-  const main = page.locator('main')
-  await main.getByLabel('Customer’s name').fill('Ada Student')
-  const box = main.getByRole('checkbox')
-  if (!(await box.isChecked())) await box.check()
-}
-
 async function arrived(
   browser: Parameters<typeof openSession>[0],
   info: Parameters<typeof openSession>[1],
@@ -53,56 +43,63 @@ async function arrived(
   return { customer, rider, riderSession, o, shop }
 }
 
-test('the rider hands over: the customer signs on the rider’s phone, then the rider signs; nobody else can finish it', async ({
+test('the customer shows a QR code and the rider scans (or types) it; nobody else can finish it, and there is no signature', async ({
   browser,
 }, info) => {
   const { customer, riderSession, o } = await arrived(browser, info, 'dh')
   const r = riderSession.page
   const c = customer.page
 
-  // the customer's own screen no longer asks them to confirm anything
+  // the customer's screen offers their own QR code; nothing to sign
   await c.goto(`/orders/${o.id}`)
   await expect(c.getByRole('heading', { name: /Your rider has arrived/ })).toBeVisible()
   await expect(c.getByRole('button', { name: /Confirm receipt|Confirm and sign/ })).toHaveCount(0)
   await a11yClean(c, '/orders/[id] (arrived)')
 
-  // the rider's screen offers two ways, and nothing that marks the order delivered by itself
+  // the rider's screen offers two QR ways and no signature
   await r.goto('/rider/jobs')
   const main = r.locator('main')
   await expect(
     main.getByRole('heading', { name: new RegExp(`hand over order ${o.number}`) }),
   ).toBeVisible()
-  await expect(main.getByRole('button', { name: 'Confirm with QR code' })).toBeVisible()
-  await main.getByRole('button', { name: 'Confirm with signatures' }).click()
-  await expect(main.getByText('Signature for customer')).toBeVisible()
-  await expect(main.getByText('Signature of rider')).toHaveCount(0)
+  await expect(main.getByRole('button', { name: 'Show my QR code' })).toBeVisible()
+  await expect(main.getByRole('button', { name: /signature/i })).toHaveCount(0)
+  await main.getByRole('button', { name: 'Scan the customer’s QR code' }).click()
   await a11yClean(r, '/rider/jobs (hand over)')
 
-  // nothing signed: refused, nothing completes
-  await main.getByLabel('Customer’s name').fill('Ada Student')
-  await main.getByRole('checkbox').check()
+  // before the customer shows a code: refused, nothing completes
+  await main.getByLabel('Or type the code the customer shows').fill('AAAAAAAAAAAAAAAAAAAA')
   await clickAndWait(r, () => main.getByRole('button', { name: 'Confirm delivery' }).click())
-  await expect(alertIn(r)).toContainText(/customer must sign/i)
+  await expect(alertIn(r)).toContainText(/has not shown a code/i)
   expect((await orderRow(o.id)).status).toBe('ARRIVAL_DETECTED')
 
-  // the customer signs: only then does the rider's box appear
-  await drawSignature(r, 0)
-  await expect(main.getByText('Signature of rider')).toBeVisible()
-  // the rider forgets to sign: refused
-  await refill(r)
+  // the customer shows a code
+  await c.getByRole('button', { name: 'Show my QR code to the rider' }).click()
+  await expect(c.getByRole('img', { name: /QR code for the rider to scan/ })).toBeVisible()
+  const code = (await c.getByTestId('delivery-code').innerText()).trim()
+  expect(code).toMatch(/^[0-9A-F]{20}$/)
+
+  // a wrong code is refused and counted
+  await main.getByLabel('Or type the code the customer shows').fill('BBBBBBBBBBBBBBBBBBBB')
   await clickAndWait(r, () => main.getByRole('button', { name: 'Confirm delivery' }).click())
-  await expect(alertIn(r)).toContainText(/second box/i)
+  await expect(alertIn(r)).toContainText(/not right/i)
   expect((await orderRow(o.id)).status).toBe('ARRIVAL_DETECTED')
 
-  await drawSignature(r, 1)
-  await refill(r)
+  // a different rider cannot complete someone else's delivery
+  const other = await seedRider({ active: true })
+  const otherSession = await openSessionFor(browser, info, other)
+  await otherSession.page.goto('/rider/jobs')
+  await expect(otherSession.page.locator('main').getByText(o.number)).toHaveCount(0)
+
+  // the right code completes it
+  await main.getByLabel('Or type the code the customer shows').fill(code)
   await clickAndWait(r, () => main.getByRole('button', { name: 'Confirm delivery' }).click())
   await expect.poll(async () => (await orderRow(o.id)).status).toBe('COMPLETED')
   const ev = await evidence(o.id)
   expect(ev).toHaveLength(1)
-  expect(ev[0]!.confirmation_channel).toBe('rider_phone')
-  expect(ev[0]!.rider_signature_png).not.toBeNull()
-  expect(ev[0]!.signature_png).not.toBeNull()
+  expect(ev[0]!.confirmation_channel).toBe('qr')
+  expect(ev[0]!.capture_method).toBe('qr')
+  expect(ev[0]!.signature_png).toBeNull()
   const a = (
     await admin().from('delivery_assignments').select('status').eq('order_id', o.id).single()
   ).data!
@@ -123,69 +120,26 @@ test('the rider hands over: the customer signs on the rider’s phone, then the 
   await Promise.all([
     customer.context.close(),
     riderSession.context.close(),
+    otherSession.context.close(),
     stranger.context.close(),
     anon.context.close(),
   ])
 })
 
-/** A white picture with one big dark loop: a signature that looks nothing like the zigzag drawn in these tests. */
-const loopPng = () => {
-  const W = 400
-  const H = 160
-  const png = new PNG({ width: W, height: H })
-  png.data.fill(255)
-  for (let t = 0; t < 360; t++) {
-    const x = 200 + 160 * Math.cos((t * Math.PI) / 180)
-    const y = 80 + 60 * Math.sin((t * Math.PI) / 180)
-    for (let dy = -3; dy <= 3; dy++)
-      for (let dx = -3; dx <= 3; dx++) {
-        const i = (Math.round(y + dy) * W + Math.round(x + dx)) * 4
-        png.data[i] = png.data[i + 1] = png.data[i + 2] = 17
-        png.data[i + 3] = 255
-      }
-  }
-  return PNG.sync.write(png)
-}
-const saveSignature = async (userId: string, png: Buffer) => {
-  const { error } = await admin()
-    .from('user_signatures')
-    .upsert({ user_id: userId, png: '\\x' + png.toString('hex') })
-  expect(error).toBeNull()
-}
-
-test('a customer signature that does not look like the one saved at sign-up is refused on the rider’s phone', async ({
+test('a customer cannot confirm their own delivery with a code they made themselves', async ({
   browser,
 }, info) => {
-  const { customer, riderSession, o } = await arrived(browser, info, 'dm')
-  const r: Page = riderSession.page
-  await saveSignature(customer.user.id, loopPng())
-  await r.goto('/rider/jobs')
-  const main = r.locator('main')
-  await main.getByRole('button', { name: 'Confirm with signatures' }).click()
-  await main.getByLabel('Customer’s name').fill('Ada Student')
-  await drawSignature(r, 0)
-  await drawSignature(r, 1)
-  await main.getByRole('checkbox').check()
-  await clickAndWait(r, () => main.getByRole('button', { name: 'Confirm delivery' }).click())
-  await expect(alertIn(r)).toContainText(/does not look like the one you saved/)
+  const { customer, riderSession, o } = await arrived(browser, info, 'ds')
+  const c = customer.page
+  await c.goto(`/orders/${o.id}`)
+  await c.getByRole('button', { name: 'Show my QR code to the rider' }).click()
+  const code = (await c.getByTestId('delivery-code').innerText()).trim()
+  await c.goto(`/confirm/${o.id}.${code}`)
+  await c.getByRole('checkbox').check()
+  await clickAndWait(c, () => c.getByRole('button', { name: 'Yes, I received my order' }).click())
+  await expect(alertIn(c)).toContainText(/not valid|new one/i)
   expect((await orderRow(o.id)).status).toBe('ARRIVAL_DETECTED')
-  expect(await evidence(o.id)).toHaveLength(0)
-
-  // a different rider cannot complete someone else's delivery, even with matching drawings
-  const other = await seedRider({ active: true })
-  const otherSession = await openSessionFor(browser, info, other)
-  await otherSession.page.goto('/rider/jobs')
-  await expect(otherSession.page.locator('main').getByText(o.number)).toHaveCount(0)
-
-  // when the saved signature is what is drawn, the delivery completes
-  const drawn = await r.evaluate(() =>
-    (document.querySelector('canvas') as HTMLCanvasElement).toDataURL('image/png'),
-  )
-  await saveSignature(customer.user.id, Buffer.from(drawn.split(',')[1]!, 'base64'))
-  await refill(r)
-  await clickAndWait(r, () => main.getByRole('button', { name: 'Confirm delivery' }).click())
-  await expect.poll(async () => (await orderRow(o.id)).status).toBe('COMPLETED')
-  await otherSession.context.close()
+  await Promise.all([customer.context.close(), riderSession.context.close()])
 })
 
 test('the rider shows a QR code; the customer scans it signed in and confirms; wrong or expired codes do nothing', async ({
@@ -196,7 +150,7 @@ test('the rider shows a QR code; the customer scans it signed in and confirms; w
   const c = customer.page
   await r.goto('/rider/jobs')
   const main = r.locator('main')
-  await main.getByRole('button', { name: 'Confirm with QR code' }).click()
+  await main.getByRole('button', { name: 'Show my QR code' }).click()
   const img = main.getByRole('img', {
     name: new RegExp(`QR code to confirm delivery of order ${o.number}`),
   })
@@ -242,7 +196,7 @@ test('an expired QR code cannot be used', async ({ browser }, info) => {
   const r = riderSession.page
   await r.goto('/rider/jobs')
   const main = r.locator('main')
-  await main.getByRole('button', { name: 'Confirm with QR code' }).click()
+  await main.getByRole('button', { name: 'Show my QR code' }).click()
   const img = main.getByRole('img', { name: /QR code to confirm delivery/ })
   await expect(img).toBeVisible()
   const path = new URL((await img.getAttribute('data-confirm-url'))!).pathname
@@ -324,11 +278,11 @@ test('the rider taps "I have arrived" and the hand-over opens straight away; GPS
   await a11yClean(r, '/rider/jobs (on the way)')
 
   await clickAndWait(r, () => main.getByRole('button', { name: 'I have arrived' }).click())
-  // the hand-over is there, with the signature option first
+  // the hand-over is there, with the two QR options
   await expect(
     main.getByRole('heading', { name: new RegExp(`hand over order ${o.number}`) }),
   ).toBeVisible()
-  await expect(main.getByRole('button', { name: 'Confirm with signatures' })).toBeVisible()
+  await expect(main.getByRole('button', { name: 'Show my QR code' })).toBeVisible()
   await expect(main.getByRole('button', { name: 'I have arrived' })).toHaveCount(0)
   expect((await orderRow(o.id)).status).toBe('ARRIVAL_DETECTED')
   const asg = (

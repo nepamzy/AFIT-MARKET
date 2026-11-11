@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
 import { PickupQrCard } from '@/components/domain/pickup-qr-card'
 import { FindByCode } from '@/components/domain/find-by-code'
-import { HandoverForm } from '@/components/domain/handover-form'
+import { PickupHandoverCard } from '@/components/domain/pickup-handover-card'
 import { Alert } from '@/components/ui/alert'
 import { Card, PageHeader } from '@/components/ui/card'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
 import { EmptyState } from '@/components/ui/states'
-import { typedSignatureEnabled } from '@/server/modules/orders-and-state-machine/actions'
 import { listPendingRiderPickups } from '@/server/modules/riders/queries'
 import { listOrders } from '@/server/modules/orders-and-state-machine/queries'
 import { getMyVendor } from '@/server/modules/vendors-and-catalogue/vendor-queries'
@@ -28,7 +27,6 @@ export default async function Handover({
         limit: 200,
       })
     : []
-  const typedEnabled = await typedSignatureEnabled()
   const riderPickups = vendor ? await listPendingRiderPickups() : []
   return (
     <>
@@ -87,7 +85,7 @@ export default async function Handover({
           {waiting.map((o) => (
             <Card key={o.id} id={`order-${o.id}`} className="space-y-3">
               <h2 className="text-lg font-bold">{o.order_number}</h2>
-              <HandoverForm orderId={o.id} typedEnabled={typedEnabled} />
+              <PickupHandoverCard orderId={o.id} />
             </Card>
           ))}
         </div>

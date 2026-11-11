@@ -12,11 +12,33 @@ export const codeFromQr = (text: string): string | null => {
   return /^[A-Za-z0-9]{4,20}$/.test(code) ? code.toUpperCase() : null
 }
 
+/** Hand-over codes that carry an order: `<prefix><order id>.<code>`. Returns the order id and the code, or null. */
+export const DELIVERY_QR_PREFIX = 'afit-delivery:'
+export const PICKUP_ORDER_QR_PREFIX = 'afit-pickup-order:'
+export const orderCodeFromQr = (
+  text: string,
+  prefix: string,
+): { orderId: string; code: string } | null => {
+  const t = text.trim()
+  if (!t.toLowerCase().startsWith(prefix)) return null
+  const m = /^([0-9a-fA-F-]{36})\.([A-Za-z0-9]{4,24})$/.exec(t.slice(prefix.length).trim())
+  return m ? { orderId: m[1]!.toLowerCase(), code: m[2]!.toUpperCase() } : null
+}
+
 /**
  * Opens the phone camera, reads the shop's QR code and hands the code to `onCode`. The camera is only switched on after
  * the tap and is always switched off again. Where the camera is not available the shop can still type the code.
  */
-export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
+export function QrScanButton({
+  onCode,
+  prefix,
+  label = 'Scan the shop’s QR code',
+}: {
+  onCode: (code: string) => void
+  /** Set to read an order code (`<order id>.<code>`) instead of the shop's code; `onCode` then gets `<order id>.<code>`. */
+  prefix?: string
+  label?: string
+}) {
   const [open, setOpen] = useState(false)
   const [msg, setMsg] = useState('')
   const video = useRef<HTMLVideoElement>(null)
@@ -52,7 +74,8 @@ export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
           const d = g.getImageData(0, 0, canvas.width, canvas.height)
           const hit = jsQR(d.data, d.width, d.height, { inversionAttempts: 'dontInvert' })
           if (!hit) return
-          const code = codeFromQr(hit.data)
+          const o = prefix ? orderCodeFromQr(hit.data, prefix) : null
+          const code = prefix ? (o ? `${o.orderId}.${o.code}` : null) : codeFromQr(hit.data)
           if (!code) return setMsg('That QR code is not an AFIT Market hand-over code.')
           stop()
           setOpen(false)
@@ -64,7 +87,7 @@ export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
       }
     })()
     return stop
-  }, [open, onCode])
+  }, [open, onCode, prefix])
 
   return (
     <div className="space-y-2">
@@ -76,7 +99,7 @@ export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
           setOpen((o) => !o)
         }}
       >
-        {open ? 'Close camera' : 'Scan the shop’s QR code'}
+        {open ? 'Close camera' : label}
       </Button>
       {open && (
         <video
@@ -84,7 +107,7 @@ export function QrScanButton({ onCode }: { onCode: (code: string) => void }) {
           muted
           playsInline
           className="aspect-square w-full max-w-xs rounded-[var(--radius-control)] bg-black object-cover"
-          aria-label="Camera view. Point it at the shop’s QR code."
+          aria-label="Camera view. Point it at the QR code."
         />
       )}
       {msg && (
