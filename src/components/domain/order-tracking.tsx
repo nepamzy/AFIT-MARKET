@@ -1,10 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  postCustomerLocationAction,
-  stopCustomerLocationAction,
-} from '@/server/modules/location/customer-actions'
+import { postCustomerLocationAction } from '@/server/modules/location/customer-actions'
 import { LiveMap, type MapPin } from './live-map'
 
 type Tracking =
@@ -102,8 +98,8 @@ export function OrderTracking({ orderId, mapKey }: { orderId: string; mapKey?: s
       )}
       {t.arrival_detected && (
         <p className="font-semibold">
-          The rider has reached your delivery point. You will confirm receipt with your pickup code
-          and signature.
+          The rider has reached your delivery point. Confirm by scanning the rider’s QR code, or
+          show your own QR code to the rider.
         </p>
       )}
       {t.estimate && (
@@ -125,28 +121,15 @@ export function OrderTracking({ orderId, mapKey }: { orderId: string; mapKey?: s
         />
       )}
       {body}
-      <div className="rounded-[var(--radius-control)] border border-line p-3">
-        <p className="font-semibold">Your rider can see where you are</p>
-        <p className="mb-2 text-sm text-muted">
-          It starts by itself once a rider takes your order, so they can find you. Only your rider
-          sees it, only while they are on this delivery, and it stops by itself when the order is
-          finished. You can stop it here at any time.
+      <p className="text-sm text-muted">
+        Your rider can see where you are while they are on this delivery. It starts by itself when
+        your order is on its way and stops when the order is finished, as set out in our terms.
+      </p>
+      {share.note && (
+        <p role="status" className="text-sm">
+          {share.note}
         </p>
-        {share.on ? (
-          <Button type="button" variant="secondary" onClick={share.stop}>
-            Stop sharing my location
-          </Button>
-        ) : (
-          <Button type="button" variant="secondary" onClick={share.start}>
-            Share my location with my rider
-          </Button>
-        )}
-        {share.note && (
-          <p role="status" className="mt-2 text-sm">
-            {share.note}
-          </p>
-        )}
-      </div>
+      )}
     </div>
   )
 }
@@ -169,14 +152,6 @@ function useShareLocation(orderId: string) {
     } catch {
       /* private window: the choice just is not remembered */
     }
-  }
-  const stop = () => {
-    remember('off')
-    halt()
-    setOn(false)
-    setMe(null)
-    setNote('Sharing stopped.')
-    void stopCustomerLocationAction(orderId)
   }
   const start = () => {
     remember('on')
@@ -250,5 +225,5 @@ function useShareLocation(orderId: string) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  return { on, me, note, start, stop }
+  return { on, me, note }
 }

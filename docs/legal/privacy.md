@@ -16,6 +16,7 @@ Last updated: 11 November 2026
 | Delivery-fee payment records and the rider's bank details shown to you | Let you pay your rider and keep a receipt | Contract |
 | Complaints, refund and return cases, statements, evidence you give | Resolve disputes fairly | Contract; legitimate interest |
 | Hand-over QR codes (stored only as one-way hashes), attempt counters | Confirm hand-overs; stop misuse | Contract; legitimate interest |
+| **Shop location** from the shop's phone while its orders screen is open (so a rider can find the shop) | Let the rider collecting an order find the shop | Legitimate interest |
 | **Rider location** while on shift with an active delivery; **your location** only if you choose to share it with your rider during a delivery | Show you where your order is; confirm arrival | Contract; your consent for your own location |
 | Rider and vendor applications: name, contact details, answers, for riders matric number, phone number and photos of the front and back of the student ID card (stored privately; the number is encrypted) | Approve riders and shops; keep deliveries safe | Legitimate interest; consent |
 | Vendor payout bank account (number stored encrypted; staff see only the last four digits) | Pay shops | Contract |
@@ -70,7 +71,7 @@ Ask for closure or a copy of your data at afitmarket01@gmail.com from the e-mail
 
 ## 10. Location
 
-A rider's location is collected only while on shift with an active delivery, and is shown only to the customer of that order and, with a stated purpose, to staff (access is logged). Phones may limit background tracking. Your own location is used only if you choose to share it with your rider during a delivery and you can stop at any time.
+Location is part of how deliveries work and is used automatically once you have an account, as set out here. A rider's location is collected only while on shift with an active delivery, and is shown only to the customer of that order and, with a stated purpose, to staff (access is logged). The customer's location is shared with the rider only while that rider is on the customer's delivery, and stops when the order is finished. A shop's location is shared with a rider only while that rider is on the way to collect an order from the shop. Phones may limit background tracking, and you can switch location off in your phone's settings, but deliveries may not work without it.
 
 ## 11. Children
 

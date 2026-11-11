@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { PickupQrCard } from '@/components/domain/pickup-qr-card'
 import { FindByCode } from '@/components/domain/find-by-code'
+import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { PickupHandoverCard } from '@/components/domain/pickup-handover-card'
 import { Alert } from '@/components/ui/alert'
 import { Card, PageHeader } from '@/components/ui/card'
@@ -30,6 +31,7 @@ export default async function Handover({
   const riderPickups = vendor ? await listPendingRiderPickups() : []
   return (
     <>
+      <VendorLocationBeacon />
       <PageHeader
         breadcrumbs={[{ label: 'Shop', href: '/vendor' }, { label: 'Handover' }]}
         title="Confirm handover"

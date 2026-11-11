@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import 'leaflet/dist/leaflet.css'
 
 export type MapPin = {
-  id: 'rider' | 'customer' | 'destination' | 'me'
+  id: 'rider' | 'customer' | 'destination' | 'me' | 'shop'
   lat: number
   lng: number
   label: string
@@ -14,14 +14,27 @@ export type MapPin = {
 }
 
 // People are drawn above the delivery-point flag, so a rider standing at the flag is still visible.
-const Z: Record<MapPin['id'], number> = { rider: 1000, customer: 900, me: 900, destination: 0 }
+const Z: Record<MapPin['id'], number> = {
+  rider: 1000,
+  customer: 900,
+  me: 900,
+  shop: 500,
+  destination: 0,
+}
 const CLASS: Record<MapPin['id'], string> = {
   rider: 'afit-pin afit-pin-rider',
   customer: 'afit-pin afit-pin-customer',
   me: 'afit-pin afit-pin-customer',
   destination: 'afit-pin afit-pin-destination',
+  shop: 'afit-pin afit-pin-destination',
 }
-const TEXT: Record<MapPin['id'], string> = { rider: 'R', customer: 'C', me: 'Me', destination: '⚑' }
+const TEXT: Record<MapPin['id'], string> = {
+  rider: 'R',
+  customer: 'C',
+  me: 'Me',
+  shop: 'S',
+  destination: '⚑',
+}
 
 /**
  * Satellite map (Esri World Imagery tiles + place labels) with a pin for each person or place. Pins move as the props

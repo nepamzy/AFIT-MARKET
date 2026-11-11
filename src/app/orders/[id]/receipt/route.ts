@@ -28,7 +28,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
         arrivalAt: ev.arrival_detected_at,
       }
     : null
-  const pdf = await buildReceiptPdf({ order, items, history, evidence, rehearsal: !paystackIsLive() })
+  const pdf = await buildReceiptPdf({
+    order,
+    items,
+    history,
+    evidence,
+    rehearsal: !paystackIsLive(),
+  })
   return new Response(Buffer.from(pdf), {
     headers: {
       'Content-Type': 'application/pdf',
