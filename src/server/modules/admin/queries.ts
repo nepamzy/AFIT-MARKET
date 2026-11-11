@@ -46,6 +46,25 @@ export type Report = {
 }
 export const adminReport = (days: number) => rpc<Report>('admin_report', { p_days: days })
 
+export type Analytics = {
+  days: number
+  visits: number
+  app_installs: number
+  app_opens: number
+  new_users: number
+  users_total: number
+  users_with_alerts: number
+  orders: number
+  buyers: number
+  sales_kobo: number
+  visits_by_source: { source: string; n: number }[]
+  visits_by_device: { device: string; n: number }[]
+  installs_by_device: { device: string; n: number }[]
+  by_day: { day: string; visits: number; installs: number; signups: number }[]
+  top_vendors: { vendor_name: string; orders: number }[]
+}
+export const adminAnalytics = (days: number) => rpc<Analytics>('admin_analytics', { p_days: days })
+
 export type AdminUser = {
   id: string
   email: string

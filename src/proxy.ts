@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { googleTagId } from '@/lib/google-tag'
 
 /**
  * Proxy (formerly middleware) does two things only:
@@ -11,13 +12,19 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
   const isDev = process.env.NODE_ENV === 'development'
+  // The Google tag needs its own script, image-beacon and report hosts, and only when a tag id is configured.
+  const g = googleTagId()
+  const gConnect = g
+    ? ' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com'
+    : ''
+  const gImg = g ? ' https://www.google-analytics.com https://www.googletagmanager.com' : ''
   const csp = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data: https://server.arcgisonline.com https://ibasemaps-api.arcgis.com`,
+    `img-src 'self' blob: data: https://server.arcgisonline.com https://ibasemaps-api.arcgis.com${gImg}`,
     `font-src 'self'`,
-    `connect-src 'self'`,
+    `connect-src 'self'${gConnect}`,
     `worker-src 'self'`,
     `object-src 'none'`,
     `base-uri 'self'`,
