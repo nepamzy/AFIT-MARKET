@@ -315,6 +315,18 @@ const HAS_PHOTO = new Set([
   'water-bottle',
   'notebook',
   'souvenir-mug',
+  'socks-pack',
+  'hair-accessories',
+  'extension-socket',
+  'folder',
+  'stapler',
+  'flash-cards',
+  'wristband-souvenir',
+  'tote-souvenir',
+  'skipping-rope',
+  'notebook-souvenir',
+  'sticky-notes',
+  'monopoly',
 ])
 
 const mk = (

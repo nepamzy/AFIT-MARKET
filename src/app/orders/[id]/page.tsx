@@ -17,6 +17,7 @@ import { ReviewForm } from '@/components/domain/engagement-forms'
 import { myOrderReview } from '@/server/modules/engagement/queries'
 import { deliveryFeeForOrder } from '@/server/modules/delivery-fee/queries'
 import { ActionForm } from '@/components/forms/action-form'
+import { CustomerScanButton } from '@/components/domain/customer-scan-button'
 import { QrImage } from '@/components/domain/qr-image'
 import { PICKUP_ORDER_QR_PREFIX } from '@/components/domain/qr-scan-button'
 import { CustomerDeliveryQr } from '@/components/domain/customer-delivery-qr'
@@ -235,6 +236,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           >
             {pickup.code}
           </p>
+          <CustomerScanButton label="Scan the shop’s QR code" />
           <QrImage
             value={`${PICKUP_ORDER_QR_PREFIX}${order.id}.${pickup.code}`}
             label="QR code for the shop to scan when you collect your order"

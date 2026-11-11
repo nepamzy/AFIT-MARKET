@@ -32,11 +32,14 @@ export const orderCodeFromQr = (
 export function QrScanButton({
   onCode,
   prefix,
+  parse,
   label = 'Scan the shop’s QR code',
 }: {
   onCode: (code: string) => void
   /** Set to read an order code (`<order id>.<code>`) instead of the shop's code; `onCode` then gets `<order id>.<code>`. */
   prefix?: string
+  /** Reads any QR text itself (for example a confirm link). Return null to refuse it. */
+  parse?: (text: string) => string | null
   label?: string
 }) {
   const [open, setOpen] = useState(false)
@@ -75,7 +78,13 @@ export function QrScanButton({
           const hit = jsQR(d.data, d.width, d.height, { inversionAttempts: 'dontInvert' })
           if (!hit) return
           const o = prefix ? orderCodeFromQr(hit.data, prefix) : null
-          const code = prefix ? (o ? `${o.orderId}.${o.code}` : null) : codeFromQr(hit.data)
+          const code = parse
+            ? parse(hit.data)
+            : prefix
+              ? o
+                ? `${o.orderId}.${o.code}`
+                : null
+              : codeFromQr(hit.data)
           if (!code) return setMsg('That QR code is not an AFIT Market hand-over code.')
           stop()
           setOpen(false)
@@ -87,7 +96,7 @@ export function QrScanButton({
       }
     })()
     return stop
-  }, [open, onCode, prefix])
+  }, [open, onCode, prefix, parse])
 
   return (
     <div className="space-y-2">

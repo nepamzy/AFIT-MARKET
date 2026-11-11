@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
+import { CustomerScanButton } from '@/components/domain/customer-scan-button'
 import { QrImage } from '@/components/domain/qr-image'
 import { DELIVERY_QR_PREFIX } from '@/components/domain/qr-scan-button'
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ export function CustomerDeliveryQr({ orderId }: { orderId: string }) {
   const [pending, start] = useTransition()
   return (
     <div className="mt-3 space-y-3">
+      <CustomerScanButton label="Scan the rider’s QR code" />
       <Button
         type="button"
         variant="gold"
