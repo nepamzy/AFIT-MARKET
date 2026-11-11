@@ -667,13 +667,13 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         <p className="text-sm text-muted">
           AFIT Market is only for people aged 18 and over. This is your own confirmation: we record
           that you made it, but we do not check your age. By creating an account you agree to the{' '}
-          <a href="/terms" className="underline">
+          <Link href="/legal/terms" className="underline">
             terms
-          </a>{' '}
+          </Link>{' '}
           and the{' '}
-          <a href="/privacy" className="underline">
+          <Link href="/legal/privacy" className="underline">
             privacy notice
-          </a>
+          </Link>
           .
         </p>
         <div className="flex gap-2">

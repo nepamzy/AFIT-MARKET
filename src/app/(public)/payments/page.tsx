@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { InfoPage } from '@/components/shells/info-page'
 
@@ -6,6 +7,11 @@ export const metadata: Metadata = { title: 'Payments' }
 export default function Payments() {
   return (
     <InfoPage title="Payments" intro="How you pay and what you see.">
+      <p>
+        <Link href="/legal/payments" className="font-semibold text-brand-800 underline">
+          Read the full Payments, delivery fee and payouts
+        </Link>
+      </p>
       <section>
         <h2>How you pay</h2>
         <p>
