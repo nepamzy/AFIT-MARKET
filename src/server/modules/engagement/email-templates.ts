@@ -152,7 +152,7 @@ export function welcomeEmail(siteUrl: string): RenderedEmail {
     heading: 'Welcome to AFIT Market!',
     paragraphs: [
       'Thank you for joining. Your account is ready.',
-      '\uD83C\uDF54 Browse food, printing and services from campus shops.',
+      '\uD83C\uDF54 Browse food, clothing, accessories and gadgets from campus shops.',
       '\uD83D\uDE9A Order for pickup or delivery to an approved delivery point.',
       '\uD83D\uDCF1 Follow every step of your order from your phone.',
       'If you would like an extra lock on your account, you can switch on two-step sign-in with an authenticator app from Account, then Security. It is optional.',
