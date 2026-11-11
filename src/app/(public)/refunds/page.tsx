@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { InfoPage } from '@/components/shells/info-page'
 
@@ -6,6 +7,11 @@ export const metadata: Metadata = { title: 'Refunds and returns' }
 export default function Refunds() {
   return (
     <InfoPage title="Refunds and returns" intro="How a problem with a paid order is handled.">
+      <p>
+        <Link href="/legal/refunds" className="font-semibold text-brand-800 underline">
+          Read the full Refund, return and dispute policy
+        </Link>
+      </p>
       <section>
         <h2>How to ask</h2>
         <ol>
