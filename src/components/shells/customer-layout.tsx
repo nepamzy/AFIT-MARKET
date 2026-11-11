@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import { AppShell } from '@/components/shells/app-shell'
-import { ADMIN_NAV, CUSTOMER_NAV, RIDER_NAV, VENDOR_NAV } from '@/components/shells/nav-config'
+import { ADMIN_NAV, customerNav, RIDER_NAV, VENDOR_NAV } from '@/components/shells/nav-config'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { enforceRoutePolicy } from '@/server/modules/identity-and-access/guard'
 import { experienceOf } from '@/server/modules/identity-and-access/policy'
+import { hasPrivateLetter } from '@/server/modules/customer/queries'
 import { getMyVendor } from '@/server/modules/vendors-and-catalogue/vendor-queries'
 
 /**
@@ -58,11 +59,12 @@ export async function CustomerLayout({
       </AppShell>
     )
   }
+  const hasLetter = await hasPrivateLetter()
   return (
     <AppShell
       area={area}
       signedInAs={data.user?.email}
-      items={CUSTOMER_NAV}
+      items={customerNav(hasLetter)}
       showCart
       search={{ action: '/products', placeholder: 'Search food, shops and services' }}
     >

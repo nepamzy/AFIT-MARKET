@@ -9,6 +9,16 @@ export const CUSTOMER_NAV: NavItem[] = [
   { href: '/cases', label: 'Reports', icon: 'help' },
   { href: '/account', label: 'Account', icon: 'user' },
 ]
+/** Added to the customer navigation only for the one person a private letter was written for. Fourth slot so it shows on phones too. */
+export const LETTER_NAV: NavItem = {
+  href: '/account/message',
+  label: 'Message from bestie',
+  icon: 'heart',
+}
+export const customerNav = (hasLetter: boolean): NavItem[] =>
+  hasLetter
+    ? [...CUSTOMER_NAV.slice(0, 3), LETTER_NAV, CUSTOMER_NAV[4]!, CUSTOMER_NAV[3]!]
+    : CUSTOMER_NAV
 export const VENDOR_NAV: NavItem[] = [
   { href: '/vendor', label: 'Home', icon: 'home', group: 'Sell' },
   { href: '/vendor/orders', label: 'Orders', icon: 'clipboard', group: 'Sell' },
