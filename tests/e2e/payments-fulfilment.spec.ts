@@ -10,7 +10,6 @@ import {
   openAnonymous,
   openSession,
   tag,
-  drawSignature,
 } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
@@ -149,18 +148,12 @@ test('Paystack test payment -> vendor accepts, prepares, readies -> pickup code 
   await expect(v.getByText(/Go to this order to complete the handover/)).toBeVisible()
   expect((await orderRow(orderId)).status).toBe('PICKUP_AWAITING_HANDOVER')
   await v.getByLabel('Pickup code from the customer').fill('WRONG123')
-  await v.getByLabel('Recipient name').fill('Ada Student')
-  const sign = () => drawSignature(v)
-  await clickAndWait(v, () => v.getByRole('button', { name: 'Complete handover' }).click())
-  await expect(alertIn(v)).toContainText(/must sign/i)
-  await sign()
-  await v.getByLabel('Pickup code from the customer').fill('WRONG123')
-  await v.getByLabel('Recipient name').fill('Ada Student') // the form resets after each submission
   await clickAndWait(v, () => v.getByRole('button', { name: 'Complete handover' }).click())
   await expect(alertIn(v)).toContainText(/not right/i)
   expect((await orderRow(orderId)).status).toBe('PICKUP_AWAITING_HANDOVER')
+  // the customer's own pickup QR code is on their order page, and the shop completes by scanning or typing the code: no signature
+  await expect(b.getByRole('img', { name: /QR code for the shop to scan/ })).toBeVisible()
   await v.getByLabel('Pickup code from the customer').fill(code.toLowerCase())
-  await v.getByLabel('Recipient name').fill('Ada Student') // signature stays drawn across the reset
   await clickAndWait(v, () => v.getByRole('button', { name: 'Complete handover' }).click())
   // the finished order leaves the waiting list
   await expect(v.getByText('Nothing waiting for pickup')).toBeVisible()

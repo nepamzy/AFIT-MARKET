@@ -106,3 +106,35 @@ export async function riderOpenQrAction(orderId: string): Promise<QrOpen> {
   const qr = await QRCode.toDataURL(url, { margin: 1, width: 320, errorCorrectionLevel: 'M' })
   return { ok: true, url, qr, expiresAt: r.expires_at }
 }
+
+/** The customer shows a QR code (or reads out its code) and the assigned rider scans or types it: the delivery is confirmed. */
+export async function riderScanDeliveryAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const orderId = text(fd, 'orderId', 40)
+  if (!uuid.safeParse(orderId).success) return failed('That order was not found.')
+  const g = await gate(RIDER)
+  if ('state' in g) return g.state
+  const token = text(fd, 'token', 40)
+  if (!token) return failed('Scan the customer’s QR code or type its code.')
+  if (!(await rateLimit(`rider-scan:${g.who.userId}`, 600, 20)))
+    return failed(
+      'Too many tries. Please wait a few minutes, then ask the customer for a new code.',
+    )
+  const sb = await createSupabaseServerClient()
+  const { data, error } = await sb.rpc('rider_qr_scan', { p_order: orderId, p_token: token })
+  if (error)
+    return dbFailed(
+      error,
+      'This delivery cannot be confirmed right now. Refresh and check its status.',
+    )
+  revalidatePath('/rider/jobs')
+  revalidatePath(`/orders/${orderId}`)
+  const r = data as { ok: boolean; reason?: string }
+  if (r.ok) return done('Delivery confirmed. Thank you.')
+  if (r.reason === 'already_completed') return done('This delivery was already confirmed.')
+  if (r.reason === 'qr_expired')
+    return failed('That code has expired. Ask the customer to show a new one.')
+  if (r.reason === 'qr_locked')
+    return failed('Too many wrong tries. Ask the customer to show a new code.')
+  if (r.reason === 'wrong_qr') return failed('That code is not right. Check it and try again.')
+  return failed('The customer has not shown a code yet. Ask them to tap “Show my QR code”.')
+}

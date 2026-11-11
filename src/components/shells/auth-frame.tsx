@@ -41,9 +41,7 @@ export function AuthFrame({ children }: { children: ReactNode }) {
           aria-hidden="true"
           className="absolute -bottom-24 -right-24 size-80 rounded-full border-[28px] border-navy-800"
         />
-        <p className="text-xs text-navy-text">
-          Shop. Order. Receive.
-        </p>
+        <p className="text-xs text-navy-text">Shop. Order. Receive.</p>
       </aside>
       <main id="main" className="flex flex-col justify-center bg-surface px-4 py-8 sm:px-10">
         <div className="mx-auto w-full max-w-md">

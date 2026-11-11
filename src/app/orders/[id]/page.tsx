@@ -17,6 +17,9 @@ import { ReviewForm } from '@/components/domain/engagement-forms'
 import { myOrderReview } from '@/server/modules/engagement/queries'
 import { deliveryFeeForOrder } from '@/server/modules/delivery-fee/queries'
 import { ActionForm } from '@/components/forms/action-form'
+import { QrImage } from '@/components/domain/qr-image'
+import { PICKUP_ORDER_QR_PREFIX } from '@/components/domain/qr-scan-button'
+import { CustomerDeliveryQr } from '@/components/domain/customer-delivery-qr'
 import { mockPaymentsAllowed, paystackConfig, paystackIsLive } from '@/lib/env'
 import { cancelOrderAction, mockPayAction } from '@/server/modules/cart-and-checkout/actions'
 import { payWithPaystackAction } from '@/server/modules/payments/actions'
@@ -232,9 +235,14 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           >
             {pickup.code}
           </p>
+          <QrImage
+            value={`${PICKUP_ORDER_QR_PREFIX}${order.id}.${pickup.code}`}
+            label="QR code for the shop to scan when you collect your order"
+          />
           <p className="text-sm text-muted">
-            Show this code to the vendor when you collect your order, then sign for it. Do not share
-            it with anyone else.
+            When you collect your order, let the shop scan this QR code (or read the code out to
+            them). Or scan the QR code the shop shows you with your phone camera. Do not share your
+            code with anyone else.
           </p>
         </Card>
       )}
@@ -254,10 +262,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <Card className="mb-5 border-brand-700">
             <h2 className="text-lg font-extrabold text-navy-900">Your rider has arrived</h2>
             <p className="mt-1">
-              Check that you have everything. Your rider will hand you their phone to sign on, or
-              show you a QR code to scan with this phone. You do not need to confirm anything on
-              your own.
+              Check that you have everything. Then confirm with a QR code: scan the code your rider
+              shows you with this phone, or show your own code and let the rider scan it.
             </p>
+            <CustomerDeliveryQr orderId={order.id} />
             <p className="mt-2 text-sm">
               Something missing or wrong? Do not confirm.{' '}
               <a

@@ -152,7 +152,7 @@ test('MFA challenge screen is keyboard operable and labelled', async ({ browser 
   await reflowAt320(page, 'MFA challenge')
 })
 
-test('signature capture on the rider’s phone: the known limitation is exactly as documented (no keyboard path), and everything else is reachable by keyboard', async ({
+test('the rider’s hand-over panel is fully reachable by keyboard (QR code, no signature pad)', async ({
   browser,
 }, info) => {
   const customer = await openSession(browser, info, 'asig')
@@ -162,23 +162,15 @@ test('signature capture on the rider’s phone: the known limitation is exactly 
   const o = await seedArrivedOrder(shop, customer.user.id, rider)
   const r = (await openSessionFor(browser, info, rider)).page
   await r.goto('/rider/jobs')
-  await r.getByRole('button', { name: 'Confirm with signatures' }).click()
-  await expect(r.locator('canvas').first()).toBeVisible()
-
-  // the drawing surface cannot take keyboard focus: this is K27, kept visible, NOT fixed by a typed fallback
-  expect(await r.locator('canvas').first().getAttribute('tabindex')).toBeNull()
+  await r.getByRole('button', { name: 'Scan the customer’s QR code' }).click()
+  // no drawing surface any more: every control is a normal focusable element
+  await expect(r.locator('canvas')).toHaveCount(0)
   const stops = await tabAudit(r)
-  expect(stops.some((s) => s.tag === 'canvas')).toBe(false)
-  expect(stops.map((s) => s.name).join('|')).toMatch(/Clear signature/)
   expect(stops.map((s) => s.name).join('|')).toMatch(/Back/)
-  expectGood(stops, 'signature panel')
-  // the typed alternative stays disabled
-  await expect(r.getByLabel(/type your name as acknowledgement/i)).toHaveCount(0)
-  // the state of the pad is announced politely
-  expect(await r.locator('p[id$="-hint"]').first().getAttribute('aria-live')).toBe('polite')
+  expectGood(stops, 'hand-over panel')
   // nothing completed
   expect((await admin().from('orders').select('status').eq('id', o.id).single()).data!.status).toBe(
     'ARRIVAL_DETECTED',
   )
-  await reflowAt320(r, 'signature panel')
+  await reflowAt320(r, 'hand-over panel')
 })
