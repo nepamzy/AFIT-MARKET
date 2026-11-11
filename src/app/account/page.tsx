@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/card'
 import { Icon, type IconName } from '@/components/ui/icons'
 import { loadPrincipal } from '@/server/modules/identity-and-access/guard'
 import { experienceOf, homeFor } from '@/server/modules/identity-and-access/policy'
-import { myProfile } from '@/server/modules/customer/queries'
+import { hasPrivateLetter, myProfile } from '@/server/modules/customer/queries'
 
 export const metadata: Metadata = { title: 'My account' }
 
@@ -22,7 +22,11 @@ const ROLE_LABEL: Record<string, string> = {
 type Tile = { href: string; icon: IconName; title: string; text: string }
 
 export default async function AccountPage() {
-  const [who, profile] = await Promise.all([loadPrincipal(), myProfile()])
+  const [who, profile, hasLetter] = await Promise.all([
+    loadPrincipal(),
+    myProfile(),
+    hasPrivateLetter(),
+  ])
   const experience = experienceOf(who)
   const shared: Tile[] = [
     { href: '/account/profile', icon: 'user', title: 'Profile', text: 'Your name and email.' },
@@ -183,6 +187,20 @@ export default async function AccountPage() {
         }
         breadcrumbs={[{ label: 'Home', href: homeFor(experience) }, { label: 'Account' }]}
       />
+      {hasLetter && (
+        <Link
+          href="/account/message"
+          className="mb-6 flex items-center gap-3 rounded-[var(--radius-card)] border-2 border-dashed border-gold-400 letter-note p-4 font-semibold text-navy-900"
+        >
+          <span aria-hidden="true" className="text-2xl">
+            💌
+          </span>
+          <span>
+            You have a message from Bestie
+            <span className="block text-sm font-normal text-muted">Tap here to open it.</span>
+          </span>
+        </Link>
+      )}
       <div className="mb-6 flex flex-wrap items-center gap-4 rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-[var(--shadow-card)]">
         <span className="grid size-14 place-items-center rounded-full bg-navy-900 text-xl font-extrabold text-white">
           {(profile.displayName ?? profile.email ?? '?').trim()[0]?.toUpperCase()}

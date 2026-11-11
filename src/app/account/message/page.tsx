@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { Card, PageHeader } from '@/components/ui/card'
-import { getPrivateLetter } from '@/server/modules/customer/queries'
+import { LetterReveal } from '@/components/domain/letter-reveal'
+import { PageHeader } from '@/components/ui/card'
+import { getPrivateLetter, myProfile } from '@/server/modules/customer/queries'
 
 export const metadata: Metadata = { title: 'Message from bestie' }
 
@@ -12,17 +13,15 @@ export const metadata: Metadata = { title: 'Message from bestie' }
 export default async function MessagePage() {
   const letter = await getPrivateLetter()
   if (!letter) notFound()
+  const profile = await myProfile()
+  const first = profile.displayName?.trim().split(/\s+/)[0] || null
   return (
     <>
       <PageHeader
         title="Message from bestie"
         breadcrumbs={[{ label: 'My account', href: '/account' }, { label: 'Message from bestie' }]}
       />
-      <Card className="max-w-2xl space-y-5 p-6 md:p-8">
-        {letter.title && <h2 className="text-xl font-bold">{letter.title}</h2>}
-        <p className="whitespace-pre-line text-lg leading-relaxed">{letter.body}</p>
-        <p className="text-lg font-bold">&mdash; {letter.sender}</p>
-      </Card>
+      <LetterReveal name={first} title={letter.title} body={letter.body} sender={letter.sender} />
     </>
   )
 }

@@ -6,6 +6,9 @@ type JobMap =
   | { active: false }
   | {
       active: true
+      stage?: 'to_shop' | 'to_customer'
+      shop?: { label: string | null; lat: number; lng: number; age_seconds: number } | null
+      shop_name?: string
       destination: { label: string | null; lat: number | null; lng: number | null }
       rider: { lat: number; lng: number; age_seconds: number } | null
       customer: {
@@ -45,7 +48,10 @@ export function RiderJobMap({
   }, [assignmentId])
 
   if (!m || !m.active) return null
+  const toShop = m.stage === 'to_shop'
   const pins: MapPin[] = []
+  if (m.shop)
+    pins.push({ id: 'shop', lat: m.shop.lat, lng: m.shop.lng, label: m.shop.label ?? 'The shop' })
   if (m.rider) pins.push({ id: 'rider', lat: m.rider.lat, lng: m.rider.lng, label: 'You' })
   if (m.destination.lat != null && m.destination.lng != null)
     pins.push({
@@ -63,18 +69,24 @@ export function RiderJobMap({
       stale: m.customer.stale,
       radiusM: m.customer.accuracy_m,
     })
-  if (pins.length === 0) return null
+  if (pins.length === 0 && !toShop) return null
   return (
     <div className="space-y-1">
-      <LiveMap pins={pins} mapKey={mapKey} label="Map of your delivery" height={240} />
+      {pins.length > 0 && (
+        <LiveMap pins={pins} mapKey={mapKey} label="Map of your delivery" height={240} />
+      )}
       <p className="text-sm">
-        {m.customer
-          ? m.customer.stale
-            ? `The customer shared their location ${m.customer.age_seconds}s ago (out of date).`
-            : (m.customer.accuracy_m ?? 0) >= 300
-              ? `The customer is sharing roughly where they are (blue circle, about ${Math.round((m.customer.accuracy_m ?? 0) / 100) / 10} km wide). Ask them to move closer or call if you cannot find them.`
-              : 'The customer is sharing where they are (blue pin).'
-          : 'The customer has not shared their location. Head for the red flag.'}
+        {toShop
+          ? m.shop
+            ? `Head to ${m.shop_name ?? 'the shop'} (the S pin). This map changes to the customer once you have collected the order.`
+            : `${m.shop_name ?? 'The shop'} has not shared its location yet. Use the address below, or ask the shop.`
+          : m.customer
+            ? m.customer.stale
+              ? `The customer shared their location ${m.customer.age_seconds}s ago (out of date).`
+              : (m.customer.accuracy_m ?? 0) >= 300
+                ? `The customer is sharing roughly where they are (blue circle, about ${Math.round((m.customer.accuracy_m ?? 0) / 100) / 10} km wide). Ask them to move closer or call if you cannot find them.`
+                : 'The customer is sharing where they are (blue pin).'
+            : 'The customer has not shared their location. Head for the red flag.'}
       </p>
     </div>
   )

@@ -238,3 +238,52 @@ body {
     animation: none;
   }
 }
+
+@keyframes letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The private letter: envelope and stationery paper */
+.letter-wrap {
+  background: linear-gradient(to bottom, #fff4f6, #f9e1e8);
+}
+.letter-accent {
+  color: #b3243f;
+}
+.letter-ink {
+  color: #3b2f25;
+}
+.letter-env-body {
+  background: #fffaf2;
+  border: 1px solid #ecd9c3;
+}
+.letter-env-flap {
+  background: #f6e6d2;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.letter-seal {
+  background: #b3243f;
+  color: #fff;
+}
+.letter-env-to {
+  color: #7a5b3f;
+}
+.letter-paper {
+  background-color: #fffdf8;
+  border: 1px solid #efe3cf;
+  background-image: repeating-linear-gradient(transparent, transparent 31px, #f1e6d3 32px);
+}
+.letter-spine {
+  background: linear-gradient(to bottom, #d34a6a, #b3243f);
+}
+
+.letter-note {
+  background: #fff9e3;
+}
