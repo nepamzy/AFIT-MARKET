@@ -22,8 +22,9 @@ export default function Delivery() {
             delivery.
           </li>
           <li>
-            You can follow the status on your order page. Delivery completion is confirmed with a
-            proof step.
+            You can follow the status on your order page. When the rider arrives, the delivery is
+            confirmed by scanning a QR code: the rider shows one and you scan it, or you show one
+            and the rider scans it.
           </li>
         </ul>
       </section>

@@ -116,12 +116,13 @@ export default async function Home() {
               Shop. Order. <span className="text-gold-400">Receive.</span>
             </h1>
             <p className="mt-4 text-lg text-navy-text">
-              Order food, printing and everyday items from campus shops. Collect it yourself or have
-              a rider bring it to you, and watch them arrive on a live map.
+              Order food, clothing, accessories, gadgets and everyday items from campus shops.
+              Collect it yourself or have a rider bring it to you, and watch them arrive on a live
+              map.
             </p>
             <SearchField
               action="/products"
-              placeholder="Search food, printing, items…"
+              placeholder="Search food, clothing, gadgets…"
               label="Search items"
               className="mt-6 max-w-lg text-ink"
             />

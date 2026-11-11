@@ -13,7 +13,7 @@ const ROLES = [
     icon: 'bag' as IconName,
     photo: 'customer' as const,
     title: 'Order from campus shops',
-    lead: 'Food, printing and everyday items from approved shops, collected or brought to you.',
+    lead: 'Food, clothing, accessories, gadgets and everyday items from approved shops, collected or brought to you.',
     points: [
       'Browse by category or search for exactly what you want.',
       'Pay with Paystack. Prices are checked again at checkout.',

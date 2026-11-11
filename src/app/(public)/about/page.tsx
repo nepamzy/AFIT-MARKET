@@ -27,7 +27,7 @@ export default function About() {
   return (
     <InfoPage
       title="About AFIT Market"
-      intro="One place to order food, printing and everyday items from campus shops, for pickup or delivery."
+      intro="One place to order food, clothing, accessories, gadgets and everyday items from campus shops, for pickup or delivery."
     >
       <section>
         <h2>What it is</h2>
