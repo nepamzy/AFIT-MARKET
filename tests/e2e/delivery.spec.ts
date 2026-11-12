@@ -56,14 +56,15 @@ test('the customer shows a QR code and the rider scans (or types) it; nobody els
   await expect(c.getByRole('button', { name: /Confirm receipt|Confirm and sign/ })).toHaveCount(0)
   await a11yClean(c, '/orders/[id] (arrived)')
 
-  // the rider's screen offers two QR ways and no signature
+  // the rider's screen first offers a choice: signature or QR code
   await r.goto('/rider/jobs')
   const main = r.locator('main')
   await expect(
     main.getByRole('heading', { name: new RegExp(`hand over order ${o.number}`) }),
   ).toBeVisible()
+  await expect(main.getByRole('button', { name: 'Use signature' })).toBeVisible()
+  await main.getByRole('button', { name: 'Use QR code' }).click()
   await expect(main.getByRole('button', { name: 'Show my QR code' })).toBeVisible()
-  await expect(main.getByRole('button', { name: /signature/i })).toHaveCount(0)
   await main.getByRole('button', { name: 'Scan the customer’s QR code' }).click()
   await a11yClean(r, '/rider/jobs (hand over)')
 
@@ -150,6 +151,7 @@ test('the rider shows a QR code; the customer scans it signed in and confirms; w
   const c = customer.page
   await r.goto('/rider/jobs')
   const main = r.locator('main')
+  await main.getByRole('button', { name: 'Use QR code' }).click()
   await main.getByRole('button', { name: 'Show my QR code' }).click()
   const img = main.getByRole('img', {
     name: new RegExp(`QR code to confirm delivery of order ${o.number}`),
@@ -196,6 +198,7 @@ test('an expired QR code cannot be used', async ({ browser }, info) => {
   const r = riderSession.page
   await r.goto('/rider/jobs')
   const main = r.locator('main')
+  await main.getByRole('button', { name: 'Use QR code' }).click()
   await main.getByRole('button', { name: 'Show my QR code' }).click()
   const img = main.getByRole('img', { name: /QR code to confirm delivery/ })
   await expect(img).toBeVisible()
@@ -282,6 +285,7 @@ test('the rider taps "I have arrived" and the hand-over opens straight away; GPS
   await expect(
     main.getByRole('heading', { name: new RegExp(`hand over order ${o.number}`) }),
   ).toBeVisible()
+  await main.getByRole('button', { name: 'Use QR code' }).click()
   await expect(main.getByRole('button', { name: 'Show my QR code' })).toBeVisible()
   await expect(main.getByRole('button', { name: 'I have arrived' })).toHaveCount(0)
   expect((await orderRow(o.id)).status).toBe('ARRIVAL_DETECTED')

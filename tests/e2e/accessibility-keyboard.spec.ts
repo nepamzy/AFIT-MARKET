@@ -152,7 +152,7 @@ test('MFA challenge screen is keyboard operable and labelled', async ({ browser 
   await reflowAt320(page, 'MFA challenge')
 })
 
-test('the rider’s hand-over panel is fully reachable by keyboard (QR code, no signature pad)', async ({
+test('the rider’s hand-over panel is fully reachable by keyboard (QR code route)', async ({
   browser,
 }, info) => {
   const customer = await openSession(browser, info, 'asig')
@@ -162,8 +162,9 @@ test('the rider’s hand-over panel is fully reachable by keyboard (QR code, no 
   const o = await seedArrivedOrder(shop, customer.user.id, rider)
   const r = (await openSessionFor(browser, info, rider)).page
   await r.goto('/rider/jobs')
+  await r.getByRole('button', { name: 'Use QR code' }).click()
   await r.getByRole('button', { name: 'Scan the customer’s QR code' }).click()
-  // no drawing surface any more: every control is a normal focusable element
+  // no drawing surface on the QR route: every control is a normal focusable element
   await expect(r.locator('canvas')).toHaveCount(0)
   const stops = await tabAudit(r)
   expect(stops.map((s) => s.name).join('|')).toMatch(/Back/)

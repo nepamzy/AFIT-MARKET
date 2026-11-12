@@ -98,13 +98,13 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     ? { text: 'Pay for your order to place it.', href: '#pay', action: 'Go to payment' }
     : order.status === 'PICKUP_AWAITING_HANDOVER'
       ? {
-          text: 'Your order is ready to collect. At the shop, scan the shop’s QR code or show your own QR code, and the order is complete.',
+          text: 'Your order is ready to collect. At the shop, sign on the shop’s phone, or use a QR code: scan the shop’s code or show your own.',
           href: '#pickup',
           action: 'Open my pickup QR code',
         }
       : arrivedForHandover
         ? {
-            text: 'Your rider is here. Scan the rider’s QR code or show your own, and the delivery is complete.',
+            text: 'Your rider is here. Sign on the rider’s phone, or use a QR code: scan the rider’s code or show your own.',
             href: '#handover',
             action: 'Open the hand-over',
           }
