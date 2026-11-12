@@ -72,6 +72,7 @@ export default async function Catalogue() {
                   <ProductPhoto
                     productId={p.id}
                     icon="bag"
+                    fresh
                     className="aspect-square! w-12! shrink-0 rounded-lg"
                   />
                   <div className="min-w-0 flex-1">

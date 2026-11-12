@@ -81,7 +81,7 @@ export function ProductPhotoField({
     }
   }, [pickedUrl])
   const showing =
-    preview ?? (hasOld && !remove && productId ? `/api/products/${productId}/image` : null)
+    preview ?? (hasOld && !remove && productId ? `/api/products/${productId}/image?fresh` : null)
   return (
     <div className="space-y-2">
       <p className="font-semibold">Photo of the item</p>

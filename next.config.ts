@@ -22,6 +22,16 @@ const nextConfig: NextConfig = {
     // Location is blocked everywhere EXCEPT the rider area (where a rider who chose Go Active can share it).
     return [
       { source: '/:path*', headers: commonHeaders },
+      // ready-made item photos never change under the same name: keep them in the browser and on the network
+      {
+        source: '/catalogue/:file*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, s-maxage=31536000, stale-while-revalidate=604800',
+          },
+        ],
+      },
       { source: '/rider', headers: [POLICY('(self)')] },
       { source: '/rider/:path*', headers: [POLICY('(self)')] },
       // A customer may choose to share where they are with the rider while a delivery is active.
