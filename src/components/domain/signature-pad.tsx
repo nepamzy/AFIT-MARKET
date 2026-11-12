@@ -31,8 +31,12 @@ export function SignaturePad({
   const uid = useId()
   const canvas = useRef<HTMLCanvasElement>(null)
   const signedRef = useRef(false)
+  // the finished drawing is kept here, and the canvas is wiped, so nobody looking at the screen afterwards sees the signature
+  const capturedPng = useRef<string | null>(null)
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null)
   const drawing = useRef(false)
   const [signed, setSigned] = useState(false)
+  const [wiped, setWiped] = useState(false)
   // the parent's callback may be a new function on every render; keep the latest without re-running effects
   const changed = useRef(onSignedChange)
   useEffect(() => {
@@ -50,6 +54,9 @@ export function SignaturePad({
     g.lineCap = 'round'
     g.strokeStyle = '#111111'
     signedRef.current = false
+    setWiped(false)
+    capturedPng.current = null
+    if (settle.current) clearTimeout(settle.current)
     setSigned(false)
     changed.current?.(false)
   }, [])
@@ -61,7 +68,8 @@ export function SignaturePad({
     if (!form) return
     const onFormData = (e: FormDataEvent) => {
       // A single tap or a dot is not a signature: require a minimum amount of ink before the image is sent at all.
-      if (signedRef.current && canvas.current && inkPixels(canvas.current) >= MIN_INK_PIXELS)
+      if (capturedPng.current) e.formData.set(name, capturedPng.current)
+      else if (signedRef.current && canvas.current && inkPixels(canvas.current) >= MIN_INK_PIXELS)
         e.formData.set(name, canvas.current.toDataURL('image/png'))
     }
     form.addEventListener('formdata', onFormData)
@@ -79,6 +87,7 @@ export function SignaturePad({
   const down = (e: React.PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId)
     drawing.current = true
+    if (settle.current) clearTimeout(settle.current)
     const p = pos(e)
     const g = ctx()!
     g.beginPath()
@@ -99,6 +108,20 @@ export function SignaturePad({
     signedRef.current = true
     setSigned(true)
     changed.current?.(true)
+    // a moment after the last stroke: keep the drawing, wipe the screen and show "captured"
+    if (settle.current) clearTimeout(settle.current)
+    settle.current = setTimeout(() => {
+      const c = canvas.current
+      if (!c || drawing.current) return
+      if (inkPixels(c) < MIN_INK_PIXELS) return
+      capturedPng.current = c.toDataURL('image/png')
+      const g = ctx()
+      if (g) {
+        g.fillStyle = '#ffffff'
+        g.fillRect(0, 0, c.width, c.height)
+      }
+      setWiped(true)
+    }, 900)
   }
 
   return (
@@ -113,17 +136,28 @@ export function SignaturePad({
         role="img"
         aria-labelledby={`${uid}-label`}
         aria-describedby={`${uid}-hint`}
-        className="w-full touch-none rounded-[var(--radius-control)] border-2 border-dashed border-line-strong bg-white"
+        className={`w-full touch-none rounded-[var(--radius-control)] border-2 border-dashed border-line-strong bg-white ${wiped ? 'hidden' : ''}`}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
       />
+      {wiped && (
+        <div
+          role="status"
+          className="flex items-center gap-3 rounded-[var(--radius-control)] border-2 border-success-700 bg-success-50 px-4 py-6 font-semibold text-success-700"
+        >
+          <span aria-hidden="true" className="text-3xl">
+            ✓
+          </span>
+          Signature captured. It has been cleared from the screen.
+        </div>
+      )}
       <p id={`${uid}-hint`} aria-live="polite" className="text-sm text-muted">
         {hint} {signed ? 'Signature captured.' : 'Nothing signed yet.'}
       </p>
       <Button type="button" variant="secondary" onClick={reset}>
-        Clear signature
+        {wiped ? 'Sign again' : 'Clear signature'}
       </Button>
     </div>
   )

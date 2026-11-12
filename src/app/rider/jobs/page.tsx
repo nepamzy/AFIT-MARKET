@@ -54,7 +54,7 @@ export default async function Jobs() {
   ])
   return (
     <>
-      <AutoRefresh />
+      <AutoRefresh everySeconds={assignments.some((a) => a.arrival_detected_at) ? 4 : 15} />
       <PageHeader
         breadcrumbs={[{ label: 'Rider', href: '/rider' }, { label: 'Jobs' }]}
         title="Jobs"
