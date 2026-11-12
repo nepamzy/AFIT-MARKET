@@ -213,3 +213,35 @@ export async function riderIdCardForAdmin(
     .maybeSingle()
   return fromHex((data as Record<string, unknown> | null)?.[col])
 }
+
+/**
+ * Saves the details every new person gives at sign-up (full name, phone number, date of birth) and the categories they said
+ * they would like to shop. The phone number is encrypted; the name is also used as the display name. Interests are only
+ * a reference (nothing is hidden or switched on because of them) and point at live categories.
+ */
+export async function saveProfileDetails(
+  userId: string,
+  a: { fullName: string; phone: string; dateOfBirth: string; interestIds: string[] },
+): Promise<boolean> {
+  const sb = createSupabaseServiceClient()
+  const { error } = await sb.from('profile_details').upsert(
+    {
+      user_id: userId,
+      full_name: a.fullName,
+      phone_cipher: encryptField(a.phone),
+      date_of_birth: a.dateOfBirth,
+    },
+    { onConflict: 'user_id' },
+  )
+  if (error) return false
+  await sb
+    .from('profiles')
+    .update({ display_name: a.fullName.slice(0, 80) })
+    .eq('id', userId)
+  if (a.interestIds.length > 0)
+    await sb.from('user_interests').upsert(
+      a.interestIds.map((category_id) => ({ user_id: userId, category_id })),
+      { onConflict: 'user_id,category_id', ignoreDuplicates: true },
+    )
+  return true
+}

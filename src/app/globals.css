@@ -287,3 +287,45 @@ body {
 .letter-note {
   background: #fff9e3;
 }
+
+/* Sign-up: what would you like to shop. Two rows of category pictures slide sideways in opposite directions. */
+@keyframes afit-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.afit-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.afit-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: afit-marquee var(--afit-marquee-s, 40s) linear infinite;
+}
+.afit-marquee-track[data-reverse='1'] {
+  animation-direction: reverse;
+}
+.afit-marquee:hover .afit-marquee-track,
+.afit-marquee:focus-within .afit-marquee-track,
+.afit-marquee:active .afit-marquee-track,
+.afit-marquee[data-paused='1'] .afit-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .afit-marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .afit-marquee-track {
+    animation: none;
+  }
+  .afit-marquee-copy {
+    display: none;
+  }
+}
