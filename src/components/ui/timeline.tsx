@@ -1,6 +1,12 @@
 import { cn } from './cn'
 
-export type Step = { label: string; detail?: string; state: 'done' | 'current' | 'upcoming' }
+export type Step = {
+  label: string
+  detail?: string
+  state: 'done' | 'current' | 'upcoming'
+  /** Where tapping the step goes (for example the place on the page where the customer scans). */
+  href?: string
+}
 export function Timeline({ steps }: { steps: Step[] }) {
   return (
     <ol className="space-y-4" aria-label="Progress">
@@ -23,7 +29,13 @@ export function Timeline({ steps }: { steps: Step[] }) {
           </span>
           <div>
             <p className={cn('font-semibold', s.state === 'upcoming' && 'text-muted')}>
-              {s.label}
+              {s.href ? (
+                <a href={s.href} className="text-brand-800 underline underline-offset-2">
+                  {s.label}
+                </a>
+              ) : (
+                s.label
+              )}
               <span className="sr-only">
                 {' '}
                 ({s.state === 'done' ? 'done' : s.state === 'current' ? 'current step' : 'not yet'})

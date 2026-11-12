@@ -7,7 +7,7 @@ import { OrderStatusPill, ORDER_STATES } from '@/components/domain/order-status'
 import { OrderTracking } from '@/components/domain/order-tracking'
 import { Alert } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, ButtonLink } from '@/components/ui/button'
 import { Card, PageHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
 import { Timeline } from '@/components/ui/timeline'
@@ -77,13 +77,56 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const beforeCompletion =
     !completedAt && !['PENDING_PAYMENT', 'CANCELLED', 'REFUNDED'].includes(order.status)
   const hasReceipt = !['PENDING_PAYMENT', 'CANCELLED'].includes(order.status)
+  const arrivedForHandover =
+    order.fulfilment === 'delivery' &&
+    ['ARRIVAL_DETECTED', 'AWAITING_RECIPIENT_PROOF'].includes(order.status)
+  const waitingForHandover = arrivedForHandover || order.status === 'PICKUP_AWAITING_HANDOVER'
+  const onTheWay =
+    order.fulfilment === 'delivery' &&
+    ['RIDER_ASSIGNED', 'PICKED_UP_BY_RIDER', 'EN_ROUTE', 'ARRIVAL_DETECTED'].includes(order.status)
+  // where each step of the timeline takes the customer, when that place is on this page right now
+  const placeFor = (status: string): string | undefined => {
+    if (status === 'PENDING_PAYMENT' && unpaid) return '#pay'
+    if (status === 'PICKUP_AWAITING_HANDOVER' && pickup) return '#pickup'
+    if (['ARRIVAL_DETECTED', 'AWAITING_RECIPIENT_PROOF'].includes(status) && arrivedForHandover)
+      return '#handover'
+    if (['RIDER_ASSIGNED', 'PICKED_UP_BY_RIDER', 'EN_ROUTE'].includes(status) && onTheWay)
+      return '#tracking'
+    return undefined
+  }
+  const next: { text: string; href?: string; action?: string } | null = unpaid
+    ? { text: 'Pay for your order to place it.', href: '#pay', action: 'Go to payment' }
+    : order.status === 'PICKUP_AWAITING_HANDOVER'
+      ? {
+          text: 'Your order is ready to collect. At the shop, scan the shop’s QR code or show your own QR code, and the order is complete.',
+          href: '#pickup',
+          action: 'Open my pickup QR code',
+        }
+      : arrivedForHandover
+        ? {
+            text: 'Your rider is here. Scan the rider’s QR code or show your own, and the delivery is complete.',
+            href: '#handover',
+            action: 'Open the hand-over',
+          }
+        : onTheWay
+          ? { text: 'Your rider is on the way.', href: '#tracking', action: 'Watch on the map' }
+          : ['PAID', 'VENDOR_REVIEW', 'ACCEPTED', 'PREPARING'].includes(order.status)
+            ? { text: 'The shop is preparing your order. Nothing to do yet.' }
+            : ['READY', 'AWAITING_RIDER'].includes(order.status)
+              ? {
+                  text:
+                    order.fulfilment === 'delivery'
+                      ? 'Your order is ready. We are finding a rider.'
+                      : 'Your order is ready.',
+                }
+              : null
   const label = (c: string) => ORDER_STATES.find((s) => s.code === c)?.label ?? c
   const settled = ['COMPLETED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED'].includes(
     order.status,
   )
   return (
     <>
-      {!settled && <AutoRefresh />}
+      {!settled && <AutoRefresh everySeconds={waitingForHandover ? 4 : 15} />}
       <PageHeader
         title={order.order_number}
         subtitle={`${order.vendor_name} · ${order.fulfilment === 'delivery' ? 'Delivery' : 'Pickup'}`}
@@ -97,6 +140,17 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <Alert tone="info" className="mb-5">
         {ORDER_STATES.find((s) => s.code === order.status)?.meaning}
       </Alert>
+      {next && (
+        <Card className="mb-5 space-y-2 border-2 border-navy-900" data-testid="next-step">
+          <h2 className="text-lg font-extrabold text-navy-900">What to do now</h2>
+          <p>{next.text}</p>
+          {next.href && next.action && (
+            <ButtonLink href={next.href} variant="gold">
+              {next.action}
+            </ButtonLink>
+          )}
+        </Card>
+      )}
 
       {declined && (
         <div data-testid="declined">
@@ -145,7 +199,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       )}
 
       {unpaid && (
-        <Card className="mb-5 space-y-3 border-2 border-gold-400 bg-accent-50/50">
+        <Card
+          id="pay"
+          className="mb-5 scroll-mt-20 space-y-3 border-2 border-gold-400 bg-accent-50/50"
+        >
           <h2 className="text-lg font-extrabold text-navy-900">Payment needed</h2>
           <p>
             Total to pay: <Money kobo={order.total_kobo} className="font-bold" />
@@ -228,7 +285,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       )}
 
       {pickup && (
-        <Card className="mb-5 space-y-2 border-brand-700">
+        <Card id="pickup" className="mb-5 scroll-mt-20 space-y-2 border-brand-700">
           <h2 className="text-lg font-extrabold text-navy-900">Your pickup code</h2>
           <p
             className="text-3xl font-bold tracking-widest"
@@ -253,7 +310,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         ['RIDER_ASSIGNED', 'PICKED_UP_BY_RIDER', 'EN_ROUTE', 'ARRIVAL_DETECTED'].includes(
           order.status,
         ) && (
-          <Card className="mb-5 space-y-2">
+          <Card id="tracking" className="mb-5 scroll-mt-20 space-y-2">
             <h2 className="text-lg font-extrabold text-navy-900">Delivery tracking</h2>
             <OrderTracking orderId={order.id} mapKey={process.env.ARCGIS_API_KEY ?? null} />
           </Card>
@@ -261,7 +318,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
       {order.fulfilment === 'delivery' &&
         ['ARRIVAL_DETECTED', 'AWAITING_RECIPIENT_PROOF'].includes(order.status) && (
-          <Card className="mb-5 border-brand-700">
+          <Card id="handover" className="mb-5 scroll-mt-20 border-brand-700">
             <h2 className="text-lg font-extrabold text-navy-900">Your rider has arrived</h2>
             <p className="mt-1">
               Check that you have everything. Then confirm with a QR code: scan the code your rider
@@ -403,6 +460,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               label: label(h.to_status),
               detail: lagosDateTime(h.created_at),
               state: i === history.length - 1 ? 'current' : 'done',
+              href: i === history.length - 1 ? placeFor(h.to_status) : undefined,
             }))}
           />
         </Card>
