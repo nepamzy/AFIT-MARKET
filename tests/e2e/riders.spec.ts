@@ -189,6 +189,7 @@ test('rider journey: apply -> approve -> terms -> Go Active -> accept -> handove
   // ---- shop-to-rider hand-over: the SHOP shows a one-time QR code; the rider scans it (a wrong code is refused) ----
   await v.goto('/vendor/handover')
   await expect(v.getByText('Assigned rider:')).toContainText(fullName)
+  await v.getByRole('button', { name: 'Use QR code' }).click()
   await clickAndWait(v, () => v.getByRole('button', { name: 'Show hand-over QR code' }).click())
   const codeEl = v.getByTestId('pickup-code')
   await expect(codeEl).toBeVisible()
