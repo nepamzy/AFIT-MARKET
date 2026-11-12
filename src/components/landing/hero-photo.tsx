@@ -9,7 +9,7 @@ export function HeroPhoto({ className = '' }: { className?: string }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/art/hero.jpg"
+        src="/art/hero.webp"
         width={1024}
         height={576}
         alt="A student orders food on her phone at a campus food stall while a delivery rider rides past."

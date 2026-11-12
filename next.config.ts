@@ -22,9 +22,9 @@ const nextConfig: NextConfig = {
     // Location is blocked everywhere EXCEPT the rider area (where a rider who chose Go Active can share it).
     return [
       { source: '/:path*', headers: commonHeaders },
-      // ready-made item photos never change under the same name: keep them in the browser and on the network
+      // site pictures, the logo and ready-made item photos never change under the same name: keep them in the browser and on the network
       {
-        source: '/catalogue/:file*',
+        source: '/:folder(catalogue|art|brand|icons)/:file*',
         headers: [
           {
             key: 'Cache-Control',

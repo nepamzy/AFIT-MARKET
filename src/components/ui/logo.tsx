@@ -6,7 +6,7 @@ export function BrandMark({ size = 36 }: { size?: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/brand/mark.png"
+      src="/brand/mark-128.webp"
       alt=""
       width={size}
       height={size}

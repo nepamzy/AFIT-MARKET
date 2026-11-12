@@ -7,7 +7,7 @@ export function Watermark() {
     <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/art/hero.jpg"
+        src="/art/hero.webp"
         alt=""
         width={1024}
         height={576}
