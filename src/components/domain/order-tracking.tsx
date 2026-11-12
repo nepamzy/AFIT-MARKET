@@ -21,7 +21,7 @@ type Tracking =
     }
 
 const WHY: Record<string, string> = {
-  not_in_transit: 'Live tracking starts as soon as a rider accepts your order.',
+  not_in_transit: 'Live tracking starts once your rider has collected your order from the shop.',
   no_active_assignment: 'No rider is carrying your order right now.',
   rider_not_sharing: 'The rider is not sharing a location at the moment.',
   no_location_yet: 'Waiting for the rider’s first location update…',
@@ -178,7 +178,7 @@ function useShareLocation(orderId: string) {
         })
         if (r.accepted) setNote('Your rider can see where you are.')
         else if (r.reason === 'no_active_delivery')
-          setNote('Waiting for a rider to take this delivery.')
+          setNote('Sharing starts once your rider has collected your order.')
         else if (r.reason === 'inaccurate') setNote('Your location is not accurate enough yet.')
       },
       (err) => {

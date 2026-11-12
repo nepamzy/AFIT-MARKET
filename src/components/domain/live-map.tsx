@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import 'leaflet/dist/leaflet.css'
 
 export type MapPin = {
@@ -64,6 +64,8 @@ export function LiveMap({
     fitted: string
   } | null>(null)
   const latest = useRef(pins)
+  const wrap = useRef<HTMLDivElement>(null)
+  const [full, setFull] = useState(false)
 
   const sync = () => {
     const s = state.current
@@ -171,19 +173,67 @@ export function LiveMap({
     sync()
   })
 
+  // Expanded view: the map fills the whole screen (uses the browser's full-screen mode where it exists, so the phone can
+  // be turned sideways), and the map is told its new size.
+  const resize = () => window.setTimeout(() => state.current?.map.invalidateSize(), 80)
+  useEffect(() => {
+    resize()
+    const onResize = () => resize()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFull(false)
+    }
+    const onFs = () => {
+      if (!document.fullscreenElement) setFull(false)
+      resize()
+    }
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('fullscreenchange', onFs)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('fullscreenchange', onFs)
+    }
+  }, [full])
+  const toggle = async () => {
+    if (!full) {
+      setFull(true)
+      try {
+        await wrap.current?.requestFullscreen?.()
+      } catch {
+        /* no full-screen mode: the map still fills the page */
+      }
+    } else {
+      setFull(false)
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined)
+    }
+  }
+
   return (
-    <div>
+    <div
+      ref={wrap}
+      className={full ? 'fixed inset-0 z-[3000] flex flex-col bg-navy-950' : 'relative'}
+    >
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={full ? 'Close the full-screen map' : 'Expand the map to fill the screen'}
+        className="touch-target absolute right-2 top-2 z-[1000] rounded-full bg-white px-4 py-2 text-sm font-bold text-navy-900 shadow-lg"
+      >
+        {full ? '✕ Close map' : '⛶ Expand map'}
+      </button>
       <div
         ref={box}
         role="region"
         aria-label={label}
-        style={{ height }}
-        className="afit-map w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-navy-950"
+        style={{ height: full ? '100%' : height }}
+        className={`afit-map w-full overflow-hidden border border-line bg-navy-950 ${full ? 'flex-1 rounded-none' : 'rounded-[var(--radius-card)]'}`}
       />
-      <p className="mt-1 text-xs text-muted">
-        Satellite imagery © Esri and its data providers. Delivery points in this version are
-        placeholders.
-      </p>
+      {!full && (
+        <p className="mt-1 text-xs text-muted">Satellite imagery © Esri and its data providers.</p>
+      )}
     </div>
   )
 }
