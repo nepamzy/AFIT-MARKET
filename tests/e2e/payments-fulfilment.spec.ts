@@ -133,7 +133,8 @@ test('Paystack test payment -> vendor accepts, prepares, readies -> pickup code 
 
   // customer sees the pickup code
   await b.goto(`/orders/${orderId}`)
-  await expect(b.getByRole('heading', { name: 'Your pickup code' })).toBeVisible()
+  await expect(b.getByRole('heading', { name: 'Collect your order' })).toBeVisible()
+  await expect(b.getByRole('button', { name: 'Scan the shop’s QR code' })).toBeVisible()
   const code = (await b.locator('p.tracking-widest').innerText()).trim()
   expect(code).toMatch(/^[0-9A-F]{8}$/)
 
