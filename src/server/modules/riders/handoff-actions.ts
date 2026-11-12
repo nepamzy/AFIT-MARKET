@@ -138,3 +138,44 @@ export async function riderScanDeliveryAction(_p: ActionState, fd: FormData): Pr
   if (r.reason === 'wrong_qr') return failed('That code is not right. Check it and try again.')
   return failed('The customer has not shown a code yet. Ask them to tap “Show my QR code”.')
 }
+
+/**
+ * At the shop, on the SHOP's phone: the rider collecting the order signs, the server compares it with the signature that
+ * rider saved at sign-up, and the hand-over to the rider is complete. Only the shop's own people, only for a waiting rider.
+ */
+export async function vendorRiderPickupSignedAction(
+  _p: ActionState,
+  fd: FormData,
+): Promise<ActionState> {
+  const orderId = text(fd, 'orderId', 40)
+  if (!uuid.safeParse(orderId).success) return failed('That order was not found.')
+  const g = await gate({ roles: ['vendor_owner', 'vendor_staff'], aal: 'aal2' })
+  if ('state' in g) return g.state
+  const actor = g.who.userId
+  if (!actor) return failed('Please sign in again.')
+  const sig = parseSignature(String(fd.get('rider_signature') ?? ''))
+  if (!sig.ok) return failed('The rider must sign in the box.')
+  if (!(await rateLimit(`rider-pickup-sign:${actor}`, 600, 30)))
+    return failed('Too many attempts. Please wait a few minutes.')
+  const service = createSupabaseServiceClient()
+  const { data: job } = await service
+    .from('delivery_assignments')
+    .select('rider_id')
+    .eq('order_id', orderId)
+    .eq('status', 'accepted')
+    .maybeSingle()
+  if (!job) return failed('There is no rider waiting to collect this order any more.')
+  const mismatch = await signatureProblem(job.rider_id as string, sig.png)
+  if (mismatch) return failed(mismatch)
+  const { data, error } = await service.rpc('vendor_rider_pickup_signed', {
+    p_actor: actor,
+    p_order: orderId,
+    p_rider_sig: sig.hex,
+  })
+  if (error) return dbFailed(error, 'This order cannot be handed to the rider right now.')
+  const r = data as { ok: boolean }
+  if (!r.ok) return failed('There is no rider waiting to collect this order any more.')
+  revalidatePath('/vendor/handover')
+  revalidatePath('/rider/jobs')
+  return done('Handed to the rider. The order is on its way.')
+}

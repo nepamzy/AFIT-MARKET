@@ -19,7 +19,8 @@ export function PickupScanCard() {
   return (
     <div ref={box} className="space-y-3" data-testid="pickup-scan">
       <p className="text-sm font-semibold">
-        Collecting from the shop? Ask them to show their QR code.
+        Collecting from the shop? Sign on the shop’s phone, or ask them to show their QR code and
+        scan it.
       </p>
       <QrScanButton onCode={onCode} />
       <ActionForm

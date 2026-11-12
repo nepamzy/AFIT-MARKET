@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { PickupQrCard } from '@/components/domain/pickup-qr-card'
+import { RiderPickupCard } from '@/components/domain/rider-pickup-card'
 import { FindByCode } from '@/components/domain/find-by-code'
 import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { AutoRefresh } from '@/components/domain/auto-refresh'
@@ -57,7 +57,7 @@ export default async function Handover({
         <MetricCard
           label="Riders collecting"
           value={riderPickups.length}
-          note="Show them your QR code; they scan it"
+          note="They sign, or scan your QR code"
           icon="truck"
         />
       </MetricGrid>
@@ -70,10 +70,10 @@ export default async function Handover({
             <Card key={p.order_id} className="space-y-3">
               <p className="font-bold">{p.order_number}</p>
               <p>
-                Assigned rider: <strong>{p.rider_name}</strong>. Show the QR code below to this
-                person. When they scan it with their phone, the hand-over is complete.
+                Assigned rider: <strong>{p.rider_name}</strong>. Hand the order to this person only.
+                They sign on your phone, or scan your QR code with theirs.
               </p>
-              <PickupQrCard orderId={p.order_id} />
+              <RiderPickupCard orderId={p.order_id} />
             </Card>
           ))}
         </section>
