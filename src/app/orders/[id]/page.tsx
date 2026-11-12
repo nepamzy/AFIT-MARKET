@@ -87,7 +87,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   // where each step of the timeline takes the customer, when that place is on this page right now
   const placeFor = (status: string): string | undefined => {
     if (status === 'PENDING_PAYMENT' && unpaid) return '#pay'
-    if (status === 'PICKUP_AWAITING_HANDOVER' && pickup) return '#pickup'
+    if (status === 'PICKUP_AWAITING_HANDOVER' && order.status === status) return '#pickup'
     if (['ARRIVAL_DETECTED', 'AWAITING_RECIPIENT_PROOF'].includes(status) && arrivedForHandover)
       return '#handover'
     if (['RIDER_ASSIGNED', 'PICKED_UP_BY_RIDER', 'EN_ROUTE'].includes(status) && onTheWay)
@@ -284,25 +284,38 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         </Card>
       )}
 
-      {pickup && (
-        <Card id="pickup" className="mb-5 scroll-mt-20 space-y-2 border-brand-700">
-          <h2 className="text-lg font-extrabold text-navy-900">Your pickup code</h2>
-          <p
-            className="text-3xl font-bold tracking-widest"
-            aria-label={`Pickup code ${pickup.code.split('').join(' ')}`}
-          >
-            {pickup.code}
+      {order.status === 'PICKUP_AWAITING_HANDOVER' && (
+        <Card id="pickup" className="mb-5 scroll-mt-20 space-y-3 border-brand-700">
+          <h2 className="text-lg font-extrabold text-navy-900">Collect your order</h2>
+          <p className="text-sm text-muted">
+            At the shop, finish in one of two ways: scan the QR code the shop shows you, or let the
+            shop scan your QR code below.
           </p>
           <CustomerScanButton label="Scan the shop’s QR code" />
-          <QrImage
-            value={`${PICKUP_ORDER_QR_PREFIX}${order.id}.${pickup.code}`}
-            label="QR code for the shop to scan when you collect your order"
-          />
-          <p className="text-sm text-muted">
-            When you collect your order, let the shop scan this QR code (or read the code out to
-            them). Or scan the QR code the shop shows you with your phone camera. Do not share your
-            code with anyone else.
-          </p>
+          {pickup ? (
+            <>
+              <p className="font-semibold">Your pickup code</p>
+              <p
+                className="text-3xl font-bold tracking-widest"
+                aria-label={`Pickup code ${pickup.code.split('').join(' ')}`}
+              >
+                {pickup.code}
+              </p>
+              <QrImage
+                value={`${PICKUP_ORDER_QR_PREFIX}${order.id}.${pickup.code}`}
+                label="QR code for the shop to scan when you collect your order"
+              />
+              <p className="text-sm text-muted">
+                Let the shop scan this QR code, or read the code out to them. Do not share it with
+                anyone else.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-muted">
+              Your own pickup code is not available right now. You can still scan the shop’s QR
+              code, or contact support.
+            </p>
+          )}
         </Card>
       )}
 
