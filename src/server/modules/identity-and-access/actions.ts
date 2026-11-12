@@ -143,18 +143,23 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
       if (problem) return { error: problem }
     }
   }
-  // everyone: full name, phone number and date of birth (18 or older), and at least three things they would like to shop
+  // everyone: full name, phone number and date of birth (18 or older)
   const details = parseSignupDetails({
     fullName: String(formData.get('fullName') ?? ''),
     phone: String(formData.get('phone') ?? ''),
     dateOfBirth: String(formData.get('dob') ?? ''),
   })
   if (!details.ok) return { error: details.error }
-  const interests = parseInterests(
-    String(formData.get('interests') ?? ''),
-    (await listCategories()).map((c) => c.id),
-  )
-  if (!interests.ok) return { error: interests.error }
+  // only customers are asked what they would like to shop (shops and riders are not)
+  let interestIds: string[] = []
+  if (intent === 'customer') {
+    const interests = parseInterests(
+      String(formData.get('interests') ?? ''),
+      (await listCategories()).map((c) => c.id),
+    )
+    if (!interests.ok) return { error: interests.error }
+    interestIds = interests.ids
+  }
   const ip = await clientIp()
   if (
     !(await rateLimit(`signup:ip:${ip}`, 3600, 10)) ||
@@ -239,7 +244,7 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
         fullName: details.fullName,
         phone: details.phone,
         dateOfBirth: details.dateOfBirth,
-        interestIds: interests.ids,
+        interestIds,
       })
     } catch (e) {
       logger.warn('sign-up details not saved', { err: e instanceof Error ? e.name : 'error' })

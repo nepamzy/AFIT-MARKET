@@ -392,7 +392,8 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         return setProblem('Enter a valid Nigerian phone number, for example 0803 123 4567.')
       if (!dob) return setProblem('Enter your date of birth.')
       if (ageOf(dob) < 18) return setProblem('AFIT Market is only for people aged 18 and over.')
-      return setStep(3)
+      // only customers are asked what they would like to shop; shops and riders go straight on
+      return setStep(intent === 'customer' ? 3 : 4)
     }
     if (step === 3) {
       if (interests.length < MIN_PICKS)
@@ -404,19 +405,23 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
       return setStep(5)
     }
   }
-  const stepTitle = [
+  const wantsInterests = intent === 'customer'
+  const titles = [
     'Who are you?',
     'About you',
     'What would you like to shop?',
     'Your signature',
     'Your account',
-  ][step - 1]!
+  ]
+  const stepTitle = titles[step - 1]!
+  const stepNo = wantsInterests || step < 3 ? step : step - 1
+  const stepCount = wantsInterests ? 5 : 4
 
   return (
     <form action={action} className="space-y-4" noValidate>
       <Notice state={state} />
       <p className="text-sm font-semibold text-muted" data-testid="signup-step">
-        Step {step} of 5: {stepTitle}
+        Step {stepNo} of {stepCount}: {stepTitle}
       </p>
       {problem && (
         <p
@@ -712,7 +717,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
           onSignedChange={setSigned}
         />
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={() => setStep(3)}>
+          <Button type="button" variant="secondary" onClick={() => setStep(wantsInterests ? 3 : 2)}>
             Back
           </Button>
           <Button type="button" onClick={goNext} disabled={!signed} className="flex-1">
