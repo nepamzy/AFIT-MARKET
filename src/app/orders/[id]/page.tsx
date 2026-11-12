@@ -20,6 +20,8 @@ import { ActionForm } from '@/components/forms/action-form'
 import { CustomerScanButton } from '@/components/domain/customer-scan-button'
 import { QrImage } from '@/components/domain/qr-image'
 import { PICKUP_ORDER_QR_PREFIX } from '@/components/domain/qr-scan-button'
+import { HandoverChoice } from '@/components/domain/handover-choice'
+import { PickupShopMap } from '@/components/domain/pickup-shop-map'
 import { CustomerDeliveryQr } from '@/components/domain/customer-delivery-qr'
 import { mockPaymentsAllowed, paystackConfig, paystackIsLive } from '@/lib/env'
 import { cancelOrderAction, mockPayAction } from '@/server/modules/cart-and-checkout/actions'
@@ -284,38 +286,71 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         </Card>
       )}
 
+      {order.fulfilment === 'pickup' &&
+        [
+          'PAID',
+          'VENDOR_REVIEW',
+          'ACCEPTED',
+          'PREPARING',
+          'READY',
+          'PICKUP_AWAITING_HANDOVER',
+        ].includes(order.status) && (
+          <Card id="shop-map" className="mb-5 scroll-mt-20 space-y-2">
+            <h2 className="text-lg font-extrabold text-navy-900">Where to collect</h2>
+            <PickupShopMap orderId={order.id} mapKey={process.env.ARCGIS_API_KEY ?? null} />
+          </Card>
+        )}
+
       {order.status === 'PICKUP_AWAITING_HANDOVER' && (
         <Card id="pickup" className="mb-5 scroll-mt-20 space-y-3 border-brand-700">
           <h2 className="text-lg font-extrabold text-navy-900">Collect your order</h2>
-          <p className="text-sm text-muted">
-            At the shop, finish in one of two ways: scan the QR code the shop shows you, or let the
-            shop scan your QR code below.
-          </p>
-          <CustomerScanButton label="Scan the shop’s QR code" />
-          {pickup ? (
-            <>
-              <p className="font-semibold">Your pickup code</p>
-              <p
-                className="text-3xl font-bold tracking-widest"
-                aria-label={`Pickup code ${pickup.code.split('').join(' ')}`}
-              >
-                {pickup.code}
-              </p>
-              <QrImage
-                value={`${PICKUP_ORDER_QR_PREFIX}${order.id}.${pickup.code}`}
-                label="QR code for the shop to scan when you collect your order"
-              />
-              <p className="text-sm text-muted">
-                Let the shop scan this QR code, or read the code out to them. Do not share it with
-                anyone else.
-              </p>
-            </>
-          ) : (
+          <HandoverChoice
+            sign={
+              <div className="space-y-2">
+                <p>
+                  Tell the shop you will sign. Give them your pickup code, then sign on the shop’s
+                  phone. It must look like the signature you saved when you joined.
+                </p>
+                {pickup && (
+                  <p
+                    className="text-3xl font-bold tracking-widest"
+                    aria-label={`Pickup code ${pickup.code.split('').join(' ')}`}
+                  >
+                    {pickup.code}
+                  </p>
+                )}
+              </div>
+            }
+          >
             <p className="text-sm text-muted">
-              Your own pickup code is not available right now. You can still scan the shop’s QR
-              code, or contact support.
+              Scan the QR code the shop shows you, or let the shop scan your QR code below.
             </p>
-          )}
+            <CustomerScanButton label="Scan the shop’s QR code" />
+            {pickup ? (
+              <>
+                <p className="font-semibold">Your pickup code</p>
+                <p
+                  className="text-3xl font-bold tracking-widest"
+                  aria-label={`Pickup code ${pickup.code.split('').join(' ')}`}
+                >
+                  {pickup.code}
+                </p>
+                <QrImage
+                  value={`${PICKUP_ORDER_QR_PREFIX}${order.id}.${pickup.code}`}
+                  label="QR code for the shop to scan when you collect your order"
+                />
+                <p className="text-sm text-muted">
+                  Let the shop scan this QR code, or read the code out to them. Do not share it with
+                  anyone else.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted">
+                Your own pickup code is not available right now. You can still scan the shop’s QR
+                code, or contact support.
+              </p>
+            )}
+          </HandoverChoice>
         </Card>
       )}
 
@@ -333,11 +368,21 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         ['ARRIVAL_DETECTED', 'AWAITING_RECIPIENT_PROOF'].includes(order.status) && (
           <Card id="handover" className="mb-5 scroll-mt-20 border-brand-700">
             <h2 className="text-lg font-extrabold text-navy-900">Your rider has arrived</h2>
-            <p className="mt-1">
-              Check that you have everything. Then confirm with a QR code: scan the code your rider
-              shows you with this phone, or show your own code and let the rider scan it.
-            </p>
-            <CustomerDeliveryQr orderId={order.id} />
+            <p className="mb-3 mt-1">Check that you have everything, then confirm.</p>
+            <HandoverChoice
+              sign={
+                <p>
+                  Tell the rider you will sign. Sign on the rider’s phone; it must look like the
+                  signature you saved when you joined. The rider signs after you.
+                </p>
+              }
+            >
+              <p>
+                Scan the code your rider shows you with this phone, or show your own code and let
+                the rider scan it.
+              </p>
+              <CustomerDeliveryQr orderId={order.id} />
+            </HandoverChoice>
             <p className="mt-2 text-sm">
               Something missing or wrong? Do not confirm.{' '}
               <a

@@ -75,6 +75,7 @@ test('the customer shows a QR code and the rider scans (or types) it; nobody els
   expect((await orderRow(o.id)).status).toBe('ARRIVAL_DETECTED')
 
   // the customer shows a code
+  await c.getByRole('button', { name: 'Use QR code' }).click()
   await c.getByRole('button', { name: 'Show my QR code to the rider' }).click()
   await expect(c.getByRole('img', { name: /QR code for the rider to scan/ })).toBeVisible()
   const code = (await c.getByTestId('delivery-code').innerText()).trim()
@@ -133,6 +134,7 @@ test('a customer cannot confirm their own delivery with a code they made themsel
   const { customer, riderSession, o } = await arrived(browser, info, 'ds')
   const c = customer.page
   await c.goto(`/orders/${o.id}`)
+  await c.getByRole('button', { name: 'Use QR code' }).click()
   await c.getByRole('button', { name: 'Show my QR code to the rider' }).click()
   const code = (await c.getByTestId('delivery-code').innerText()).trim()
   await c.goto(`/confirm/${o.id}.${code}`)
