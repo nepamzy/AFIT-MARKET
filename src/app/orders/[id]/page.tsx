@@ -517,7 +517,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             steps={history.map((h, i) => ({
               label: label(h.to_status),
               detail: lagosDateTime(h.created_at),
-              state: i === history.length - 1 ? 'current' : 'done',
+              state: 'done',
               href: i === history.length - 1 ? placeFor(h.to_status) : undefined,
             }))}
           />
