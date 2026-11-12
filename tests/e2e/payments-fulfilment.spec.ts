@@ -134,6 +134,7 @@ test('Paystack test payment -> vendor accepts, prepares, readies -> pickup code 
   // customer sees the pickup code
   await b.goto(`/orders/${orderId}`)
   await expect(b.getByRole('heading', { name: 'Collect your order' })).toBeVisible()
+  await b.getByRole('button', { name: 'Use QR code' }).click()
   await expect(b.getByRole('button', { name: 'Scan the shop’s QR code' })).toBeVisible()
   const code = (await b.locator('p.tracking-widest').innerText()).trim()
   expect(code).toMatch(/^[0-9A-F]{8}$/)
@@ -148,6 +149,7 @@ test('Paystack test payment -> vendor accepts, prepares, readies -> pickup code 
   await clickAndWait(v, () => v.getByRole('button', { name: 'Find order' }).click())
   await expect(v.getByText(/Go to this order to complete the handover/)).toBeVisible()
   expect((await orderRow(orderId)).status).toBe('PICKUP_AWAITING_HANDOVER')
+  await v.getByRole('button', { name: 'Use QR code' }).click()
   await v.getByLabel('Pickup code from the customer').fill('WRONG123')
   await clickAndWait(v, () => v.getByRole('button', { name: 'Complete handover' }).click())
   await expect(alertIn(v)).toContainText(/not right/i)

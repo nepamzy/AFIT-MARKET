@@ -41,6 +41,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             productId={product.id}
             icon="bag"
             label={product.name}
+            eager
             className="aspect-[4/3] rounded-[var(--radius-card)]"
           />
         </div>

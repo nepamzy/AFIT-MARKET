@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom'
 import { ActionForm } from '@/components/forms/action-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/fields'
+import { HandoverForm } from '@/components/domain/handover-form'
 import { PICKUP_ORDER_QR_PREFIX, QrScanButton } from '@/components/domain/qr-scan-button'
 import { lagosTime } from '@/lib/time'
 import {
@@ -13,10 +14,12 @@ import {
 } from '@/server/modules/orders-and-state-machine/qr-actions'
 
 /**
- * A customer collecting their own order. Two ways, both with a QR code and no signature: the shop shows a code and the
- * customer scans it with their phone, or the customer shows their pickup QR code and the shop scans it (or types the code).
+ * A customer collecting their own order. The shop first chooses: signature (the customer gives their pickup code and
+ * signs on the shop's phone) or QR code (the shop shows a code and the customer scans it, or the customer shows their
+ * pickup QR code and the shop scans it or types the code).
  */
 export function PickupHandoverCard({ orderId }: { orderId: string }) {
+  const [mode, setMode] = useState<'choose' | 'sign' | 'qr'>('choose')
   const [qr, setQr] = useState<ShopPickupQr | null>(null)
   const [code, setCode] = useState('')
   const [pending, start] = useTransition()
@@ -32,6 +35,33 @@ export function PickupHandoverCard({ orderId }: { orderId: string }) {
     },
     [orderId],
   )
+  if (mode === 'choose')
+    return (
+      <div className="space-y-3">
+        <p>Choose how the customer confirms they collected the order.</p>
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" onClick={() => setMode('sign')}>
+            Use signature
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setMode('qr')}>
+            Use QR code
+          </Button>
+        </div>
+      </div>
+    )
+  if (mode === 'sign')
+    return (
+      <div className="space-y-3">
+        <p className="font-semibold">The customer signs on this phone</p>
+        <HandoverForm orderId={orderId} typedEnabled={false} />
+        <p className="text-sm text-muted">
+          If the signature is not accepted, go back and use a QR code instead.
+        </p>
+        <Button type="button" variant="secondary" onClick={() => setMode('choose')}>
+          Back
+        </Button>
+      </div>
+    )
   return (
     <div className="space-y-4">
       <div ref={scanBox} className="space-y-3" data-testid="pickup-scan-customer">
@@ -95,6 +125,9 @@ export function PickupHandoverCard({ orderId }: { orderId: string }) {
           </div>
         )}
       </div>
+      <Button type="button" variant="secondary" onClick={() => setMode('choose')}>
+        Back
+      </Button>
     </div>
   )
 }

@@ -7,7 +7,7 @@ test('the AFIT Market logo is used for the browser tab, the installed app and li
   await page.goto('/')
   // header: the mark and the name written out as text
   const logo = page.locator('header').getByRole('link', { name: 'AFIT Market home' }).first()
-  await expect(logo.locator('img[src="/brand/mark.png"]')).toBeVisible()
+  await expect(logo.locator('img[src="/brand/mark-128.webp"]')).toBeVisible()
   await expect(logo).toContainText('AFIT')
   await expect(logo).toContainText('MARKET')
   const head = await page.evaluate(() => ({
