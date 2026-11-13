@@ -292,7 +292,7 @@ body {
 .built-by-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-height: 32px;
   padding: 8px 14px;
   border-radius: 999px;
@@ -303,6 +303,10 @@ body {
 }
 .built-by-badge:hover {
   outline: 2px solid #e4b343;
+}
+.built-by-mark {
+  display: block;
+  border-radius: 3px;
 }
 .built-by-label {
   color: #8b93a3;
