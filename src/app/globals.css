@@ -329,3 +329,27 @@ body {
     display: none;
   }
 }
+
+/* "Built by NOBS Agent" credit badge in the footer */
+.built-by-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #0b0d12;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1;
+}
+.built-by-badge:hover {
+  outline: 2px solid #e4b343;
+}
+.built-by-label {
+  color: #8b93a3;
+}
+.built-by-name {
+  color: #e4b343;
+  font-weight: 600;
+}

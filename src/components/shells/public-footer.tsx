@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { WhatsAppLogo } from '@/components/landing/whatsapp'
+import { BuiltByBadge } from '@/components/ui/built-by-badge'
 import { Logo } from '@/components/ui/logo'
 import { WHATSAPP_NUMBER_DISPLAY, WHATSAPP_URL, supportEmail } from '@/lib/contact'
 
@@ -103,9 +104,12 @@ export function PublicFooter() {
         ))}
       </div>
       <div className="border-t border-white/10">
-        <p className="mx-auto max-w-6xl px-4 py-4 text-xs">
-          AFIT Market is a student marketplace for the Kaduna campus community.
-        </p>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
+          <p className="text-xs">
+            AFIT Market is a student marketplace for the Kaduna campus community.
+          </p>
+          <BuiltByBadge />
+        </div>
       </div>
     </footer>
   )
