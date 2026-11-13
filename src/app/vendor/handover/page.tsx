@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ShopRiderMap } from '@/components/domain/shop-rider-map'
 import { RiderPickupCard } from '@/components/domain/rider-pickup-card'
 import { FindByCode } from '@/components/domain/find-by-code'
 import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
@@ -73,6 +74,7 @@ export default async function Handover({
                 Assigned rider: <strong>{p.rider_name}</strong>. Hand the order to this person only.
                 They sign on your phone, or scan your QR code with theirs.
               </p>
+              <ShopRiderMap orderId={p.order_id} mapKey={process.env.ARCGIS_API_KEY ?? null} />
               <RiderPickupCard orderId={p.order_id} />
             </Card>
           ))}
