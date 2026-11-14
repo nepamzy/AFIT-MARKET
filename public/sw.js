@@ -46,7 +46,11 @@ self.addEventListener('push', (event) => {
         body: String(data.body || '').slice(0, 200),
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
-        tag: url,
+        // one pop-up per notification: a shared tag would swap the old pop-up for the new one without alerting
+        tag: id ? 'n-' + id : url,
+        renotify: true,
+        vibrate: [200, 100, 200],
+        timestamp: Date.now(),
         data: { url },
       }),
     ]),

@@ -66,7 +66,10 @@ export async function sendPush(
           publicKey: config.publicKey,
           privateKey: config.privateKey,
         },
-        TTL: 3600,
+        // keep it for a day so a phone that was off or out of signal still gets it when it is back; high urgency
+        // asks the phone to show it straight away instead of waiting for its next quiet moment
+        TTL: 86400,
+        urgency: 'high',
         timeout: 8000,
       },
     )

@@ -8,7 +8,7 @@ import {
 const CHANGE = 'afit-push-change'
 export type PushPhase = 'checking' | 'unsupported' | 'blocked' | 'off' | 'on' | 'working' | 'signin'
 
-function keyBytes(b64url: string): Uint8Array<ArrayBuffer> {
+export function keyBytes(b64url: string): Uint8Array<ArrayBuffer> {
   const pad = '='.repeat((4 - (b64url.length % 4)) % 4)
   const raw = atob((b64url + pad).replace(/-/g, '+').replace(/_/g, '/'))
   const out = new Uint8Array(new ArrayBuffer(raw.length))

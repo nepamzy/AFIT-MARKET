@@ -281,6 +281,43 @@ export async function savePushSubscriptionAction(input: unknown): Promise<Action
   return done('Pop-ups are on for this device.')
 }
 
+/**
+ * Quietly (re)binds this device to whoever is signed in right now. A phone is often used by more than one account
+ * (customer, shop, rider): the pop-up address belongs to the device, so it must follow the person who is signed in.
+ * Makes room by dropping the oldest device when the person already has five.
+ */
+export async function syncPushSubscriptionAction(input: unknown): Promise<ActionState> {
+  const g = await gate(ANY_USER)
+  if ('state' in g) return g.state
+  const userId = g.who.userId
+  if (!userId) return failed('Please sign in to continue.')
+  if (!(await rateLimit(`push:sync:${userId}`, 3600, 120)))
+    return failed('Too many attempts. Please try again later.')
+  const parsed = pushSub.safeParse(input)
+  if (!parsed.success) return failed('This device cannot receive pop-ups.')
+  const svc = createSupabaseServiceClient()
+  const mine = await svc
+    .from('push_subscriptions')
+    .select('endpoint, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+  if (mine.error) return failed('Could not update pop-ups.')
+  const rows = mine.data ?? []
+  const known = rows.some((r) => r.endpoint === parsed.data.endpoint)
+  if (!known && rows.length >= MAX_DEVICES) {
+    const drop = rows.slice(0, rows.length - MAX_DEVICES + 1).map((r) => r.endpoint)
+    await svc.from('push_subscriptions').delete().eq('user_id', userId).in('endpoint', drop)
+  }
+  const { error } = await svc
+    .from('push_subscriptions')
+    .upsert({ user_id: userId, ...parsed.data }, { onConflict: 'endpoint' })
+  if (error) {
+    logger.warn('push subscription sync failed', { code: error.code })
+    return failed('Could not update pop-ups.')
+  }
+  return { ok: true }
+}
+
 export async function removePushSubscriptionAction(endpoint: string): Promise<ActionState> {
   const g = await gate(ANY_USER)
   if ('state' in g) return g.state
