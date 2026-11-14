@@ -4,11 +4,6 @@
 
 alter table public.orders add column payment_timing text not null default 'now' check (payment_timing in ('now', 'on_delivery'));
 
-insert into public.platform_settings (key, value, note) values
-  ('pay_on_delivery_enabled', 'true'::jsonb, 'Customers may choose to pay when they receive their order.'),
-  ('pay_on_delivery_max_kobo', '2000000'::jsonb, 'Largest order (in kobo) that can be paid on delivery. 2000000 is 20,000 naira.')
-on conflict (key) do nothing;
-
 create or replace function app_private.setting_rule(p_key text) returns table (kind text, lo bigint, hi bigint, choices text[])
 language sql immutable set search_path = ''
 as $$
@@ -44,6 +39,11 @@ as $$
     ('pay_on_delivery_max_kobo', 'int', 100000, 20000000, null)
   ) as r(key, kind, lo, hi, choices) where r.key = p_key
 $$;
+
+insert into public.platform_settings (key, value, note) values
+  ('pay_on_delivery_enabled', 'true'::jsonb, 'Customers may choose to pay when they receive their order.'),
+  ('pay_on_delivery_max_kobo', '2000000'::jsonb, 'Largest order (in kobo) that can be paid on delivery. 2000000 is 20,000 naira.')
+on conflict (key) do nothing;
 
 -- The moments when someone is holding their order and can pay for it.
 create function app_private.pay_at_door_window(p_status text) returns boolean
