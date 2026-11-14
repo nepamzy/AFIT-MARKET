@@ -16,6 +16,12 @@ const MESSAGES: Record<string, string> = {
   cart_empty: 'Your cart is empty.',
   invalid_fulfilment: 'Choose pickup or delivery.',
   order_not_payable: 'This order can no longer be paid.',
+  payment_due:
+    'The customer has not paid yet. Ask them to pay in the app, wait until it shows Paid, then try again.',
+  pay_on_delivery_off: 'Paying when you receive the order is switched off right now.',
+  pay_on_delivery_too_large: 'This order is too large to pay on delivery. Please pay now.',
+  too_many_unpaid:
+    'You have orders waiting to be paid at the door. Pay for those first, or pay for this one now.',
   order_not_cancellable: 'This order can no longer be cancelled.',
   mock_payments_disabled: 'Test payments are switched off.',
   application_pending: 'You already have an application waiting for review.',

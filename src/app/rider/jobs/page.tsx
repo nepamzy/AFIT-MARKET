@@ -1,3 +1,4 @@
+import { PayAtDoorNotice } from '@/components/domain/pay-at-door-notice'
 import { RiderHandoff } from '@/components/domain/rider-handoff'
 import { AutoRefresh } from '@/components/domain/auto-refresh'
 import type { Metadata } from 'next'
@@ -133,7 +134,10 @@ export default async function Jobs() {
                 </div>
               )}
               {a.arrival_detected_at && (
-                <RiderHandoff orderId={a.order_id} orderNumber={a.order_number} />
+                <>
+                  <PayAtDoorNotice orderId={a.order_id} />
+                  <RiderHandoff orderId={a.order_id} orderNumber={a.order_number} />
+                </>
               )}
               <ReportIssueForm assignmentId={a.assignment_id} />
             </Card>

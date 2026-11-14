@@ -1,6 +1,6 @@
 # Customer Terms and Conditions
 
-Last updated: 11 November 2026
+Last updated: 14 November 2026
 
 These terms are the agreement between you and **NOBS AGENT** (company registration in progress), the operator of **AFIT Market** ("we", "us"). Support: afitmarket01@gmail.com, WhatsApp 0911 5930 445. By creating an account or placing an order you accept these terms. Read them together with our Privacy Policy, Refund, Return and Dispute Policy, and Payments, Delivery Fee and Payouts notice.
 
@@ -32,11 +32,11 @@ These terms are the agreement between you and **NOBS AGENT** (company registrati
 
 4.1 Vendors set their own prices and descriptions. The price you see at checkout is the price you pay for the items. Checkout shows the item total, the delivery fee (if you choose delivery) and your total before you pay. **There is no platform or service fee for customers.**
 
-4.2 You pay for your items online through **Paystack** on a card or other method Paystack offers. We never see or store your card details. A payment is treated as received only after we have confirmed it with Paystack; a message from your own browser is not proof of payment.
+4.2 You pay for your items online through **Paystack** on a card or other method Paystack offers. We never see or store your card details. A payment is treated as received only after we have confirmed it with Paystack; a message from your own browser is not proof of payment. For orders up to ₦20,000 you may instead choose at checkout to **pay when you receive the order**: you must then pay through Paystack before you take the order, and we may switch this option off for a customer who repeatedly does not pay (see the Payments notice).
 
 4.3 An order must be paid within **30 minutes** of being placed, or it is cancelled and the stock is released.
 
-4.4 After payment the shop must **accept or decline** your order. The shop has **15 hours** to answer. If the shop declines (it must give you a reason, which you will see on your order) or does not answer in time, the order is cancelled and **your payment is refunded in full automatically** to the way you paid. Refunds can take a few working days to reach your bank or card, depending on your bank.
+4.4 After payment (or, for an order paid on delivery, after you place it) the shop must **accept or decline** your order. The shop has **15 hours** to answer. If the shop declines (it must give you a reason, which you will see on your order) or does not answer in time, the order is cancelled and **your payment is refunded in full automatically** to the way you paid. Refunds can take a few working days to reach your bank or card, depending on your bank.
 
 4.5 Your payment is held by us until the order is completed and is released to the shop 24 hours after completion, unless a complaint is open (see the Payments notice). During that time you can report a problem.
 

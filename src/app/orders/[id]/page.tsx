@@ -26,6 +26,7 @@ import { CustomerDeliveryQr } from '@/components/domain/customer-delivery-qr'
 import { mockPaymentsAllowed, paystackConfig, paystackIsLive } from '@/lib/env'
 import { cancelOrderAction, mockPayAction } from '@/server/modules/cart-and-checkout/actions'
 import { payWithPaystackAction } from '@/server/modules/payments/actions'
+import type { PaymentView } from '@/server/modules/payments/pay-on-delivery'
 import {
   getOrder,
   getPickupCode,
@@ -68,6 +69,12 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     ? await myOrderReview(order.id)
     : null
   const dfp = order.fulfilment === 'delivery' ? await deliveryFeeForOrder(order.id) : null
+  // an order that is paid when it is received: is it paid yet, and is this the moment to pay?
+  const pv = (
+    await (await createSupabaseServerClient()).rpc('order_payment_view', { p_order: order.id })
+  ).data as PaymentView
+  const payAtDoor = pv?.pay_at_door === true
+  const mustPayNow = payAtDoor && !pv?.paid && pv?.can_pay_now === true
   const holdHours = Number(
     (await (await createSupabaseServerClient()).rpc('payout_hold_hours')).data ?? 24,
   )
@@ -98,30 +105,40 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   }
   const next: { text: string; href?: string; action?: string } | null = unpaid
     ? { text: 'Pay for your order to place it.', href: '#pay', action: 'Go to payment' }
-    : order.status === 'PICKUP_AWAITING_HANDOVER'
+    : mustPayNow
       ? {
-          text: 'Your order is ready to collect. At the shop, sign on the shop’s phone, or use a QR code: scan the shop’s code or show your own.',
-          href: '#pickup',
-          action: 'Open my pickup QR code',
+          text: 'Pay for your order now, then confirm that you received it.',
+          href: '#pay-at-door',
+          action: 'Pay now',
         }
-      : arrivedForHandover
+      : order.status === 'PICKUP_AWAITING_HANDOVER'
         ? {
-            text: 'Your rider is here. Sign on the rider’s phone, or use a QR code: scan the rider’s code or show your own.',
-            href: '#handover',
-            action: 'Open the hand-over',
+            text: 'Your order is ready to collect. At the shop, sign on the shop’s phone, or use a QR code: scan the shop’s code or show your own.',
+            href: '#pickup',
+            action: 'Open my pickup QR code',
           }
-        : onTheWay
-          ? { text: 'Your rider is on the move.', href: '#tracking', action: 'Watch on the map' }
-          : ['PAID', 'VENDOR_REVIEW', 'ACCEPTED', 'PREPARING'].includes(order.status)
-            ? { text: 'The shop is preparing your order. Nothing to do yet.' }
-            : ['READY', 'AWAITING_RIDER'].includes(order.status)
+        : arrivedForHandover
+          ? {
+              text: 'Your rider is here. Sign on the rider’s phone, or use a QR code: scan the rider’s code or show your own.',
+              href: '#handover',
+              action: 'Open the hand-over',
+            }
+          : onTheWay
+            ? { text: 'Your rider is on the move.', href: '#tracking', action: 'Watch on the map' }
+            : ['PAID', 'VENDOR_REVIEW', 'ACCEPTED', 'PREPARING'].includes(order.status)
               ? {
-                  text:
-                    order.fulfilment === 'delivery'
-                      ? 'Your order is ready. We are finding a rider.'
-                      : 'Your order is ready.',
+                  text: payAtDoor
+                    ? 'The shop is preparing your order. You pay when you receive it.'
+                    : 'The shop is preparing your order. Nothing to do yet.',
                 }
-              : null
+              : ['READY', 'AWAITING_RIDER'].includes(order.status)
+                ? {
+                    text:
+                      order.fulfilment === 'delivery'
+                        ? 'Your order is ready. We are finding a rider.'
+                        : 'Your order is ready.',
+                  }
+                : null
   const label = (c: string) => ORDER_STATES.find((s) => s.code === c)?.label ?? c
   const settled = ['COMPLETED', 'CANCELLED', 'REFUNDED', 'PARTIALLY_REFUNDED'].includes(
     order.status,
@@ -198,6 +215,46 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             )}
           </Alert>
         </div>
+      )}
+
+      {payAtDoor && !pv?.paid && order.status !== 'CANCELLED' && (
+        <Card
+          id="pay-at-door"
+          className="mb-5 scroll-mt-20 space-y-3 border-2 border-gold-400 bg-accent-50/50"
+        >
+          <h2 className="text-lg font-extrabold text-navy-900">
+            {mustPayNow ? 'Pay for your order' : 'You pay when you receive it'}
+          </h2>
+          <p>
+            Total to pay: <Money kobo={order.total_kobo} className="font-bold" />
+          </p>
+          {mustPayNow ? (
+            <>
+              <p className="text-sm text-muted">
+                Check your order first. Then pay with Paystack on this phone. When the payment shows
+                as received, confirm the hand-over. You cannot take the order before it is paid.
+              </p>
+              {paystack ? (
+                <ActionForm
+                  action={payWithPaystackAction}
+                  submitLabel={
+                    paystackIsLive() ? 'Pay with Paystack' : 'Pay with Paystack (test mode)'
+                  }
+                  pendingLabel="Opening payment…"
+                >
+                  <input type="hidden" name="orderId" value={order.id} />
+                </ActionForm>
+              ) : (
+                <p className="font-medium text-warning-700">Online payment is not open yet.</p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted">
+              Nothing to pay yet. When your order is with you, a Pay button appears here. The order
+              is only handed over after the payment is received.
+            </p>
+          )}
+        </Card>
       )}
 
       {unpaid && (

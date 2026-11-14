@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 11 November 2026
+Last updated: 14 November 2026
 
 **NOBS AGENT** (company registration in progress), operator of AFIT Market, decides why and how your personal data is used and is the **data controller** under the Nigeria Data Protection Act 2023 (NDPA). Privacy contact: afitmarket01@gmail.com. This policy explains what we collect, why, who sees it and your rights.
 
@@ -8,7 +8,8 @@ Last updated: 11 November 2026
 
 | What | Why | Basis |
 | --- | --- | --- |
-| E-mail, password (stored only in hashed form by our sign-in service), display name, confirmation that you are 18 or over and when you gave it | Create and secure your account; check eligibility | Contract; legal obligation |
+| E-mail, password (stored only in hashed form by our sign-in service), **full name**, **phone number** (stored encrypted), **date of birth**, and confirmation that you are 18 or over and when you gave it | Create and secure your account; let shops and riders reach you about an order; check you are 18 or over (the date of birth is used for that and nothing else) | Contract; legal obligation |
+| **What you would like to shop:** the categories a customer picks when signing up (at least three) | Reference only, to understand what customers like. Nothing is hidden, switched on or priced differently because of it | Legitimate interest |
 | Account type (student, military, lecturer, other); for students the matric number (stored encrypted) and, if you add one, a photo of your student ID card | Understand who uses the service; let staff review an account when needed | Legitimate interest; your consent for the photo |
 | A signature you draw at sign-up | Kept on your account for records and for any dispute about a hand-over | Legitimate interest |
 | Orders, items, totals, delivery point, status history, receipts | Fulfil your order, keep accounts and handle complaints | Contract; legal obligation |
@@ -75,7 +76,7 @@ Location is part of how deliveries work and is used automatically once you have 
 
 ## 11. Children
 
-AFIT Market is for adults (18+). If we learn an account holder is under 18 we may close the account and delete their data.
+AFIT Market is for adults (18+). We check the date of birth you give at sign-up and refuse anyone under 18. If we learn an account holder is under 18 we may close the account and delete their data.
 
 ## 12. Changes and contact
 
