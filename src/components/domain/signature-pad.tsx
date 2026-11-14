@@ -132,7 +132,7 @@ export function SignaturePad({
       <canvas
         ref={canvas}
         width={600}
-        height={220}
+        height={440}
         role="img"
         aria-labelledby={`${uid}-label`}
         aria-describedby={`${uid}-hint`}
