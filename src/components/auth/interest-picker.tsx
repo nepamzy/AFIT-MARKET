@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { artKind, productArtSvg } from '@/lib/art/scenes'
 import { cn } from '@/components/ui/cn'
 import type { CategoryChoice } from '@/components/domain/vendor-choices'
@@ -42,6 +42,7 @@ function Tile({
         height={360}
         loading="lazy"
         decoding="async"
+        draggable={false}
         onError={() => setBroken(true)}
         className="aspect-square w-full object-cover"
       />
@@ -60,6 +61,16 @@ function Tile({
   )
 }
 
+/** How fast a row drifts by itself, in pixels per second. */
+const SPEED = 45
+/** After a swipe or a drag the row waits this long, then carries on drifting. */
+const RESUME_MS = 1600
+
+/**
+ * One row of pictures. It drifts sideways by itself (forward, or backward for the second row) and goes on drifting while
+ * people tap pictures. A finger swipe or a mouse drag moves it by hand, either way, and it carries on a moment later.
+ * The list is shown twice end to end so the loop has no seam; both copies react to taps and share the same picks.
+ */
 function Row({
   list,
   picked,
@@ -73,16 +84,111 @@ function Row({
   reverse?: boolean
   paused: boolean
 }) {
-  // a few seconds per picture, so a long list does not race past
-  const style = { ['--afit-marquee-s' as string]: `${Math.max(24, list.length * 6)}s` }
+  const box = useRef<HTMLDivElement>(null)
+  const pos = useRef(0)
+  const lastSet = useRef(0)
+  const resumeAt = useRef(0)
+  const holding = useRef(false)
+  const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null)
+  const noClick = useRef(false)
+  const stopped = useRef(paused)
+  useEffect(() => {
+    stopped.current = paused
+  }, [paused])
+
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const half = () => el.scrollWidth / 2
+    const wrap = (v: number) => {
+      const h = half()
+      if (h <= 0) return v
+      if (v >= h) return v - h
+      if (v <= 0) return v + h
+      return v
+    }
+    const put = (v: number) => {
+      pos.current = wrap(v)
+      lastSet.current = pos.current
+      el.scrollLeft = pos.current
+    }
+    // the second row starts in the middle so it can also be swiped the other way at once
+    put(reverse ? half() - 1 : 1)
+    const onScroll = () => {
+      // moved by a hand (a swipe, a drag, the arrow keys), not by us: take over from there and wait a moment
+      if (Math.abs(el.scrollLeft - lastSet.current) > 1.5) {
+        resumeAt.current = performance.now() + RESUME_MS
+        const w = wrap(el.scrollLeft)
+        if (w !== el.scrollLeft) put(w)
+        else {
+          pos.current = el.scrollLeft
+          lastSet.current = el.scrollLeft
+        }
+      }
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    let raf = 0
+    let last = performance.now()
+    const tick = (t: number) => {
+      const dt = Math.min(64, t - last) / 1000
+      last = t
+      if (!reduced && !stopped.current && !holding.current && t >= resumeAt.current)
+        put(pos.current + (reverse ? -1 : 1) * SPEED * dt)
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('scroll', onScroll)
+    }
+  }, [reverse, list.length])
+
+  // a mouse can drag the row; a finger swipes it natively
+  const down = (e: React.PointerEvent) => {
+    holding.current = true
+    if (e.pointerType !== 'mouse') return
+    drag.current = { x: e.clientX, left: box.current?.scrollLeft ?? 0, moved: false }
+  }
+  const move = (e: React.PointerEvent) => {
+    const d = drag.current
+    if (!d || !box.current) return
+    const dx = e.clientX - d.x
+    if (Math.abs(dx) > 5) d.moved = true
+    if (d.moved) box.current.scrollLeft = d.left - dx
+  }
+  const up = () => {
+    holding.current = false
+    if (drag.current?.moved) {
+      resumeAt.current = performance.now() + RESUME_MS
+      noClick.current = true
+      setTimeout(() => (noClick.current = false), 0)
+    }
+    drag.current = null
+  }
   return (
-    <div className="afit-marquee py-1.5" data-paused={paused ? '1' : undefined}>
-      <div className="afit-marquee-track" data-reverse={reverse ? '1' : undefined} style={style}>
+    <div
+      ref={box}
+      className="afit-marquee py-1.5"
+      onPointerDown={down}
+      onPointerMove={move}
+      onPointerUp={up}
+      onPointerCancel={up}
+      onDragStart={(e) => e.preventDefault()}
+      onPointerLeave={() => drag.current && up()}
+      onClickCapture={(e) => {
+        if (noClick.current) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
+      }}
+    >
+      <div className="afit-marquee-track">
         {list.map((c) => (
           <Tile key={c.id} c={c} on={picked.includes(c.id)} toggle={toggle} />
         ))}
-        {/* a second copy makes the loop seamless; the keyboard and screen readers only use the first */}
-        <span className="afit-marquee-copy flex" aria-hidden="true">
+        {/* the second copy makes the loop seamless; the keyboard and screen readers only use the first */}
+        <span className="flex" aria-hidden="true">
           {list.map((c) => (
             <Tile key={c.id} c={c} on={picked.includes(c.id)} toggle={toggle} hidden />
           ))}

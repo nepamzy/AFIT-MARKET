@@ -46,17 +46,33 @@
   --color-navy-700: #1261b0;
   --color-navy-text: #dbe8f8;
 
-  /* Role looks, so nobody wonders which account they are in: shops are green, riders are teal, administration is navy. */
+  /* Role looks, so nobody wonders which account they are in: administration is navy, shops are green, riders are orange.
+     Customers get their own colour by kind: students violet, military olive, everyone else rose. */
   --color-vendor-900: #0f4a2a;
   --color-vendor-800: #17673a;
   --color-vendor-700: #1d7d47;
   --color-vendor-50: #e5f4ea;
   --color-vendor-text: #dff3e6;
-  --color-rider-900: #0b4a50;
-  --color-rider-800: #0e6b73;
-  --color-rider-700: #12808a;
-  --color-rider-50: #e1f3f4;
-  --color-rider-text: #dcf1f3;
+  --color-rider-900: #7c2d08;
+  --color-rider-800: #a13c0a;
+  --color-rider-700: #c24d0e;
+  --color-rider-50: #fdecdc;
+  --color-rider-text: #fce6d2;
+  --color-student-900: #3b1a73;
+  --color-student-800: #4f2896;
+  --color-student-700: #6334b3;
+  --color-student-50: #efe8fb;
+  --color-student-text: #e7dcfb;
+  --color-military-900: #3a3d14;
+  --color-military-800: #4d5219;
+  --color-military-700: #62681f;
+  --color-military-50: #f0f1db;
+  --color-military-text: #e9ebc9;
+  --color-other-900: #6a1030;
+  --color-other-800: #8a1740;
+  --color-other-700: #a81f4f;
+  --color-other-50: #fbe6ee;
+  --color-other-text: #f8dbe5;
 
   --radius-card: 0.875rem;
   --radius-control: 0.625rem;
@@ -286,6 +302,53 @@ body {
 
 .letter-note {
   background: #fff9e3;
+}
+
+/* "Built by NOBS Agent" credit badge in the footer */
+.built-by-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #0b0d12;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1;
+}
+.built-by-badge:hover {
+  outline: 2px solid #e4b343;
+}
+.built-by-mark {
+  display: block;
+  border-radius: 3px;
+}
+.built-by-label {
+  color: #8b93a3;
+}
+.built-by-name {
+  color: #e4b343;
+  font-weight: 600;
+}
+
+/* Sign-up: what would you like to shop. Two rows of category pictures drift sideways in opposite directions (the movement
+   is done in the page's script so it can be swiped by hand and never stops when a picture is tapped). */
+.afit-marquee {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  user-select: none;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.afit-marquee::-webkit-scrollbar {
+  display: none;
+}
+.afit-marquee-track {
+  display: flex;
+  width: max-content;
 }
 
 /* "Built by NOBS Agent" credit badge in the footer */

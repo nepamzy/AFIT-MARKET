@@ -83,7 +83,7 @@ export async function AppShell({
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${t.chip}`}
               data-testid="area-chip"
             >
-              <Icon name={theme === 'vendor' ? 'store' : 'bike'} size={16} />
+              <Icon name={t.chipIcon} size={16} />
               {t.chipLabel}
               {areaName && <span className="hidden sm:inline"> · {areaName}</span>}
             </span>

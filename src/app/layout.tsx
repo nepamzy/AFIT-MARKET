@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import { OfflineBanner } from '@/components/ui/states'
 import { RegisterServiceWorker } from '@/components/register-sw'
 import { AppBar } from '@/components/app-bar'
+import { PushRebind } from '@/components/push-rebind'
 import { NotificationSound } from '@/components/notification-sound'
 import { pushConfig } from '@/server/modules/engagement/push'
 import { ToastProvider } from '@/components/ui/toast'
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <AppBar publicKey={pushConfig()?.publicKey ?? null} />
         <OfflineBanner />
         <NotificationSound />
+        <PushRebind publicKey={pushConfig()?.publicKey ?? null} />
         <RegisterServiceWorker />
         <ToastProvider>{children}</ToastProvider>
         <Analytics />

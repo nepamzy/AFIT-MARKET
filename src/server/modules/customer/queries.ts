@@ -1,5 +1,6 @@
 import 'server-only'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export type WishlistItem = {
   id: string
@@ -55,4 +56,24 @@ export async function myProfile(): Promise<{
     displayName: (p?.display_name as string | null | undefined) ?? null,
     createdAt: u.created_at ?? null,
   }
+}
+
+/**
+ * Which colour a customer's frame gets: students violet, military olive, everyone else (lecturers, others, people who
+ * gave no kind) rose. Read with the server's own access because the kind is kept in a private table.
+ */
+export async function customerLook(
+  userId: string | undefined,
+): Promise<'student' | 'military' | 'other'> {
+  if (!userId) return 'other'
+  const { data } = await createSupabaseServiceClient()
+    .from('account_identity')
+    .select('person_type')
+    .eq('user_id', userId)
+    .maybeSingle()
+  return data?.person_type === 'student'
+    ? 'student'
+    : data?.person_type === 'military'
+      ? 'military'
+      : 'other'
 }

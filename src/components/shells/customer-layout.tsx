@@ -4,7 +4,7 @@ import { ADMIN_NAV, customerNav, RIDER_NAV, VENDOR_NAV } from '@/components/shel
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { enforceRoutePolicy } from '@/server/modules/identity-and-access/guard'
 import { experienceOf } from '@/server/modules/identity-and-access/policy'
-import { hasPrivateLetter } from '@/server/modules/customer/queries'
+import { customerLook, hasPrivateLetter } from '@/server/modules/customer/queries'
 import { getMyVendor } from '@/server/modules/vendors-and-catalogue/vendor-queries'
 
 /**
@@ -59,12 +59,13 @@ export async function CustomerLayout({
       </AppShell>
     )
   }
-  const hasLetter = await hasPrivateLetter()
+  const [hasLetter, look] = await Promise.all([hasPrivateLetter(), customerLook(data.user?.id)])
   return (
     <AppShell
       area={area}
       signedInAs={data.user?.email}
       items={customerNav(hasLetter)}
+      theme={look}
       showCart
       search={{ action: '/products', placeholder: 'Search food, shops and services' }}
     >
