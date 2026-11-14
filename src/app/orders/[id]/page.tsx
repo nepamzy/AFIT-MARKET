@@ -111,7 +111,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             action: 'Open the hand-over',
           }
         : onTheWay
-          ? { text: 'Your rider is on the way.', href: '#tracking', action: 'Watch on the map' }
+          ? { text: 'Your rider is on the move.', href: '#tracking', action: 'Watch on the map' }
           : ['PAID', 'VENDOR_REVIEW', 'ACCEPTED', 'PREPARING'].includes(order.status)
             ? { text: 'The shop is preparing your order. Nothing to do yet.' }
             : ['READY', 'AWAITING_RIDER'].includes(order.status)
