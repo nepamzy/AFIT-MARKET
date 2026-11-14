@@ -103,6 +103,13 @@ export async function placeOrderAction(_p: CheckoutState, fd: FormData): Promise
     }
     return dbFailed(error)
   }
+  // "Pay when I receive it": the order goes straight to the shop, and the customer pays with Paystack at the door.
+  if (fd.get('payment') === 'on_delivery') {
+    const { error: podError } = await sb.rpc('customer_choose_pay_on_delivery', {
+      p_order: String(data),
+    })
+    if (podError) return dbFailed(podError, 'Paying on delivery is not available. Choose Pay now.')
+  }
   notifyAdmin({ type: 'order_placed', orderId: String(data) })
   kickDispatch()
   revalidatePath('/orders')

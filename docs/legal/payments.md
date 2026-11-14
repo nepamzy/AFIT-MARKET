@@ -1,12 +1,14 @@
 # Payments, Delivery Fee and Payouts
 
-Last updated: 11 November 2026
+Last updated: 14 November 2026
 
 Support: afitmarket01@gmail.com. This notice explains where money goes on AFIT Market.
 
 ## 1. What you pay online
 
 At checkout you see the **item total**, the **delivery fee** (if you choose delivery) and your total. You pay the **item total** online through **Paystack**. **Customers pay no platform or service fee.** We never see or store card details. Every payment is confirmed with Paystack before an order goes to the shop.
+
+**Pay on delivery.** For an order of up to ₦20,000 you may choose at checkout to **pay when you receive it** instead. The shop then prepares your order straight away. When the rider arrives (or you collect at the shop) you check the order and pay through **Paystack** on your phone, and the hand-over is finished only after we have confirmed the payment. You cannot take the order until it is paid. If you do not pay, nothing is charged and the order goes back to the shop. You may have at most two unpaid pay-on-delivery orders at a time, and we may switch this option off for a customer who repeatedly does not pay. Everything else in this notice applies in the same way: the shop is paid 24 hours after the order is completed.
 
 ## 2. The delivery fee
 

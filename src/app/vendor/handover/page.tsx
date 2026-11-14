@@ -4,6 +4,7 @@ import { RiderPickupCard } from '@/components/domain/rider-pickup-card'
 import { FindByCode } from '@/components/domain/find-by-code'
 import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { AutoRefresh } from '@/components/domain/auto-refresh'
+import { PayAtDoorNotice } from '@/components/domain/pay-at-door-notice'
 import { PickupHandoverCard } from '@/components/domain/pickup-handover-card'
 import { Alert } from '@/components/ui/alert'
 import { Card, PageHeader } from '@/components/ui/card'
@@ -91,6 +92,7 @@ export default async function Handover({
           {waiting.map((o) => (
             <Card key={o.id} id={`order-${o.id}`} className="space-y-3">
               <h2 className="text-lg font-bold">{o.order_number}</h2>
+              <PayAtDoorNotice orderId={o.id} />
               <PickupHandoverCard orderId={o.id} />
             </Card>
           ))}

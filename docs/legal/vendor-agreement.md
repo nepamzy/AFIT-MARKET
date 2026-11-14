@@ -1,6 +1,6 @@
 # Vendor Agreement
 
-Last updated: 11 November 2026
+Last updated: 14 November 2026
 
 This agreement is between **NOBS AGENT** (company registration in progress), operator of AFIT Market (the "operator"), and the shop named in your application ("you", "the vendor"). Support: afitmarket01@gmail.com, WhatsApp 0911 5930 445. By applying and ticking acceptance you agree to it.
 
@@ -22,7 +22,7 @@ You are responsible for true descriptions, photos, prices (in naira), availabili
 
 ## 4. Orders: accept or decline
 
-4.1 You only see orders that have been paid. For each paid order you must **accept or decline** it within **15 hours**. If you decline you must give a short reason, which the customer sees. If you do not answer in time, the order is declined and the customer is refunded automatically.
+4.1 You see orders that have been paid, and orders the customer has chosen to **pay on delivery** (the order page says so). For each such order you must **accept or decline** it within **15 hours**. If you decline you must give a short reason, which the customer sees. If you do not answer in time, the order is declined and the customer is refunded automatically.
 
 4.2 You may choose, when you apply, to have orders marked **ready automatically** after the preparation time you set.
 
@@ -34,7 +34,7 @@ You are responsible for true descriptions, photos, prices (in naira), availabili
 
 5.2 For **delivery**, you hand the order to the assigned rider. You show a QR code and the rider scans it when collecting.
 
-5.3 You must not hand an order to anyone who cannot confirm it in the app. A hand-over is recorded in the app.
+5.3 You must not hand an order to anyone who cannot confirm it in the app. A hand-over is recorded in the app. For an order paid on delivery you must not hand it over until the app shows **Paid**; the app will not finish the hand-over before that. If the customer does not pay, you keep the goods, nothing is charged to the customer and no payout is made for that order.
 
 ## 6. Your own riders
 

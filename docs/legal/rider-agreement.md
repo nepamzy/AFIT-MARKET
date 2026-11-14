@@ -1,6 +1,6 @@
 # Rider Agreement
 
-Last updated: 11 November 2026
+Last updated: 14 November 2026
 
 This agreement is between **NOBS AGENT** (company registration in progress), operator of AFIT Market, and the rider. Support: afitmarket01@gmail.com, WhatsApp 0911 5930 445. You accept it when you apply and each time we ask you to accept a new version before going active.
 
@@ -34,7 +34,7 @@ While you are on shift with an active delivery the app uses your phone's locatio
 
 ## 6. Hand-over
 
-6.1 Deliver only to the account holder, at an approved delivery point. When you arrive, confirm the hand-over by **QR code**: you show a code and the customer scans it, or the customer shows a code and you scan it.
+6.1 Deliver only to the account holder, at an approved delivery point. If the order is paid on delivery, the app shows that the customer must pay when you arrive: do not hand the order over until the app shows **Paid**; the app will not finish the delivery before that. If the customer does not pay, report it in the app and return the order. When you arrive, confirm the hand-over by **QR code**: you show a code and the customer scans it, or the customer shows a code and you scan it.
 
 6.2 You must not confirm a delivery that did not happen. False confirmations lead to suspension and may be reported to the authorities. If the customer cannot confirm, contact support and do not complete it yourself.
 

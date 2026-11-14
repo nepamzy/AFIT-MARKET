@@ -14,6 +14,7 @@ export function CheckoutForm({
   points,
   defaultPoint,
   idempotencyKey,
+  payAtDoor,
 }: {
   pickup: Quote
   delivery: Quote | null
@@ -21,11 +22,16 @@ export function CheckoutForm({
   /** The customer's saved default place, when it is still an open delivery point. */
   defaultPoint?: string
   idempotencyKey: string
+  /** Whether paying when the order is received is switched on, and the largest order it is allowed for. */
+  payAtDoor: { enabled: boolean; maxKobo: number }
 }) {
   const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrderAction, {})
   const canDeliver = Boolean(delivery) && points.length > 0
   const [mode, setMode] = useState<'pickup' | 'delivery'>('pickup')
+  const [payment, setPayment] = useState<'now' | 'on_delivery'>('now')
   const q = mode === 'delivery' && delivery ? delivery : pickup
+  const canPayAtDoor = payAtDoor.enabled && q.total_kobo <= payAtDoor.maxKobo
+  const payLater = payment === 'on_delivery' && canPayAtDoor
   const optionCls = (on: boolean, disabled = false) =>
     `touch-target flex items-start gap-3 rounded-[var(--radius-card)] border-2 p-4 ${disabled ? 'cursor-not-allowed border-line text-muted' : on ? 'cursor-pointer border-navy-900 bg-brand-50' : 'cursor-pointer border-line bg-card hover:border-line-strong'}`
   return (
@@ -102,9 +108,53 @@ export function CheckoutForm({
             ))}
           </Select>
         )}
+        {payAtDoor.enabled && (
+          <fieldset className="space-y-3">
+            <legend className="mb-1 text-lg font-extrabold text-navy-900">
+              2. When do you want to pay?
+            </legend>
+            <label className={optionCls(!payLater)}>
+              <input
+                type="radio"
+                name="payment"
+                value="now"
+                checked={!payLater}
+                onChange={() => setPayment('now')}
+                className="mt-1 size-5 accent-[var(--color-brand-700)]"
+              />
+              <span>
+                <span className="font-bold text-navy-900">Pay now</span>
+                <span className="block text-sm text-muted">
+                  You pay securely with Paystack on the next screen.
+                </span>
+              </span>
+            </label>
+            <label className={optionCls(payLater, !canPayAtDoor)}>
+              <input
+                type="radio"
+                name="payment"
+                value="on_delivery"
+                disabled={!canPayAtDoor}
+                checked={payLater}
+                onChange={() => setPayment('on_delivery')}
+                className="mt-1 size-5 accent-[var(--color-brand-700)]"
+              />
+              <span>
+                <span className="font-bold text-navy-900">Pay when I receive it</span>
+                <span className="block text-sm text-muted">
+                  {canPayAtDoor
+                    ? 'The shop prepares your order now. You pay with Paystack on your phone when you see it, then confirm.'
+                    : 'Not available for an order this size. Please pay now.'}
+                </span>
+              </span>
+            </label>
+          </fieldset>
+        )}
         <p className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm text-brand-800">
           <Icon name="lock" size={14} className="mr-1 inline" />
-          You pay securely with Paystack on the next screen.
+          {payLater
+            ? 'You will pay securely with Paystack when you receive your order. You will not be able to take it until you have paid.'
+            : 'You pay securely with Paystack on the next screen.'}
         </p>
       </div>
       <aside
@@ -145,9 +195,11 @@ export function CheckoutForm({
           </div>
           <div className="flex justify-between text-lg font-extrabold text-navy-900">
             <dt>
-              {q.delivery_fee_collection === 'direct_to_rider'
-                ? 'Total to pay online now'
-                : 'Total'}
+              {payLater
+                ? 'Total to pay when you receive it'
+                : q.delivery_fee_collection === 'direct_to_rider'
+                  ? 'Total to pay online now'
+                  : 'Total'}
             </dt>
             <dd data-testid="checkout-total">
               <Money kobo={q.total_kobo} />
@@ -158,7 +210,7 @@ export function CheckoutForm({
           The final amount is calculated again by our server when you place the order.
         </p>
         <Button type="submit" variant="gold" disabled={pending} className="w-full">
-          {pending ? 'Placing order…' : 'Place order'}
+          {pending ? 'Placing order…' : payLater ? 'Place order, pay later' : 'Place order'}
         </Button>
       </aside>
     </form>

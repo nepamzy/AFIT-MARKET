@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/states'
 import { ButtonLink } from '@/components/ui/button'
 import { getQuote, listDeliveryPoints } from '@/server/modules/cart-and-checkout/queries'
 import { listSavedPlaces } from '@/server/modules/customer/queries'
+import { payOnDeliveryRules } from '@/server/modules/payments/pay-on-delivery'
 
 export const metadata: Metadata = { title: 'Checkout' }
 
@@ -22,6 +23,7 @@ export default async function CheckoutPage() {
     return <EmptyState title="We could not load checkout">Please try again in a moment.</EmptyState>
   if (pickup.empty) redirect('/cart')
   const delivery = points[0] ? await getQuote('delivery', points[0].id) : null
+  const payAtDoor = await payOnDeliveryRules()
   return (
     <>
       <PageHeader
@@ -41,6 +43,7 @@ export default async function CheckoutPage() {
         points={points}
         defaultPoint={preferred}
         idempotencyKey={`co-${randomUUID()}`}
+        payAtDoor={payAtDoor}
       />
       <p className="mt-4">
         <ButtonLink href="/cart" variant="ghost">

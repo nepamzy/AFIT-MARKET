@@ -1,10 +1,12 @@
 # Refund, Return and Dispute Policy
 
-Last updated: 11 November 2026
+Last updated: 14 November 2026
 
 Support: afitmarket01@gmail.com, WhatsApp 0911 5930 445. **Nothing here removes a right you have under Nigerian law that cannot lawfully be excluded**, including under the Federal Competition and Consumer Protection Act 2018.
 
 ## 1. Automatic refund when a shop declines or does not answer
+
+(If you chose to pay on delivery and the shop declines or does not answer, you have paid nothing, so there is nothing to refund.)
 
 After you pay, the shop must accept or decline your order within **15 hours**. If it declines (with a reason you can see on your order page) or does not answer in time, we cancel the order and refund **everything you paid online** automatically to the way you paid. Banks and card networks can take a few working days to show it.
 
