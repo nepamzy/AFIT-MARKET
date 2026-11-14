@@ -258,9 +258,13 @@ begin
   if v_title is null then return new; end if;
   v_body := case new.to_status
     when 'PICKED_UP_BY_RIDER' then 'Your rider has your order. Open it to follow the rider on the map.'
-    when 'ARRIVAL_DETECTED' then 'Open your order to confirm that you received it.'
+    when 'ARRIVAL_DETECTED' then case when o.payment_timing = 'on_delivery'
+      then 'Your rider is here. Open your order to pay, then confirm that you received it.'
+      else 'Open your order to confirm that you received it.' end
     when 'CANCELLED' then 'Your order was cancelled. Open it to see what happens next.'
-    when 'PICKUP_AWAITING_HANDOVER' then 'Your order is ready. Open it to see your pickup details.'
+    when 'PICKUP_AWAITING_HANDOVER' then case when o.payment_timing = 'on_delivery'
+      then 'Your order is ready. Open it to pay and see your pickup details.'
+      else 'Your order is ready. Open it to see your pickup details.' end
     else 'Open your order to see the latest status.' end;
   perform app_private.notify(o.customer_id, 'order', v_title, v_body, '/orders/' || o.id, v_key);
   return new;
