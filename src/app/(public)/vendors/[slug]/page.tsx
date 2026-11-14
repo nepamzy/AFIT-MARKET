@@ -14,9 +14,34 @@ import { Pager } from '@/components/ui/pager'
 import { pageParam, vendorReviews } from '@/server/modules/engagement/queries'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { WEEKDAYS, hoursByDay } from '@/server/modules/vendors-and-catalogue/hours'
+import { ShareButtons } from '@/components/domain/share-buttons'
 import { getMenu } from '@/server/modules/vendors-and-catalogue/public'
 
-export const metadata: Metadata = { title: 'Vendor' }
+const SITE = process.env.SITE_URL ?? 'https://afit-market.vercel.app'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const menu = await getMenu((await params).slug)
+  if (!menu) return { title: 'Vendor' }
+  const { vendor } = menu
+  const description = `${vendor.name}${vendor.category ? `: ${vendor.category}` : ''} on AFIT Market. Ready in about ${vendor.prep_minutes} minutes.`
+  const image = { url: '/brand/share.jpg', width: 1200, height: 630, alt: vendor.name }
+  return {
+    title: vendor.name,
+    description,
+    openGraph: {
+      type: 'website',
+      siteName: 'AFIT Market',
+      title: vendor.name,
+      description,
+      images: [image],
+    },
+    twitter: { card: 'summary_large_image', title: vendor.name, description, images: [image.url] },
+  }
+}
 
 export default async function VendorPage({
   params,
@@ -68,6 +93,14 @@ export default async function VendorPage({
                 <Icon name="pin" size={16} /> Pickup: {vendor.pickup_location_text}
               </p>
             )}
+            <div className="mt-4">
+              <ShareButtons
+                url={`${SITE}/vendors/${slug}`}
+                title={vendor.name}
+                text={`${vendor.name} on AFIT Market:`}
+                heading="Share this shop"
+              />
+            </div>
           </div>
           <Badge tone={vendor.open_now ? 'success' : 'neutral'}>
             {vendor.open_now ? 'Open now' : 'Closed now'}

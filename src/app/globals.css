@@ -420,3 +420,26 @@ body {
     display: none;
   }
 }
+
+/* Share buttons: the networks' own colours */
+.share-whatsapp {
+  background: #25d366;
+}
+.share-facebook {
+  background: #1877f2;
+}
+.share-x {
+  background: #000000;
+}
+.share-telegram {
+  background: #229ed9;
+}
+.share-tiktok {
+  background: #000000;
+  box-shadow:
+    2px 2px 0 #fe2c55,
+    -2px -2px 0 #25f4ee;
+}
+.share-copy {
+  background: var(--color-navy-800);
+}

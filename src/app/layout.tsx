@@ -25,8 +25,21 @@ export const metadata: Metadata = {
     title: 'AFIT Market: Shop. Order. Receive.',
     description: 'Order from campus vendors for pickup or delivery.',
     locale: 'en_NG',
+    images: [
+      {
+        url: '/brand/share.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'AFIT Market: Shop. Order. Receive.',
+      },
+    ],
   },
-  twitter: { card: 'summary_large_image', title: 'AFIT Market' },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AFIT Market',
+    description: 'Order from campus vendors for pickup or delivery.',
+    images: ['/brand/share.jpg'],
+  },
   manifest: '/manifest.webmanifest',
   applicationName: 'AFIT Market',
 }

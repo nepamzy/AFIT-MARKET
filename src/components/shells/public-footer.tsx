@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { WhatsAppLogo } from '@/components/landing/whatsapp'
+import { ShareButtons } from '@/components/domain/share-buttons'
 import { BuiltByBadge } from '@/components/ui/built-by-badge'
 import { Logo } from '@/components/ui/logo'
 import { WHATSAPP_NUMBER_DISPLAY, WHATSAPP_URL, supportEmail } from '@/lib/contact'
@@ -50,6 +51,8 @@ const COLS: { title: string; links: [string, string][] }[] = [
   },
 ]
 
+const SITE = process.env.SITE_URL ?? 'https://afit-market.vercel.app'
+
 export function PublicFooter() {
   return (
     <footer className="mt-12 bg-navy-900 text-navy-text">
@@ -82,6 +85,14 @@ export function PublicFooter() {
               </li>
             )}
           </ul>
+          <div className="mt-5 rounded-[var(--radius-card)] bg-white p-3">
+            <ShareButtons
+              url={SITE}
+              title="AFIT Market"
+              text="Shop, order and receive on AFIT Market:"
+              heading="Share AFIT Market"
+            />
+          </div>
         </div>
         {COLS.map((c) => (
           <nav key={c.title} aria-label={c.title}>

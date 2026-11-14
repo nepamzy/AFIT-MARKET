@@ -1,5 +1,6 @@
 import 'server-only'
 import { z } from 'zod'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
 import { clientIp, rateLimit } from '@/server/modules/identity-and-access/security'
@@ -98,4 +99,15 @@ export async function getProduct(id: string) {
   return rpc<{ vendor: Menu['vendor']; product: Menu['products'][number] } | null>('get_product', {
     p_product: id,
   })
+}
+
+/** True when the item has its own photo (so a shared link can show it). Only asks about items the public page already shows. */
+export async function productHasPhoto(id: string): Promise<boolean> {
+  if (!z.uuid().safeParse(id).success) return false
+  const { data } = await createSupabaseServiceClient()
+    .from('product_images')
+    .select('product_id')
+    .eq('product_id', id)
+    .maybeSingle()
+  return Boolean(data)
 }

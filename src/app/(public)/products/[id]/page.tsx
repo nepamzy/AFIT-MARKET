@@ -9,12 +9,42 @@ import { Money } from '@/components/ui/money'
 import { ProductCard } from '@/components/ui/product-card'
 import { ProductPhoto } from '@/components/ui/product-photo'
 import { Section } from '@/components/ui/section'
-import { getMenu, getProduct } from '@/server/modules/vendors-and-catalogue/public'
+import { ShareButtons } from '@/components/domain/share-buttons'
+import { getMenu, getProduct, productHasPhoto } from '@/server/modules/vendors-and-catalogue/public'
 import { WishlistButton } from '@/components/domain/customer-forms'
 import { isWishlisted } from '@/server/modules/customer/queries'
 import { loadPrincipal } from '@/server/modules/identity-and-access/guard'
 
-export const metadata: Metadata = { title: 'Item' }
+const SITE = process.env.SITE_URL ?? 'https://afit-market.vercel.app'
+const naira = (kobo: number) => `₦${(kobo / 100).toLocaleString('en-NG')}`
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const id = (await params).id
+  const found = await getProduct(id)
+  if (!found) return { title: 'Item' }
+  const { vendor, product } = found
+  const description = `${product.name} from ${vendor.name} for ${naira(product.price_kobo)}. Order it on AFIT Market.`
+  // a shared link shows the item's own photo when it has one, otherwise the AFIT Market picture
+  const image = (await productHasPhoto(product.id))
+    ? { url: `/api/products/${product.id}/image`, width: 800, height: 600, alt: product.name }
+    : { url: '/brand/share.jpg', width: 1200, height: 630, alt: 'AFIT Market' }
+  return {
+    title: product.name,
+    description,
+    openGraph: {
+      type: 'website',
+      siteName: 'AFIT Market',
+      title: product.name,
+      description,
+      images: [image],
+    },
+    twitter: { card: 'summary_large_image', title: product.name, description, images: [image.url] },
+  }
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const found = await getProduct((await params).id)
@@ -64,6 +94,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           <p className="text-3xl font-extrabold text-navy-900">
             <Money kobo={product.price_kobo} />
           </p>
+          <ShareButtons
+            url={`${SITE}/products/${product.id}`}
+            title={product.name}
+            text={`${product.name} from ${vendor.name} on AFIT Market:`}
+            heading="Share this item"
+          />
           <p>
             {product.available ? (
               <Badge tone="success">Available</Badge>
