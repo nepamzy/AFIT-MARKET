@@ -24,8 +24,10 @@ import {
   type VendorChoices,
 } from '@/server/modules/vendors-and-catalogue/vendor-choices'
 import { checkAccess, loadPrincipal } from './guard'
+import { parseInterests, parseSignupDetails } from './signup-details'
 import {
   PERSON_TYPES,
+  saveProfileDetails,
   hasSignature,
   jpegHasQr,
   normalizePhone,
@@ -141,6 +143,23 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
       if (problem) return { error: problem }
     }
   }
+  // everyone: full name, phone number and date of birth (18 or older)
+  const details = parseSignupDetails({
+    fullName: String(formData.get('fullName') ?? ''),
+    phone: String(formData.get('phone') ?? ''),
+    dateOfBirth: String(formData.get('dob') ?? ''),
+  })
+  if (!details.ok) return { error: details.error }
+  // only customers are asked what they would like to shop (shops and riders are not)
+  let interestIds: string[] = []
+  if (intent === 'customer') {
+    const interests = parseInterests(
+      String(formData.get('interests') ?? ''),
+      (await listCategories()).map((c) => c.id),
+    )
+    if (!interests.ok) return { error: interests.error }
+    interestIds = interests.ids
+  }
   const ip = await clientIp()
   if (
     !(await rateLimit(`signup:ip:${ip}`, 3600, 10)) ||
@@ -221,6 +240,12 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
       await saveSignature(newUserId, String(formData.get('signature') ?? ''))
       if (personType) await saveIdentity(newUserId, { personType, studentId, idCard })
       if (rider) await saveRiderIdentity(newUserId, rider)
+      await saveProfileDetails(newUserId, {
+        fullName: details.fullName,
+        phone: details.phone,
+        dateOfBirth: details.dateOfBirth,
+        interestIds,
+      })
     } catch (e) {
       logger.warn('sign-up details not saved', { err: e instanceof Error ? e.name : 'error' })
     }

@@ -12,6 +12,7 @@ import {
   type CategoryChoice,
   type VendorChoicesState,
 } from '@/components/domain/vendor-choices'
+import { InterestPicker, MIN_PICKS } from './interest-picker'
 import { SignatureStatement } from './signature-statement'
 import { RolePhoto } from '@/components/landing/role-photo'
 import { Watermark } from '@/components/landing/watermark'
@@ -238,6 +239,20 @@ async function readCard(file: File): Promise<{ url: string; qr: boolean } | null
 const looksLikePhone = (v: string) =>
   /^(?:\+234|234|0)[789][01]\d{8}$/.test(v.replace(/[\s()-]/g, ''))
 
+/** Whole years since a date of birth typed as YYYY-MM-DD (the server checks again). */
+const ageOf = (dob: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob)
+  if (!m) return 0
+  const now = new Date()
+  let a = now.getFullYear() - Number(m[1])
+  if (
+    now.getMonth() + 1 < Number(m[2]) ||
+    (now.getMonth() + 1 === Number(m[2]) && now.getDate() < Number(m[3]))
+  )
+    a -= 1
+  return a
+}
+
 const ROLE_HELP: Record<Intent, [string, string]> = {
   customer: ['Customer', 'Buy food and items and get them delivered or ready for pickup.'],
   vendor: [
@@ -306,13 +321,16 @@ function PersonIcon({ kind }: { kind: PersonType }) {
 
 export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] }) {
   const [state, action, pending] = useActionState(signUpAction, initial)
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1)
   const [intent, setIntent] = useState<Intent>('customer')
   const [personType, setPersonType] = useState<PersonType | null>(null)
   const [studentId, setStudentId] = useState('')
   const [idCard, setIdCard] = useState<string | null>(null)
   const [idBack, setIdBack] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [dob, setDob] = useState('')
+  const [interests, setInterests] = useState<string[]>([])
   const [vendor, setVendor] = useState<VendorChoicesState>({
     vendorType: '',
     categories: [],
@@ -322,6 +340,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
   const [frontQr, setFrontQr] = useState<'none' | 'ok' | 'noqr'>('none')
   const [signed, setSigned] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  const interestCategories = categories.filter((c) => c.slug !== 'other')
   if (state.ok) return <SignUpDone email={state.email ?? ''} message={state.message} />
 
   const isRider = intent === 'rider'
@@ -329,12 +348,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
   const isStudent =
     (intent === 'customer' && personType === 'student') ||
     (isVendor && vendor.vendorType === 'student')
-  const riderReady =
-    studentId.trim().length >= 3 &&
-    looksLikePhone(phone) &&
-    !!idCard &&
-    !!idBack &&
-    frontQr === 'ok'
+  const riderReady = studentId.trim().length >= 3 && !!idCard && !!idBack && frontQr === 'ok'
   const step1Ready = isRider
     ? riderReady
     : isVendor
@@ -363,8 +377,6 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
       if (isStudent && studentId.trim().length < 3) return setProblem('Enter your matric number.')
       if (isRider) {
         if (studentId.trim().length < 3) return setProblem('Enter your matric number.')
-        if (!looksLikePhone(phone))
-          return setProblem('Enter a valid Nigerian phone number, for example 0803 123 4567.')
         if (!idCard) return setProblem('Add a clear photo of the front of your ID card.')
         if (frontQr !== 'ok')
           return setProblem(
@@ -375,17 +387,41 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
       return setStep(2)
     }
     if (step === 2) {
+      if (fullName.trim().length < 2) return setProblem('Enter your full name.')
+      if (!looksLikePhone(phone))
+        return setProblem('Enter a valid Nigerian phone number, for example 0803 123 4567.')
+      if (!dob) return setProblem('Enter your date of birth.')
+      if (ageOf(dob) < 18) return setProblem('AFIT Market is only for people aged 18 and over.')
+      // only customers are asked what they would like to shop; shops and riders go straight on
+      return setStep(intent === 'customer' ? 3 : 4)
+    }
+    if (step === 3) {
+      if (interests.length < MIN_PICKS)
+        return setProblem(`Pick at least ${MIN_PICKS} things you would like to shop.`)
+      return setStep(4)
+    }
+    if (step === 4) {
       if (!signed) return setProblem('Please sign in the box first.')
-      return setStep(3)
+      return setStep(5)
     }
   }
-  const stepTitle = ['Who are you?', 'Your signature', 'Your account'][step - 1]!
+  const wantsInterests = intent === 'customer'
+  const titles = [
+    'Who are you?',
+    'About you',
+    'What would you like to shop?',
+    'Your signature',
+    'Your account',
+  ]
+  const stepTitle = titles[step - 1]!
+  const stepNo = wantsInterests || step < 3 ? step : step - 1
+  const stepCount = wantsInterests ? 5 : 4
 
   return (
     <form action={action} className="space-y-4" noValidate>
       <Notice state={state} />
       <p className="text-sm font-semibold text-muted" data-testid="signup-step">
-        Step {step} of 3: {stepTitle}
+        Step {stepNo} of {stepCount}: {stepTitle}
       </p>
       {problem && (
         <p
@@ -401,7 +437,8 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
       )}
       {(isStudent || isRider) && <input type="hidden" name="studentId" value={studentId} />}
       {(isStudent || isRider) && idCard && <input type="hidden" name="idCard" value={idCard} />}
-      {isRider && <input type="hidden" name="phone" value={phone} />}
+      <input type="hidden" name="phone" value={phone} />
+      <input type="hidden" name="interests" value={JSON.stringify(interests)} />
       {isRider && idBack && <input type="hidden" name="idCardBack" value={idBack} />}
       {isVendor && vendor.vendorType === 'student' && (
         <input type="hidden" name="personType" value="student" />
@@ -536,16 +573,6 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
             />
-            <Input
-              label="Phone number"
-              name="riderPhoneInput"
-              type="tel"
-              autoComplete="tel"
-              inputMode="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              hint="For example 0803 123 4567"
-            />
             <div className="space-y-1">
               <label htmlFor="rider-id-front" className="text-sm font-semibold">
                 Photo of the FRONT of your new student ID card
@@ -621,8 +648,68 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         </div>
       </div>
 
-      {/* The signature box stays on the page (hidden) so a drawn signature is not lost when moving between steps. */}
       <div className={step === 2 ? 'space-y-4' : 'hidden'}>
+        <Input
+          label="Full name"
+          name="fullName"
+          autoComplete="name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          hint="As it is on your ID."
+        />
+        <Input
+          label="Phone number"
+          name="phoneInput"
+          type="tel"
+          autoComplete="tel"
+          inputMode="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          hint="For example 0803 123 4567. Riders and shops may call you about an order."
+        />
+        <Input
+          label="Date of birth"
+          name="dob"
+          type="date"
+          autoComplete="bday"
+          value={dob}
+          max={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setDob(e.target.value)}
+          hint="We only use this to make sure you are 18 or older."
+        />
+        <div className="flex gap-2">
+          <Button type="button" variant="secondary" onClick={() => setStep(1)}>
+            Back
+          </Button>
+          <Button type="button" onClick={goNext} className="flex-1">
+            Next
+          </Button>
+        </div>
+      </div>
+
+      <div className={step === 3 ? 'space-y-4' : 'hidden'}>
+        <InterestPicker
+          categories={interestCategories}
+          picked={interests}
+          onChange={setInterests}
+        />
+        <div className="flex gap-2">
+          <Button type="button" variant="secondary" onClick={() => setStep(2)}>
+            Back
+          </Button>
+          <Button
+            type="button"
+            onClick={goNext}
+            disabled={interests.length < MIN_PICKS}
+            className="flex-1"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+
+      {/* The signature box stays on the page (hidden) so a drawn signature is not lost when moving between steps. */}
+      <div className={step === 4 ? 'space-y-4' : 'hidden'}>
         <SignatureStatement />
         <SignaturePad
           label="Sign here"
@@ -630,7 +717,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
           onSignedChange={setSigned}
         />
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={() => setStep(1)}>
+          <Button type="button" variant="secondary" onClick={() => setStep(wantsInterests ? 3 : 2)}>
             Back
           </Button>
           <Button type="button" onClick={goNext} disabled={!signed} className="flex-1">
@@ -639,7 +726,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         </div>
       </div>
 
-      <div className={step === 3 ? 'space-y-4' : 'hidden'}>
+      <div className={step === 5 ? 'space-y-4' : 'hidden'}>
         <Input
           label="Email"
           name="email"
@@ -665,8 +752,8 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         />
         <Checkbox name="adult" label="I confirm that I am 18 years old or older." required />
         <p className="text-sm text-muted">
-          AFIT Market is only for people aged 18 and over. This is your own confirmation: we record
-          that you made it, but we do not check your age. By creating an account you agree to the{' '}
+          AFIT Market is only for people aged 18 and over. We use the date of birth you gave to
+          check this, and keep your confirmation. By creating an account you agree to the{' '}
           <Link href="/legal/terms" className="underline">
             terms
           </Link>{' '}
@@ -677,7 +764,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
           .
         </p>
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={() => setStep(2)}>
+          <Button type="button" variant="secondary" onClick={() => setStep(4)}>
             Back
           </Button>
           <Button type="submit" disabled={pending} className="flex-1">
