@@ -609,6 +609,7 @@ describe('Phase 9: who may and may not complete a delivery', () => {
       'complete_pickup',
       'complete_pickup_qr', // the shop scans or types the customer's pickup code: no signature
       'create_review',
+      'customer_choose_pay_on_delivery', // the customer chooses to pay at the door (it counts unpaid orders in these states)
       'customer_pickup_qr_confirm', // the customer scans the shop's QR code
       'customer_qr_confirm', // the customer scans the rider's QR code (signed in, aal2, must be the customer)
       'customer_qr_open', // the customer opens their own code for the rider to scan; completes nothing
