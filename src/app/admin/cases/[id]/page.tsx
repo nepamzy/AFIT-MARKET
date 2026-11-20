@@ -106,20 +106,6 @@ export default async function AdminCase({ params }: { params: Promise<{ id: stri
               </li>
             ))}
           </ul>
-          <p className="text-sm">
-            Received <Money kobo={b.payment.received_kobo} /> · refunded{' '}
-            <Money kobo={b.payment.refunded_kobo} /> · still refundable{' '}
-            <Money kobo={b.payment.refundable_kobo} />
-          </p>
-          {b.refunds.length > 0 && (
-            <p className="text-sm">
-              Refunds:{' '}
-              {b.refunds
-                .map((r) => `${r.status}${r.provider_mode === 'fake' ? ' (fake)' : ''}`)
-                .join(', ')}{' '}
-              (manage in Refunds)
-            </p>
-          )}
         </Card>
         <Card className="space-y-2">
           <h2 className="text-lg font-extrabold text-navy-900">Delivery evidence (neutral)</h2>

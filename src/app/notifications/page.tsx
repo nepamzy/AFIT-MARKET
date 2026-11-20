@@ -20,10 +20,7 @@ export default async function Notifications({
   const items = data?.items ?? []
   return (
     <>
-      <PageHeader
-        title="Notifications"
-        subtitle="Updates about your orders, reports and refunds."
-      />
+      <PageHeader title="Notifications" subtitle="Updates about your orders and reports." />
       {data && data.unread > 0 && (
         <Card className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p>

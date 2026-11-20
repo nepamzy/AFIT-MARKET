@@ -118,7 +118,7 @@ export function buildAdminAlert(
     case 'refund_requested':
       subject = '[AFIT Market] Refund requested'
       lines.push(`Order id: ${ident(event.orderId, 40)}`, `Requested by: ${event.by}`)
-      link = '/admin/refunds'
+      link = '/admin/emergency'
       break
     case 'return_requested':
       subject = '[AFIT Market] Return requested'

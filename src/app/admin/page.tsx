@@ -24,9 +24,6 @@ const ATTENTION: Record<string, [string, string]> = {
   review_reports_open: ['Open review reports', '/admin/reviews'],
   rider_issues_open: ['Open rider issues', '/admin/rider-issues'],
   deliveries_in_flight: ['Deliveries in progress', '/admin/orders'],
-  refunds_requested: ['Refunds waiting for review', '/admin/refunds'],
-  refunds_awaiting_execution: ['Refunds approved, not executed', '/admin/refunds'],
-  refunds_need_reconciliation: ['Refunds needing reconciliation', '/admin/refunds'],
   payment_flags_open: ['Open payment flags', '/admin/payments'],
   vendor_applications_pending: ['Vendor applications pending', '/admin/applications'],
   rider_applications_pending: ['Rider applications pending', '/admin/applications'],
@@ -38,7 +35,6 @@ const ACTIONS: [string, string, IconName][] = [
   ['/admin/vendors', 'Manage vendors', 'store'],
   ['/admin/riders', 'Manage riders', 'bike'],
   ['/admin/orders', 'View orders', 'package'],
-  ['/admin/refunds', 'Process refunds', 'refund'],
   ['/admin/reports', 'View reports', 'chart'],
   ['/admin/settings', 'Platform settings', 'sliders'],
 ]
@@ -50,12 +46,8 @@ export default async function AdminHome() {
   const emergency = {
     reports: (overview?.cases_open ?? 0) + (overview?.cases_awaiting_close ?? 0),
     returns: overview?.returns_waiting ?? 0,
-    refunds:
-      (overview?.refunds_requested ?? 0) +
-      (overview?.refunds_awaiting_execution ?? 0) +
-      (overview?.refunds_need_reconciliation ?? 0),
   }
-  const emergencyTotal = emergency.reports + emergency.returns + emergency.refunds
+  const emergencyTotal = emergency.reports + emergency.returns
   return (
     <>
       <PageHeader
@@ -73,11 +65,11 @@ export default async function AdminHome() {
       >
         <span>
           <span className="block text-lg font-extrabold text-navy-900">
-            Emergency: reports, returns and refunds
+            Emergency: reports and returns
           </span>
           <span className="text-sm text-muted">
             {emergencyTotal > 0
-              ? `${emergency.reports} report${emergency.reports === 1 ? '' : 's'} · ${emergency.returns} return${emergency.returns === 1 ? '' : 's'} · ${emergency.refunds} refund${emergency.refunds === 1 ? '' : 's'} need you`
+              ? `${emergency.reports} report${emergency.reports === 1 ? '' : 's'} · ${emergency.returns} return${emergency.returns === 1 ? '' : 's'}`
               : 'Nothing is waiting for you right now.'}
           </span>
         </span>
@@ -204,7 +196,7 @@ export default async function AdminHome() {
         id="todo"
         description={
           waiting === 0
-            ? 'Nothing is waiting: reports, refunds, applications and background jobs are all clear.'
+            ? 'Nothing is waiting: reports, applications and background jobs are all clear.'
             : `${waiting} ${waiting === 1 ? 'queue has' : 'queues have'} items waiting. Queues you can see are listed; empty ones are dimmed.`
         }
       >

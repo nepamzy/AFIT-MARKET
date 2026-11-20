@@ -14,6 +14,7 @@ export async function withTx<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
   const c = await pool.connect()
   try {
     await c.query('begin')
+    await c.query("set local afit.allow_manual_refunds = 'on'") // refunds are switched off in the app; the old refund machinery is still tested
     return await fn(c)
   } finally {
     await c.query('rollback').catch(() => undefined)

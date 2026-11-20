@@ -3,22 +3,18 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Card, PageHeader } from '@/components/ui/card'
-import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
 import { listReturns, staffListCases, staffListRefunds } from '@/server/modules/support/queries'
 
 export const metadata: Metadata = { title: 'Emergency' }
 export const dynamic = 'force-dynamic'
 
-const REFUND_OPEN = ['requested', 'under_review', 'approved', 'reconciliation_required']
-
 /** Everything that needs a person right now, in one place: customer reports, return requests, and refunds waiting. */
 export default async function Emergency() {
-  const [open, review, returns, refunds] = await Promise.all([
+  const [open, review, returns] = await Promise.all([
     staffListCases('open', 1),
     staffListCases('under_review', 1),
     listReturns(),
-    Promise.all(REFUND_OPEN.map((s) => staffListRefunds(s, 1))).then((x) => x.flat()),
   ])
   const reports = [...open, ...review]
   const waitingReturns = returns.filter((r) => r.status === 'requested')
@@ -37,7 +33,7 @@ export default async function Emergency() {
       <PageHeader
         breadcrumbs={[{ label: 'Administration', href: '/admin' }, { label: 'Emergency' }]}
         title="Emergency"
-        subtitle="Reports, returns and refunds that need a person, oldest first. Nothing here happens on its own."
+        subtitle="Reports and returns that need a person, oldest first. Nothing here happens on its own."
       />
       <div className="space-y-8">
         <section aria-label="Reports">
@@ -87,35 +83,6 @@ export default async function Emergency() {
                       {r.items.map((i) => `${i.quantity} × ${i.name}`).join(', ')}
                     </p>
                     <p className="text-sm text-muted">{r.reason}</p>
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-        <section aria-label="Refunds">
-          {section('Refunds that need you', refunds.length, '/admin/refunds')}
-          {refunds.length === 0 ? (
-            <EmptyState title="No refunds waiting">Refund requests appear here.</EmptyState>
-          ) : (
-            <ul className="space-y-2">
-              {refunds.map((r) => (
-                <li key={r.id}>
-                  <Card className="flex flex-wrap items-center justify-between gap-2">
-                    <Link
-                      href="/admin/refunds"
-                      className="font-bold underline-offset-2 hover:underline"
-                    >
-                      {r.order_number} · <Money kobo={r.amount_kobo} />
-                    </Link>
-                    <span className="flex items-center gap-2 text-sm text-muted">
-                      <Badge tone={r.status === 'reconciliation_required' ? 'warning' : 'info'}>
-                        {r.status === 'approved'
-                          ? 'approved: not sent yet'
-                          : r.status.replaceAll('_', ' ')}
-                      </Badge>
-                      {lagosDateTime(r.created_at)}
-                    </span>
                   </Card>
                 </li>
               ))}

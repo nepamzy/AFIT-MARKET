@@ -38,9 +38,6 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
             <strong>{c.decision.replaceAll('_', ' ')}</strong>
             {c.decision_reason ? `: ${c.decision_reason}` : ''}
           </p>
-          <p className="text-sm text-muted">
-            A refund decision creates a request that finance still has to approve and run.
-          </p>
         </Card>
       )}
       <div className="grid gap-5 md:grid-cols-2">
