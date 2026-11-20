@@ -1,4 +1,5 @@
 'use client'
+import { AllowLocationButton } from '@/components/domain/allow-location-button'
 import { LocationNotice } from '@/components/domain/location-notice'
 import { lagosTime } from '@/lib/time'
 import { useEffect, useRef, useState } from 'react'
@@ -313,6 +314,7 @@ export function LocationSharing({
         />
       )}
       <p className="font-semibold">Location sharing is {on ? 'ON' : 'OFF'}</p>
+      <AllowLocationButton />
       {!enabled && (
         <p className="text-sm text-muted">
           It is off because you have no accepted delivery, or you are inactive.

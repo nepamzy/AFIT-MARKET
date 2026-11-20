@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AllowLocationButton } from '@/components/domain/allow-location-button'
 import { LocationNotice } from '@/components/domain/location-notice'
 import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { AppShell } from '@/components/shells/app-shell'
@@ -33,6 +34,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
       {vendor?.status === 'approved' && (
         <>
           <VendorLocationBeacon />
+          <AllowLocationButton className="mb-4" />
           <LocationNotice
             id="vendor"
             text="We are using your shop’s location while you have open orders, so riders and customers can find you."

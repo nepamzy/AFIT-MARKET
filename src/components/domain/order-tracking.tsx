@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { postCustomerLocationAction } from '@/server/modules/location/customer-actions'
+import { AllowLocationButton } from './allow-location-button'
 import { LiveMap, type MapPin } from './live-map'
 
 type Tracking =
@@ -71,7 +72,8 @@ export function OrderTracking({ orderId, mapKey }: { orderId: string; mapKey?: s
       lng: dest.lng,
       label: dest.label ?? 'Delivery point',
     })
-  if (share.me)
+  // a rough fix (Wi-Fi or network based, often many kilometres off) is not drawn: it would put the customer in another city
+  if (share.me && share.me.accuracy <= 300)
     pins.push({
       id: 'me',
       lat: share.me.lat,
@@ -121,6 +123,7 @@ export function OrderTracking({ orderId, mapKey }: { orderId: string; mapKey?: s
         />
       )}
       {body}
+      <AllowLocationButton />
       <p className="text-sm text-muted">
         Your rider can see where you are while they are on this delivery. It starts by itself when
         your order is on its way and stops when the order is finished, as set out in our terms.
@@ -163,6 +166,10 @@ function useShareLocation(orderId: string) {
     setOn(true)
     watch.current = navigator.geolocation.watchPosition(
       async (pos) => {
+        if (pos.coords.accuracy > 300)
+          setNote(
+            `Your phone gave only a rough location (about ${Math.round(pos.coords.accuracy / 1000) || 1} km off). Turn on GPS or precise location and go outside if you can.`,
+          )
         setMe({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
