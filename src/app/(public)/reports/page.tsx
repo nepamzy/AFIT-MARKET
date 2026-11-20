@@ -4,11 +4,11 @@ import { InfoPage } from '@/components/shells/info-page'
 
 export const metadata: Metadata = { title: 'Reports and returns' }
 
-export default function Refunds() {
+export default function Reports() {
   return (
     <InfoPage title="Reports and returns" intro="How a problem with an order is handled.">
       <p>
-        <Link href="/legal/refunds" className="font-semibold text-brand-800 underline">
+        <Link href="/legal/reports" className="font-semibold text-brand-800 underline">
           Read the full Reports, returns and cancelled orders policy
         </Link>
       </p>
@@ -30,12 +30,8 @@ export default function Refunds() {
         <h2>What to expect</h2>
         <ul>
           <li>
-            A report does not lead to a refund. A person decides what happens next, such as
-            arranging a return or taking action against the shop, rider or customer.
-          </li>
-          <li>
-            If a shop declines your paid order or does not answer in time, your payment is returned
-            automatically because you never received anything.
+            A person decides what happens next, such as arranging a return or taking action against
+            the shop, rider or customer.
           </li>
           <li>Every decision and the reason are recorded.</li>
         </ul>

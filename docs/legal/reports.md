@@ -4,11 +4,9 @@ Last updated: 20 November 2026
 
 Support: afitmarket01@gmail.com, WhatsApp 0911 5930 445. **Nothing here removes a right you have under Nigerian law that cannot lawfully be excluded**, including under the Federal Competition and Consumer Protection Act 2018.
 
-## 1. When your money goes back to you automatically
+## 1. Orders the shop declines
 
-(If you chose to pay on delivery and the shop declines or does not answer, you have paid nothing, so there is nothing to return.)
-
-After you pay, the shop must accept or decline your order within **15 hours**. If it declines (with a reason you can see on your order page) or does not answer in time, we cancel the order and return **everything you paid online** automatically to the way you paid, because you never received anything. Banks and card networks can take a few working days to show it. This is the only case in which money is returned.
+The shop must accept or decline your order within **15 hours**. If it declines (with a reason you can see on your order page) or does not answer in time, the order is cancelled.
 
 ## 2. Problems with an order you received
 
@@ -16,11 +14,11 @@ After you pay, the shop must accept or decline your order within **15 hours**. I
 
 2.2 Examples: the item was not delivered, was damaged or unsafe, was not what was described, or part of the order is missing.
 
-2.3 **A report does not lead to a refund.** We tell the shop and give both sides a chance to explain. Someone not involved in the order reads the evidence and decides what happens next: no action, a return of an item that is arranged between you and the shop, a warning or other action against the shop, rider or customer, or another fair remedy that is not a refund. Every step is recorded and cannot be edited afterwards.
+2.3 We tell the shop and give both sides a chance to explain. Someone not involved in the order reads the evidence and decides what happens next: no action, a return of an item that is arranged between you and the shop, a warning or other action against the shop, rider or customer or another fair remedy. Every step is recorded and cannot be edited afterwards.
 
 ## 3. Returns
 
-If a return is appropriate, you arrange it with the shop through the order page. Returning an item does not refund the order. Goods you simply no longer want, and that match their description, are not covered unless the shop agrees.
+If a return is appropriate, you arrange it with the shop through the order page. Goods you simply no longer want, and that match their description, are not covered unless the shop agrees.
 
 ## 4. Special cases
 

@@ -22,7 +22,7 @@ You are responsible for true descriptions, photos, prices (in naira), availabili
 
 ## 4. Orders: accept or decline
 
-4.1 You see orders that have been paid, and orders the customer has chosen to **pay on delivery** (the order page says so). For each such order you must **accept or decline** it within **15 hours**. If you decline you must give a short reason, which the customer sees. If you do not answer in time, the order is declined and the customer is refunded automatically.
+4.1 You see orders that have been paid, and orders the customer has chosen to **pay on delivery** (the order page says so). For each such order you must **accept or decline** it within **15 hours**. If you decline you must give a short reason, which the customer sees. If you do not answer in time, the order is declined.
 
 4.2 You may choose, when you apply, to have orders marked **ready automatically** after the preparation time you set.
 
@@ -42,19 +42,17 @@ You may add riders for your own shop. Each is given a one-time sign-in code and 
 
 ## 7. Commission
 
-We keep a commission of **4.5% of the product value of each completed order** (after any product discount). Delivery fees are not included. If part of an order is refunded, the commission on that part is returned to you. The rate at completion is saved with the order. Customers pay no extra fee.
+We keep a commission of **4.5% of the product value of each completed order** (after any product discount). Delivery fees are not included. The rate at completion is saved with the order. Customers pay no extra fee.
 
 ## 8. Payouts
 
-8.1 We pay you **automatically at midnight (Nigeria time) on the day each order is completed**, by bank transfer (Paystack) to your verified payout account. The amount is the product value less our commission and less any refund. An open complaint or refund holds the payment until it is settled. Delivery fees are not part of your payout.
+8.1 We pay you **automatically at midnight (Nigeria time) on the day each order is completed**, by bank transfer (Paystack) to your verified payout account. The amount is the product value less our commission. An open report holds the payment until it is settled. Delivery fees are not part of your payout.
 
 8.2 **Payout account.** You choose a bank and enter an account number; we ask the payment provider for the account name and show it for you to confirm. Once verified it cannot be changed unless you contact support, who may unlock it after a check; each unlock is recorded. The number is stored encrypted and staff see only the last four digits.
 
-8.3 If a refund is decided after you have been paid, we may recover the amount from your future payouts or ask you to repay it.
+## 9. Reports and returns
 
-## 9. Complaints, refunds and returns
-
-You must cooperate with complaints and returns under the Refund, Return and Dispute Policy, reply to statements promptly and honestly, and accept a fair decision. Where a customer is refunded because of your fault, the cost is yours.
+You must cooperate with complaints and returns under the Reports, Returns and Cancelled Orders Policy, reply to statements promptly and honestly, and accept a fair decision.
 
 ## 10. Records and taxes
 

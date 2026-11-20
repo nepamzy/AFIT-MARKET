@@ -116,9 +116,8 @@ export default async function Earnings() {
         <p>
           AFIT Market keeps a commission of <strong>{pct(s.rates.commission_bps)}</strong> of the
           product value of each completed order (after any product discount). Delivery fees are not
-          part of it. If part of an order is refunded, the commission on that part is returned to
-          you. The rate in force when an order completes is saved with that order and does not
-          change later.
+          part of it. The rate in force when an order completes is saved with that order and does
+          not change later.
         </p>
       </Card>
 
@@ -134,14 +133,6 @@ export default async function Earnings() {
             <dt>Commission</dt>
             <dd className="font-semibold">
               − <Money kobo={f.commission_kobo} />
-            </dd>
-            <dt>Refunded product value</dt>
-            <dd className="font-semibold">
-              − <Money kobo={f.refunded_sales_kobo} />
-            </dd>
-            <dt>Commission returned on refunds</dt>
-            <dd className="font-semibold">
-              + <Money kobo={f.commission_reversed_kobo} />
             </dd>
             <dt className="font-bold">Calculated amount due to you</dt>
             <dd className="font-bold">
@@ -224,21 +215,6 @@ export default async function Earnings() {
                   <span className="text-muted">({pct(o.commission_bps)})</span>
                 </>
               ),
-            },
-            {
-              header: 'Refunded',
-              align: 'right',
-              cell: (o) =>
-                o.refunded_kobo > 0 ? (
-                  <>
-                    <Money kobo={o.refunded_kobo} />{' '}
-                    <span className="text-muted">
-                      (commission returned <Money kobo={o.commission_reversed_kobo} />)
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-muted">None</span>
-                ),
             },
             {
               header: 'Amount due',

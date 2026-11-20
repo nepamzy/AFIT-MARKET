@@ -18,17 +18,17 @@ The delivery fee is **not** part of the online payment. You pay it **directly to
 
 3.1 Your online payment is received by us through Paystack and held until the order is completed.
 
-3.2 **at midnight (Nigeria time) on the day an order is completed**, we send the shop its payout by bank transfer (Paystack) to the shop's verified bank account. Until then you can report a problem, so please report it the same day you receive your order. **A complaint or refund that is still open holds the payout** until it is settled.
+3.2 **at midnight (Nigeria time) on the day an order is completed**, we send the shop its payout by bank transfer (Paystack) to the shop's verified bank account. Until then you can report a problem, so please report it the same day you receive your order. **A report that is still open holds the payout** until it is settled.
 
-3.3 The payout is the product value of the order **less our commission and less any refund**. If a transfer fails we retry automatically and alert our team.
+3.3 The payout is the product value of the order **less our commission**. If a transfer fails we retry automatically and alert our team.
 
 ## 4. Our commission
 
-We charge shops a commission of **4.5% of the product value** of each completed order (after any product discount). Delivery fees are not included. If part of an order is refunded, the commission on that part is returned to the shop. Rounding is to the nearest kobo (half up). The rate at completion is saved with the order. Customers pay no commission.
+We charge shops a commission of **4.5% of the product value** of each completed order (after any product discount). Delivery fees are not included. Rounding is to the nearest kobo (half up). The rate at completion is saved with the order. Customers pay no commission.
 
-## 5. Refunds
+## 5. Reports
 
-Refunds go back to the way you paid and are limited to the money received. See the Refund, Return and Dispute Policy. If a shop declines or does not answer within 15 hours, your payment is refunded automatically.
+If something is wrong with an order, report it from your order page on the same day you receive it. See the Reports, Returns and Cancelled Orders Policy.
 
 ## 6. Receipts and taxes
 

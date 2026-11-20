@@ -54,9 +54,8 @@ export function ApplicationForm({
         className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm"
       >
         <strong>Commission:</strong> AFIT Market keeps {pct(commissionBps)} of the product value of
-        each completed order (after any product discount). Delivery fees are not included. If part
-        of an order is refunded, the commission on that part is returned to you. You can see every
-        order&apos;s commission on your Earnings page. No payout is enabled yet.
+        each completed order (after any product discount). Delivery fees are not included. You can
+        see every order&apos;s commission on your Earnings page. No payout is enabled yet.
       </p>
       <Checkbox
         label={`I agree to follow AFIT Market vendor rules, to keep my menu and prices accurate, and to the ${pct(commissionBps)} commission described above.`}

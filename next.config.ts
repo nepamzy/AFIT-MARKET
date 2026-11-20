@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
   // `forbidden()` (HTTP 403 pages) is still experimental in Next 16; tracked in docs/known-issues.md.
   // the rider sign-up sends two ID card photos with the form, which is more than the 1 MB default
   experimental: { authInterrupts: true, serverActions: { bodySizeLimit: '4mb' } },
+  async redirects() {
+    return [
+      { source: '/refunds', destination: '/reports', permanent: true },
+      { source: '/legal/refunds', destination: '/legal/reports', permanent: true },
+    ]
+  },
   async headers() {
     return [
       { source: '/:path*', headers: commonHeaders },

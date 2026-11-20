@@ -31,10 +31,6 @@ const FAQ: { q: string; a: string }[] = [
     a: 'For pickup you get a one-time code on your order page. Show it at the shop when you collect.',
   },
   {
-    q: 'Can I get a refund?',
-    a: 'Reports do not lead to refunds. If something is wrong with your order, report it the same day you receive it and a person at AFIT Market reviews it. If a shop declines your paid order or does not answer in time, your payment is returned automatically.',
-  },
-  {
     q: 'Something went wrong with my order.',
     a: 'Open the order and choose "Report a problem", or send us a message from the contact page.',
   },

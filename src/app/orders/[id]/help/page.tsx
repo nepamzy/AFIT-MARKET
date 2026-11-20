@@ -53,7 +53,7 @@ export default async function OrderHelp({ params }: { params: Promise<{ id: stri
           <h2 className="text-lg font-bold">Report a problem</h2>
           <p className="text-sm text-muted">
             Tell us what went wrong. A person reads every report. Report it the same day you receive
-            your order. Reports do not lead to refunds.
+            your order.
           </p>
           {order.status === 'PENDING_PAYMENT' ? (
             <p>You can report a problem once the order is paid.</p>

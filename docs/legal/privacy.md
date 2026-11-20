@@ -13,9 +13,9 @@ Last updated: 14 November 2026
 | Account type (student, military, lecturer, other); for students the matric number (stored encrypted) and, if you add one, a photo of your student ID card | Understand who uses the service; let staff review an account when needed | Legitimate interest; your consent for the photo |
 | A signature you draw at sign-up | Kept on your account for records and for any dispute about a hand-over | Legitimate interest |
 | Orders, items, totals, delivery point, status history, receipts | Fulfil your order, keep accounts and handle complaints | Contract; legal obligation |
-| Payment references and amounts (never card numbers) | Confirm payment, refund, reconcile and pay vendors | Contract; legal obligation |
+| Payment references and amounts (never card numbers) | Confirm payment, reconcile and pay vendors | Contract; legal obligation |
 | Delivery-fee payment records and the rider's bank details shown to you | Let you pay your rider and keep a receipt | Contract |
-| Complaints, refund and return cases, statements, evidence you give | Resolve disputes fairly | Contract; legitimate interest |
+| Complaints and return cases, statements, evidence you give | Resolve disputes fairly | Contract; legitimate interest |
 | Hand-over QR codes (stored only as one-way hashes), attempt counters | Confirm hand-overs; stop misuse | Contract; legitimate interest |
 | **Shop location** from the shop's phone while its orders screen is open (so a rider can find the shop) | Let the rider collecting an order find the shop | Legitimate interest |
 | **Rider location** while on shift with an active delivery; **your location** only if you choose to share it with your rider during a delivery | Show you where your order is; confirm arrival | Contract; your consent for your own location |
@@ -49,7 +49,7 @@ Some providers store or process data outside Nigeria. We use providers that appl
 ## 5. How long we keep data
 
 - Rider location history is **deleted after 24 hours**.
-- Orders, payments, refunds, delivery-fee receipts, ledger and audit records are kept for as long as needed for accounting, tax, fraud prevention and disputes, and for any longer period the law requires.
+- Orders, payments, delivery-fee receipts, ledger and audit records are kept for as long as needed for accounting, tax, fraud prevention and disputes, and for any longer period the law requires.
 - Support cases are kept while a dispute is possible.
 - Student ID card photos sent with a rider or vendor application are kept while the application and the account are open, and are deleted when the account is deleted. Only a platform administrator can open them, and each time one is opened it is logged.
 - Your account details are kept while your account is open. After closure we delete or anonymise personal data we no longer need, except records we must keep.
@@ -69,7 +69,7 @@ Under the NDPA you may ask us to: give you access to your data; correct it; dele
 
 ## 9. Closing your account and data requests
 
-Ask for closure or a copy of your data at afitmarket01@gmail.com from the e-mail address on the account (we may ask for proof it is you). We handle requests by hand. Closing an account removes your sign-in, profile details, signature, ID details and alert registrations; records we must keep (orders, payments, refunds, audit) stay in a form that does not need your name beyond what the law requires.
+Ask for closure or a copy of your data at afitmarket01@gmail.com from the e-mail address on the account (we may ask for proof it is you). We handle requests by hand. Closing an account removes your sign-in, profile details, signature, ID details and alert registrations; records we must keep (orders, payments, audit) stay in a form that does not need your name beyond what the law requires.
 
 ## 10. Location
 

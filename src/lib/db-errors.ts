@@ -56,8 +56,7 @@ const MESSAGES: Record<string, string> = {
   not_your_rider: 'That rider is not one of your shop’s riders.',
   code_not_found: 'That rider code is wrong or has run out of time. Ask your shop for a new one.',
   already_linked: 'This account is already linked to a shop.',
-  refunds_not_available:
-    'Refunds are not offered. If something is wrong with your order, report it instead.',
+  refunds_not_available: 'If something is wrong with your order, report it instead.',
   ordering_closed:
     'Ordering is not open yet: AFIT Market is waiting for approval from the AFIT board. You can keep your cart and you will be able to order as soon as it is approved.',
   clothing_too_long: 'Keep the description of what you are wearing under 120 characters.',
@@ -65,7 +64,7 @@ const MESSAGES: Record<string, string> = {
   note_required: 'Please add a short note.',
   reason_required: 'Please give a short reason.',
   purpose_required: 'Please describe why you need this (at least 10 characters).',
-  order_not_refundable: 'This order is not in a state where a refund or report can be started yet.',
+  order_not_refundable: 'This order is not in a state where a report can be started yet.',
   order_not_returnable: 'This order cannot be returned right now.',
   nothing_to_refund: 'There is nothing left to refund on this order.',
   refund_exceeds_received: 'That is more than the amount that can still be refunded on this order.',

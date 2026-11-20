@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 const DOCS = [
   ['terms', 'Customer terms and conditions'],
   ['privacy', 'Privacy policy'],
-  ['refunds', 'Refund, return and dispute policy'],
+  ['reports', 'Reports, returns and cancelled orders policy'],
   ['payments', 'Payments, delivery fee and payouts'],
   ['vendor-agreement', 'Vendor agreement'],
   ['rider-agreement', 'Rider agreement'],
