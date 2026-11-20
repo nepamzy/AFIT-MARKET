@@ -1,4 +1,4 @@
-import { lagosDateTime, lagosTime } from '@/lib/time'
+import { reportWindowEnd, lagosDateTime, lagosTime } from '@/lib/time'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -37,6 +37,7 @@ import {
 export const metadata: Metadata = { title: 'Order' }
 
 /** True while the moment is still ahead of the server clock. */
+const hoursUntil = (d: Date) => Math.max(0, Math.ceil((d.getTime() - Date.now()) / 3_600_000))
 const isInFuture = (d: Date | null) => d !== null && d.getTime() > Date.now()
 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,13 +77,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   ).data as PaymentView
   const payAtDoor = pv?.pay_at_door === true
   const mustPayNow = payAtDoor && !pv?.paid && pv?.can_pay_now === true
-  const holdHours = Number(
-    (await (await createSupabaseServerClient()).rpc('payout_hold_hours')).data ?? 24,
-  )
   const completedAt = history.find((h) => h.to_status === 'COMPLETED')?.created_at ?? null
-  const windowEnds = completedAt
-    ? new Date(new Date(completedAt).getTime() + holdHours * 3_600_000)
-    : null
+  // the window to report a problem closes at midnight (Nigeria time) on the day the order was completed
+  const windowEnds = completedAt ? reportWindowEnd(completedAt) : null
+  const hoursLeft = windowEnds ? hoursUntil(windowEnds) : null
   const windowOpen = isInFuture(windowEnds)
   const beforeCompletion =
     !completedAt && !['PENDING_PAYMENT', 'CANCELLED', 'REFUNDED'].includes(order.status)
@@ -195,20 +193,21 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             plain
             tone={windowOpen ? 'warning' : 'info'}
             className="mb-5"
-            title="Your payment is protected for 24 hours"
+            title="Report a problem on the day you receive your order"
           >
             {beforeCompletion && (
               <>
-                Your payment is held safely. When your order is completed you have {holdHours} hours
-                to report a problem and ask for your money back. After that, the payment is released
-                to the shop.
+                Your payment is held safely. You can report a problem and ask for your money back
+                until midnight (Nigeria time) on the day your order is completed. After that, the
+                payment is released to the shop.
               </>
             )}
             {windowEnds && windowOpen && (
               <>
                 Something wrong with your order? You can report it until{' '}
-                {lagosDateTime(windowEnds.toISOString())}. After that the payment is released to the
-                shop.{' '}
+                {lagosDateTime(windowEnds.toISOString())} (about {hoursLeft}{' '}
+                {hoursLeft === 1 ? 'hour' : 'hours'} left). After that the payment is released to
+                the shop.{' '}
                 <Link className="font-semibold underline" href={`/orders/${order.id}/help`}>
                   Report a problem
                 </Link>
@@ -216,8 +215,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             )}
             {windowEnds && !windowOpen && (
               <>
-                The {holdHours}-hour window to report a problem has ended and the payment has been
-                released to the shop.
+                The window to report a problem ended at midnight on the day your order was completed
+                and the payment has been released to the shop.
               </>
             )}
           </Alert>
@@ -319,8 +318,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
             </p>
           )}
           <p className="text-sm text-muted">
-            Your payment is held safely. The shop is paid {holdHours} hours after your order is
-            completed, and you can report a problem until then.
+            Your payment is held safely. You can report a problem until midnight (Nigeria time) on
+            the day your order is completed, and the shop is paid after that.
           </p>
           <div className="flex flex-wrap gap-3">
             {paystack && (

@@ -12,7 +12,7 @@ After you pay, the shop must accept or decline your order within **15 hours**. I
 
 ## 2. Problems with an order you received
 
-2.1 Report the problem from your order page. You can do this until the shop has been paid (24 hours after completion) and, where the law gives you longer, for as long as the law allows.
+2.1 Report the problem from your order page. You can do this until the shop has been paid (midnight, Nigeria time, on the day the order was completed, so report it the same day) and, where the law gives you longer, for as long as the law allows.
 
 2.2 Examples: the item was not delivered, was damaged or unsafe, was not what was described, or part of the order is missing.
 
@@ -37,7 +37,7 @@ If a return is appropriate, you arrange it with the shop through the order page.
 
 ## 6. After the shop has been paid
 
-The shop is paid 24 hours after completion unless a complaint is open. If we later decide you should be refunded, we refund you and recover the money from the shop under the Vendor Agreement.
+The shop is paid at midnight (Nigeria time) on the day the order is completed unless a complaint is open. If we later decide you should be refunded, we refund you and recover the money from the shop under the Vendor Agreement.
 
 ## 7. Timing
 

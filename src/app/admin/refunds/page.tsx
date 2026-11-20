@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { RefundStaffControls } from '@/components/domain/support-forms'
 import { Badge, type Tone } from '@/components/ui/badge'
 import { Card, PageHeader } from '@/components/ui/card'
+import { paystackConfig } from '@/lib/env'
 import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
 import { checkAccess } from '@/server/modules/identity-and-access/guard'
@@ -16,9 +17,9 @@ export const metadata: Metadata = { title: 'Refunds' }
 const STATUS: Record<string, [string, Tone]> = {
   requested: ['Requested', 'info'],
   under_review: ['Under review', 'info'],
-  approved: ['Approved: NOT executed', 'brand'],
+  approved: ['Approved: not sent yet', 'brand'],
   rejected: ['Rejected', 'danger'],
-  processing: ['Processing (fake provider)', 'warning'],
+  processing: ['Processing', 'warning'],
   succeeded: ['Succeeded', 'success'],
   failed: ['Failed', 'danger'],
   reconciliation_required: ['Needs reconciliation', 'warning'],
@@ -41,7 +42,7 @@ export default async function Refunds({
       <PageHeader
         breadcrumbs={[{ label: 'Administration', href: '/admin' }, { label: 'Refunds' }]}
         title="Refunds"
-        subtitle="Request, approval and execution are three separate steps. Only a FAKE provider exists: no real refund is sent anywhere."
+        subtitle="Request, approval and sending are three separate steps. Sending a refund moves real money through Paystack."
       />
       <ListFilter action="/admin/refunds" statuses={Object.keys(STATUS)} status={status} q={q} />
       {refunds.length === 0 ? (
@@ -91,6 +92,8 @@ export default async function Refunds({
                   ownRequest={r.own_request}
                   canApprove={finance}
                   canExecute={finance}
+                  real={paystackConfig() !== null}
+                  amountKobo={r.amount_kobo}
                 />
               </Card>
             )

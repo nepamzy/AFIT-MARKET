@@ -1,4 +1,5 @@
 'use client'
+import { formatNaira } from '@/lib/money'
 import { useState } from 'react'
 import { ActionForm } from '@/components/forms/action-form'
 import { Checkbox, Input, Select, Textarea } from '@/components/ui/fields'
@@ -203,12 +204,17 @@ export function RefundStaffControls({
   ownRequest,
   canApprove,
   canExecute,
+  real = false,
+  amountKobo,
 }: {
   refundId: string
   status: string
   ownRequest: boolean
   canApprove: boolean
   canExecute: boolean
+  /** Paystack is set up: executing sends a real refund. Otherwise only the local fake provider exists. */
+  real?: boolean
+  amountKobo?: number
 }) {
   return (
     <div className="space-y-3">
@@ -242,19 +248,27 @@ export function RefundStaffControls({
       {status === 'approved' && !ownRequest && canExecute && (
         <ActionForm
           action={refundExecuteAction}
-          submitLabel="Execute with the FAKE provider"
+          submitLabel={real ? 'Send the refund through Paystack' : 'Execute with the FAKE provider'}
           pendingLabel="Running…"
         >
           <input type="hidden" name="refundId" value={refundId} />
-          <p className="rounded-[var(--radius-control)] bg-warning-50 px-3 py-2 text-sm font-medium text-warning-700">
-            FAKE PROVIDER: nothing is sent to Paystack and no money moves. Real refund execution is
-            not built.
-          </p>
-          <Select label="Pretend the provider answers…" name="scenario" defaultValue="success">
-            <option value="success">success</option>
-            <option value="failure">failure</option>
-            <option value="timeout">no answer (needs reconciliation)</option>
-          </Select>
+          {real ? (
+            <p className="rounded-[var(--radius-control)] bg-warning-50 px-3 py-2 text-sm font-medium text-warning-700">
+              This sends{amountKobo !== undefined ? ` ${formatNaira(amountKobo)}` : ''} back to the
+              customer&apos;s original payment through Paystack. It cannot be undone.
+            </p>
+          ) : (
+            <>
+              <p className="rounded-[var(--radius-control)] bg-warning-50 px-3 py-2 text-sm font-medium text-warning-700">
+                FAKE PROVIDER: Paystack is not set up here, so nothing is sent and no money moves.
+              </p>
+              <Select label="Pretend the provider answers…" name="scenario" defaultValue="success">
+                <option value="success">success</option>
+                <option value="failure">failure</option>
+                <option value="timeout">no answer (needs reconciliation)</option>
+              </Select>
+            </>
+          )}
         </ActionForm>
       )}
       {status === 'reconciliation_required' && canExecute && (

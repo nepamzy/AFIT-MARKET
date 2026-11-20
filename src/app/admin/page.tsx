@@ -47,6 +47,15 @@ export default async function AdminHome() {
   const [d, overview] = await Promise.all([adminDashboard(), adminOverview()])
   const attention = Object.entries(overview ?? {})
   const waiting = attention.filter(([, v]) => v > 0).length
+  const emergency = {
+    reports: (overview?.cases_open ?? 0) + (overview?.cases_awaiting_close ?? 0),
+    returns: overview?.returns_waiting ?? 0,
+    refunds:
+      (overview?.refunds_requested ?? 0) +
+      (overview?.refunds_awaiting_execution ?? 0) +
+      (overview?.refunds_need_reconciliation ?? 0),
+  }
+  const emergencyTotal = emergency.reports + emergency.returns + emergency.refunds
   return (
     <>
       <PageHeader
@@ -58,6 +67,22 @@ export default async function AdminHome() {
           </ButtonLink>
         }
       />
+      <Link
+        href="/admin/emergency"
+        className={`mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border-2 p-4 shadow-[var(--shadow-card)] ${emergencyTotal > 0 ? 'border-danger-600 bg-danger-50' : 'border-line bg-card'}`}
+      >
+        <span>
+          <span className="block text-lg font-extrabold text-navy-900">
+            Emergency: reports, returns and refunds
+          </span>
+          <span className="text-sm text-muted">
+            {emergencyTotal > 0
+              ? `${emergency.reports} report${emergency.reports === 1 ? '' : 's'} · ${emergency.returns} return${emergency.returns === 1 ? '' : 's'} · ${emergency.refunds} refund${emergency.refunds === 1 ? '' : 's'} need you`
+              : 'Nothing is waiting for you right now.'}
+          </span>
+        </span>
+        <span className="font-bold text-brand-700">Open →</span>
+      </Link>
       {!d ? (
         <EmptyState title="We could not load the dashboard" icon="alert">
           Please refresh the page. If it keeps happening, check the jobs page and the audit trail.

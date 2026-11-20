@@ -18,7 +18,7 @@ The delivery fee is **not** part of the online payment. You pay it **directly to
 
 3.1 Your online payment is received by us through Paystack and held until the order is completed.
 
-3.2 **24 hours after an order is completed**, we send the shop its payout by bank transfer (Paystack) to the shop's verified bank account. During those 24 hours you can report a problem. **A complaint or refund that is still open holds the payout** until it is settled.
+3.2 **at midnight (Nigeria time) on the day an order is completed**, we send the shop its payout by bank transfer (Paystack) to the shop's verified bank account. Until then you can report a problem, so please report it the same day you receive your order. **A complaint or refund that is still open holds the payout** until it is settled.
 
 3.3 The payout is the product value of the order **less our commission and less any refund**. If a transfer fails we retry automatically and alert our team.
 

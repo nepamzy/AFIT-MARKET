@@ -38,7 +38,7 @@ These terms are the agreement between you and **NOBS AGENT** (company registrati
 
 4.4 After payment (or, for an order paid on delivery, after you place it) the shop must **accept or decline** your order. The shop has **15 hours** to answer. If the shop declines (it must give you a reason, which you will see on your order) or does not answer in time, the order is cancelled and **your payment is refunded in full automatically** to the way you paid. Refunds can take a few working days to reach your bank or card, depending on your bank.
 
-4.5 Your payment is held by us until the order is completed and is released to the shop 24 hours after completion, unless a complaint is open (see the Payments notice). During that time you can report a problem.
+4.5 Your payment is held by us until the order is completed and is released to the shop at midnight (Nigeria time) on the day of completion, unless a complaint is open (see the Payments notice). Until then you can report a problem, so report it the same day you receive your order.
 
 ## 5. Delivery fee
 
