@@ -227,7 +227,7 @@ create function public.cart_quote_multi(p_choices jsonb, p_point uuid, p_pod boo
 language plpgsql stable security definer set search_path = ''
 as $$
 declare
-  v_actor uuid := app_private.require_customer(); v rec; q jsonb; v_f text; v_door boolean;
+  v_actor uuid := app_private.require_customer(); v record; q jsonb; v_f text; v_door boolean;
   v_groups jsonb := '[]'::jsonb; v_problems jsonb := '[]'::jsonb; v_now bigint := 0; v_doortot bigint := 0; v_charge bigint;
 begin
   for v in
@@ -260,7 +260,7 @@ create function public.create_orders(p_choices jsonb, p_point uuid, p_key text, 
 language plpgsql security definer set search_path = ''
 as $$
 declare
-  v_actor uuid := (select auth.uid()); v_cart public.carts%rowtype; v_checkout uuid := gen_random_uuid(); v rec; v_q jsonb; v_f text;
+  v_actor uuid := (select auth.uid()); v_cart public.carts%rowtype; v_checkout uuid := gen_random_uuid(); v record; v_q jsonb; v_f text;
   v_quotes jsonb := '[]'::jsonb; v_problems jsonb := '[]'::jsonb; e jsonb; v_order uuid; v_vendor public.vendors%rowtype; v_line jsonb;
   v_expiry int := app_private.setting_int('unpaid_order_expiry_minutes', 30)::int; v_n int := 0; v_out jsonb := '[]'::jsonb;
   v_pod boolean; v_no text; v_tot bigint; v_prev jsonb;
