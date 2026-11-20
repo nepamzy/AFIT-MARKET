@@ -237,12 +237,18 @@ export function LiveMap({
       >
         {full ? '✕ Close map' : '⛶ Expand map'}
       </button>
+      {/* The map element's class name must never change after the map starts: React would overwrite the classes Leaflet put
+          on it and the map would turn into a blank blue box. Only the style changes when the map is expanded. */}
       <div
         ref={box}
         role="region"
         aria-label={label}
-        style={{ height: full ? '100dvh' : height }}
-        className={`afit-map w-full overflow-hidden border border-line bg-navy-950 ${full ? 'flex-1 rounded-none' : 'rounded-[var(--radius-card)]'}`}
+        style={{
+          height: full ? '100dvh' : height,
+          borderRadius: full ? 0 : 'var(--radius-card)',
+          flex: full ? '1 1 0%' : undefined,
+        }}
+        className="afit-map w-full overflow-hidden border border-line bg-navy-950"
       />
       {!full && (
         <p className="mt-1 text-xs text-muted">
