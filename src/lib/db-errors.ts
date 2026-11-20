@@ -6,6 +6,8 @@ const MESSAGES: Record<string, string> = {
   'authentication required': 'Please sign in to continue.',
   'MFA (aal2) required': 'Please confirm your authenticator code to continue.',
   forbidden: 'You are not allowed to do this.',
+  one_business_role:
+    'This account already runs a shop, so it cannot also be a rider. A rider needs a separate account.',
   'vendor is not active': 'This vendor account is not active.',
   invalid_quantity: 'Choose a quantity between 1 and the allowed maximum.',
   product_unavailable: 'That item is not available right now.',
