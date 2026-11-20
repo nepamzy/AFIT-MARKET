@@ -174,8 +174,10 @@ export const ORDER_STATES: OrderState[] = [
   },
 ]
 
-export function OrderStatusPill({ code }: { code: string }) {
+export function OrderStatusPill({ code, atDoor }: { code: string; atDoor?: boolean }) {
   const s = ORDER_STATES.find((x) => x.code === code)
   if (!s) return <Badge>Unknown</Badge>
+  // an order that is paid when it is received has not been paid yet: do not call it "Payment received"
+  if (atDoor && code === 'PAID') return <Badge tone="info">Placed · pays on receipt</Badge>
   return <Badge tone={s.tone}>{s.label}</Badge>
 }

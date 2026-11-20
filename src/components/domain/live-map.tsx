@@ -66,6 +66,7 @@ export function LiveMap({
   const latest = useRef(pins)
   const wrap = useRef<HTMLDivElement>(null)
   const [full, setFull] = useState(false)
+  const [streets, setStreets] = useState(false)
 
   const sync = () => {
     const s = state.current
@@ -127,11 +128,11 @@ export function LiveMap({
       .join(',')
     if (key !== s.fitted && now.length) {
       s.fitted = key
-      if (now.length === 1) map.setView([now[0]!.lat, now[0]!.lng], 17)
+      if (now.length === 1) map.setView([now[0]!.lat, now[0]!.lng], 16)
       else
         map.fitBounds(L.latLngBounds(now.map((p) => [p.lat, p.lng] as [number, number])), {
           padding: [40, 40],
-          maxZoom: 18,
+          maxZoom: 17,
         })
     }
   }
@@ -151,13 +152,40 @@ export function LiveMap({
       // public tiles are used.
       const host = mapKey ? KEYED_HOST : FREE_HOST
       const q = mapKey ? `?token=${encodeURIComponent(mapKey)}` : ''
-      L.tileLayer(`${host}/World_Imagery/MapServer/tile/{z}/{y}/{x}${q}`, {
+      // Satellite pictures of some places stop at a lower zoom: past it the tiles are stretched instead of asking for
+      // pictures that do not exist (which left a blank blue map).
+      const imagery = L.tileLayer(`${host}/World_Imagery/MapServer/tile/{z}/{y}/{x}${q}`, {
         maxZoom: 19,
+        maxNativeZoom: 17,
         attribution: 'Esri',
       }).addTo(map)
-      L.tileLayer(`${host}/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}${q}`, {
-        maxZoom: 19,
-      }).addTo(map)
+      const places = L.tileLayer(
+        `${host}/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}${q}`,
+        { maxZoom: 19, maxNativeZoom: 17 },
+      ).addTo(map)
+      // If the satellite tiles do not arrive (blocked, slow, or no picture here), switch to the street map so the
+      // person never stares at an empty screen.
+      let loaded = false
+      let errors = 0
+      const toStreets = () => {
+        if (loaded || cancelled) return
+        loaded = true
+        imagery.remove()
+        places.remove()
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap',
+        }).addTo(map)
+        setStreets(true)
+      }
+      imagery.on('tileload', () => {
+        loaded = true
+      })
+      imagery.on('tileerror', () => {
+        errors += 1
+        if (errors >= 3) toStreets()
+      })
+      window.setTimeout(toStreets, 6000)
       state.current = { map, L, markers: new Map(), circles: new Map(), fitted: '' }
       sync()
     })()
@@ -173,43 +201,28 @@ export function LiveMap({
     sync()
   })
 
-  // Expanded view: the map fills the whole screen (uses the browser's full-screen mode where it exists, so the phone can
-  // be turned sideways), and the map is told its new size.
-  const resize = () => window.setTimeout(() => state.current?.map.invalidateSize(), 80)
+  // Expanded view: the map fills the whole screen (plain page layout: the browser full-screen mode left a blank map on phones), and the map is
+  // told its new size.
+  const resize = () => {
+    for (const ms of [60, 250, 700])
+      window.setTimeout(() => state.current?.map.invalidateSize(), ms)
+  }
   useEffect(() => {
     resize()
     const onResize = () => resize()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setFull(false)
     }
-    const onFs = () => {
-      if (!document.fullscreenElement) setFull(false)
-      resize()
-    }
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onResize)
     document.addEventListener('keydown', onKey)
-    document.addEventListener('fullscreenchange', onFs)
     return () => {
       window.removeEventListener('resize', onResize)
       window.removeEventListener('orientationchange', onResize)
       document.removeEventListener('keydown', onKey)
-      document.removeEventListener('fullscreenchange', onFs)
     }
   }, [full])
-  const toggle = async () => {
-    if (!full) {
-      setFull(true)
-      try {
-        await wrap.current?.requestFullscreen?.()
-      } catch {
-        /* no full-screen mode: the map still fills the page */
-      }
-    } else {
-      setFull(false)
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined)
-    }
-  }
+  const toggle = () => setFull((f) => !f)
 
   return (
     <div
@@ -228,11 +241,15 @@ export function LiveMap({
         ref={box}
         role="region"
         aria-label={label}
-        style={{ height: full ? '100%' : height }}
+        style={{ height: full ? '100dvh' : height }}
         className={`afit-map w-full overflow-hidden border border-line bg-navy-950 ${full ? 'flex-1 rounded-none' : 'rounded-[var(--radius-card)]'}`}
       />
       {!full && (
-        <p className="mt-1 text-xs text-muted">Satellite imagery © Esri and its data providers.</p>
+        <p className="mt-1 text-xs text-muted">
+          {streets
+            ? 'Map © OpenStreetMap contributors.'
+            : 'Satellite imagery © Esri and its data providers.'}
+        </p>
       )}
     </div>
   )

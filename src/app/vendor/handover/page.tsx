@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { ShopRiderMap } from '@/components/domain/shop-rider-map'
 import { RiderPickupCard } from '@/components/domain/rider-pickup-card'
 import { FindByCode } from '@/components/domain/find-by-code'
-import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { AutoRefresh } from '@/components/domain/auto-refresh'
 import { PayAtDoorNotice } from '@/components/domain/pay-at-door-notice'
 import { PickupHandoverCard } from '@/components/domain/pickup-handover-card'
@@ -34,7 +33,6 @@ export default async function Handover({
   const riderPickups = vendor ? await listPendingRiderPickups() : []
   return (
     <>
-      <VendorLocationBeacon />
       <AutoRefresh everySeconds={5} />
       <PageHeader
         breadcrumbs={[{ label: 'Shop', href: '/vendor' }, { label: 'Handover' }]}

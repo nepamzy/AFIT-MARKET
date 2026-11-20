@@ -24,6 +24,7 @@ export type OrderRow = {
   discount_kobo: number
   total_kobo: number
   expires_at: string | null
+  payment_timing?: 'now' | 'on_delivery'
   created_at: string
 }
 export type OrderItemRow = {
@@ -43,7 +44,7 @@ export type HistoryRow = {
 }
 
 const COLS =
-  'id, order_number, customer_id, vendor_id, vendor_name, fulfilment, delivery_point_label, pickup_location_snapshot, prep_minutes_snapshot, status, items_total_kobo, delivery_fee_kobo, delivery_fee_collection, platform_fee_kobo, discount_kobo, total_kobo, expires_at, created_at'
+  'id, order_number, customer_id, vendor_id, vendor_name, fulfilment, delivery_point_label, pickup_location_snapshot, prep_minutes_snapshot, status, items_total_kobo, delivery_fee_kobo, delivery_fee_collection, platform_fee_kobo, discount_kobo, total_kobo, expires_at, payment_timing, created_at'
 
 /** Orders that no longer need anyone's attention (everything else is "unfinished"). */
 export const FINISHED_ORDER_STATUSES = [

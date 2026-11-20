@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { LocationNotice } from '@/components/domain/location-notice'
+import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { AppShell } from '@/components/shells/app-shell'
 import { VENDOR_NAV } from '@/components/shells/nav-config'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -27,6 +29,15 @@ export default async function Layout({ children }: { children: ReactNode }) {
           Your vendor account is suspended. Customers cannot see or order from you, and you cannot
           make changes. Contact support.
         </p>
+      )}
+      {vendor?.status === 'approved' && (
+        <>
+          <VendorLocationBeacon />
+          <LocationNotice
+            id="vendor"
+            text="We are using your shop’s location while you have open orders, so riders and customers can find you."
+          />
+        </>
       )}
       {children}
     </AppShell>

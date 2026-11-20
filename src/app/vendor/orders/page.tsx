@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { VendorOrderActions } from '@/components/domain/vendor-order-actions'
 import { OrderStatusPill } from '@/components/domain/order-status'
-import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { PageHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
@@ -50,10 +49,15 @@ function OrdersTable({
           </Td>
           <Td>{lagosDateTime(o.created_at)}</Td>
           <Td>
-            <OrderStatusPill code={o.status} />
-            {!['PENDING_PAYMENT', 'CANCELLED'].includes(o.status) && (
-              <p className="mt-1 text-xs font-semibold text-success-700">✓ Payment confirmed</p>
-            )}
+            <OrderStatusPill code={o.status} atDoor={o.payment_timing === 'on_delivery'} />
+            {!['PENDING_PAYMENT', 'CANCELLED'].includes(o.status) &&
+              (o.payment_timing === 'on_delivery' ? (
+                <p className="mt-1 text-xs font-semibold text-warning-700">
+                  Customer pays when they receive it
+                </p>
+              ) : (
+                <p className="mt-1 text-xs font-semibold text-success-700">✓ Payment confirmed</p>
+              ))}
           </Td>
           <Td>
             <VendorOrderActions orderId={o.id} status={o.status} />
@@ -85,7 +89,6 @@ export default async function VendorOrders({
   const items = await listItemsForOrders([...open, ...done.orders].map((o) => o.id))
   return (
     <>
-      <VendorLocationBeacon />
       <PageHeader
         breadcrumbs={[{ label: 'Shop', href: '/vendor' }, { label: 'Orders' }]}
         title="Orders"

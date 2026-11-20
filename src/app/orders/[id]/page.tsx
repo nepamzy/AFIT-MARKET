@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { Card, PageHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
+import { LocationNotice } from '@/components/domain/location-notice'
 import { Timeline } from '@/components/ui/timeline'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
@@ -145,11 +146,17 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   )
   return (
     <>
+      {!settled && order.fulfilment === 'delivery' && (
+        <LocationNotice
+          id="customer"
+          text="We are using your location until your order is complete, so your rider can find you."
+        />
+      )}
       {!settled && <AutoRefresh everySeconds={waitingForHandover ? 4 : 15} />}
       <PageHeader
         title={order.order_number}
         subtitle={`${order.vendor_name} · ${order.fulfilment === 'delivery' ? 'Delivery' : 'Pickup'}`}
-        actions={<OrderStatusPill code={order.status} />}
+        actions={<OrderStatusPill code={order.status} atDoor={payAtDoor && !pv?.paid} />}
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'Orders', href: '/orders' },
@@ -572,7 +579,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <h2 className="mb-3 text-lg font-extrabold text-navy-900">Order timeline</h2>
           <Timeline
             steps={history.map((h, i) => ({
-              label: label(h.to_status),
+              label:
+                h.to_status === 'PAID' && h.reason === 'pay_on_delivery'
+                  ? 'Order placed · you pay when you receive it'
+                  : label(h.to_status),
               detail: lagosDateTime(h.created_at),
               state: 'done',
               href: i === history.length - 1 ? placeFor(h.to_status) : undefined,
