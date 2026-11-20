@@ -1,5 +1,6 @@
 'use server'
 
+import { parseIdCard, saveIdCard } from '@/server/modules/identity-and-access/id-card'
 import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
 import {
   notifyApplicationDecision,
@@ -48,6 +49,14 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
   if (!choices.ok) return failed(choices.error)
   const auto = parseAutoReady(fd)
   if (!auto.ok) return failed(auto.error)
+  // a student sends pictures of the new ID card; they are saved first, so an application never exists without them
+  if (choices.type === 'student') {
+    const card = parseIdCard(fd)
+    if (!card.ok) return failed(card.error)
+    const saved = await saveIdCard('vendor', card)
+    if (saved.error)
+      return dbFailed(saved.error, 'We could not save your ID card pictures. Please try again.')
+  }
   const sb = await createSupabaseServerClient()
   const { error } = await sb.rpc('submit_vendor_application', {
     p_business_name: text(fd, 'businessName', 80),

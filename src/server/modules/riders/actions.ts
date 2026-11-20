@@ -1,5 +1,6 @@
 'use server'
 
+import { parseIdCard, saveIdCard } from '@/server/modules/identity-and-access/id-card'
 import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
 import { notifyApplicationReceived } from '@/server/modules/engagement/dispatch'
 import { revalidatePath } from 'next/cache'
@@ -30,6 +31,14 @@ export async function submitRiderApplicationAction(
   if ('state' in g) return g.state
   if (!(await rateLimit(`riderapply:${g.who.userId}`, 3600, 5)))
     return failed('Too many attempts. Please try again later.')
+  // a student rider sends pictures of the new ID card; they are saved first, so an application never exists without them
+  if (fd.get('student') === 'on') {
+    const card = parseIdCard(fd)
+    if (!card.ok) return failed(card.error)
+    const saved = await saveIdCard('rider', card)
+    if (saved.error)
+      return dbFailed(saved.error, 'We could not save your ID card pictures. Please try again.')
+  }
   const sb = await createSupabaseServerClient()
   const { error } = await sb.rpc('submit_rider_application', {
     p_name: text(fd, 'fullName', 80),

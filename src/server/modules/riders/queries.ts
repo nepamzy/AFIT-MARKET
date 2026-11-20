@@ -114,7 +114,9 @@ export async function listRiderApplications() {
   const sb = await createSupabaseServerClient()
   const { data } = await sb
     .from('rider_applications')
-    .select('id, full_name, contact_phone, vehicle_note, status, decision_reason, created_at')
+    .select(
+      'id, applicant_id, full_name, contact_phone, vehicle_note, status, decision_reason, created_at',
+    )
     .order('created_at', { ascending: false })
     .limit(50)
   return data ?? []
