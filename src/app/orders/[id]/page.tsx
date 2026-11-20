@@ -149,7 +149,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
       <PageHeader
         title={order.order_number}
         subtitle={`${order.vendor_name} · ${order.fulfilment === 'delivery' ? 'Delivery' : 'Pickup'}`}
-        actions={<OrderStatusPill code={order.status} />}
+        actions={<OrderStatusPill code={order.status} atDoor={payAtDoor && !pv?.paid} />}
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'Orders', href: '/orders' },
@@ -572,7 +572,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <h2 className="mb-3 text-lg font-extrabold text-navy-900">Order timeline</h2>
           <Timeline
             steps={history.map((h, i) => ({
-              label: label(h.to_status),
+              label:
+                h.to_status === 'PAID' && h.reason === 'pay_on_delivery'
+                  ? 'Order placed · you pay when you receive it'
+                  : label(h.to_status),
               detail: lagosDateTime(h.created_at),
               state: 'done',
               href: i === history.length - 1 ? placeFor(h.to_status) : undefined,

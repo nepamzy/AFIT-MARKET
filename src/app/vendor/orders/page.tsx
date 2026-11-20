@@ -50,10 +50,15 @@ function OrdersTable({
           </Td>
           <Td>{lagosDateTime(o.created_at)}</Td>
           <Td>
-            <OrderStatusPill code={o.status} />
-            {!['PENDING_PAYMENT', 'CANCELLED'].includes(o.status) && (
-              <p className="mt-1 text-xs font-semibold text-success-700">✓ Payment confirmed</p>
-            )}
+            <OrderStatusPill code={o.status} atDoor={o.payment_timing === 'on_delivery'} />
+            {!['PENDING_PAYMENT', 'CANCELLED'].includes(o.status) &&
+              (o.payment_timing === 'on_delivery' ? (
+                <p className="mt-1 text-xs font-semibold text-warning-700">
+                  Customer pays when they receive it
+                </p>
+              ) : (
+                <p className="mt-1 text-xs font-semibold text-success-700">✓ Payment confirmed</p>
+              ))}
           </Td>
           <Td>
             <VendorOrderActions orderId={o.id} status={o.status} />
