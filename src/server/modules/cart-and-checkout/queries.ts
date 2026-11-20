@@ -33,6 +33,8 @@ export type VendorGroup = Quote & {
   vendor_id: string
   vendor_name: string
   is_food: boolean
+  /** the shop has at least one rider of its own, so delivery can be chosen */
+  rider_available?: boolean
   pay_timing: 'now' | 'door'
   /** Paystack's charge on this group's total, when it is paid at the door. */
   door_charge_kobo: number

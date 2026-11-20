@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
-import { AddRiderForm, RiderCards } from '@/components/domain/vendor-riders-form'
+import { RiderCodeMaker } from '@/components/domain/rider-code-maker'
+import { RiderTeam } from '@/components/domain/rider-team'
 import { Card, PageHeader } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/states'
 import { Section } from '@/components/ui/section'
 import {
+  activeRiderCodes,
   getMyVendor,
-  listVendorRiders,
+  listRiderTeam,
 } from '@/server/modules/vendors-and-catalogue/vendor-queries'
 
 export const metadata: Metadata = { title: 'My riders' }
@@ -15,7 +17,12 @@ export default async function MyRiders() {
   if (!me) return <EmptyState title="No vendor account yet" />
   const owner = me.staff_role === 'owner'
   const ready = me.status === 'approved'
-  const riders = ready ? await listVendorRiders(me.id) : []
+  const [team, codes] = ready
+    ? await Promise.all([
+        listRiderTeam(me.id),
+        owner ? activeRiderCodes(me.id) : Promise.resolve([]),
+      ])
+    : [[], []]
   return (
     <>
       <PageHeader
@@ -25,20 +32,16 @@ export default async function MyRiders() {
       />
       <Card className="mb-6 space-y-2 text-sm">
         <p>
-          <strong>How it works.</strong> You create the rider’s account here (name, e-mail, phone).
-          You get a temporary password and a one-time <strong>5-digit rider code</strong>, shown
-          once.
+          <strong>How to add a rider.</strong> Tap <strong>Generate code for a new rider</strong>.
+          Give the 6-digit code to the rider. The rider signs up on AFIT Market as a rider and types
+          the code on the <strong>last page</strong>, before the account is created. The rider is
+          then linked to your shop and appears here. The code works once and lasts 10 minutes.
         </p>
         <p>
-          Give the rider the e-mail, the password and the code. When the rider{' '}
-          <strong>signs in</strong> and types the code in the “Shop rider code” boxes, the account
-          becomes a rider account <strong>linked to your shop</strong>. The code works once and only
-          for that account. For another rider, create another account.
-        </p>
-        <p>
-          A rider linked to your shop sees and takes only your shop’s orders. You vouch for them:
-          there is no separate administrator approval. Remove a rider at any time and their rider
-          access stops.
+          A rider sees and takes only your shop’s orders. For each delivery you can choose which of
+          your riders takes it. A shop does not need a rider, but without one customers can only
+          pick up. Want to deliver yourself? Sign up as a rider with one of your own codes (or open
+          Deliver on AFIT Market in your account and type it there).
         </p>
       </Card>
       {!ready ? (
@@ -46,14 +49,12 @@ export default async function MyRiders() {
       ) : (
         <div className="space-y-8">
           {owner && (
-            <Section id="add" title="Create a rider account">
-              <Card>
-                <AddRiderForm vendorId={me.id} />
-              </Card>
+            <Section id="add" title="Add a rider">
+              <RiderCodeMaker vendorId={me.id} active={codes} />
             </Section>
           )}
           <Section id="list" title="Your riders">
-            <RiderCards vendorId={me.id} riders={riders} />
+            <RiderTeam vendorId={me.id} riders={team} />
           </Section>
         </div>
       )}

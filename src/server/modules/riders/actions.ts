@@ -4,6 +4,8 @@ import { parseIdCard, saveIdCard } from '@/server/modules/identity-and-access/id
 import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
 import { notifyApplicationReceived } from '@/server/modules/engagement/dispatch'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { z } from 'zod'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import type { AccessRequirement } from '@/server/modules/identity-and-access/policy'
@@ -255,4 +257,28 @@ export async function confirmPickupScanAction(_p: ActionState, fd: FormData): Pr
   revalidatePath('/rider/jobs')
   revalidatePath('/vendor/handover')
   return done(`Collected ${r.order_number ?? 'the order'}. Now start your route.`)
+}
+
+/** A signed-in person who is not yet a rider joins a shop with its rider code (6 digits, good for 10 minutes, works once). */
+export async function joinShopWithCodeAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const g = await gate({ roles: ['customer', 'rider'], aal: 'aal2' })
+  if ('state' in g) return g.state
+  const code = text(fd, 'shopCode', 6)
+  const name = text(fd, 'fullName', 80)
+  const phone = text(fd, 'phone', 20)
+  if (!/^[0-9]{6}$/.test(code)) return failed('Enter the 6-digit rider code your shop gave you.')
+  if (name.length < 2) return failed('Enter your full name.')
+  if (!/^[0-9+() -]{7,20}$/.test(phone)) return failed('Enter your phone number.')
+  if (!(await rateLimit(`joinshop:${g.who.userId}`, 3600, 8)))
+    return failed('Too many tries. Please wait a while and ask your shop for a new code.')
+  const { error } = await createSupabaseServiceClient().rpc('rider_join_with_code', {
+    p_user: g.who.userId,
+    p_code: code,
+    p_name: name,
+    p_phone: phone,
+  })
+  if (error) return dbFailed(error, 'That code did not work. Ask your shop for a new one.')
+  revalidatePath('/rider-apply')
+  revalidatePath('/rider')
+  redirect('/rider')
 }

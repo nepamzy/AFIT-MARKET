@@ -116,9 +116,7 @@ export function PublicFooter() {
       </div>
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <p className="text-xs">
-            AFIT Market is your campus marketplace, at your doorstep.
-          </p>
+          <p className="text-xs">AFIT Market is your campus marketplace, at your doorstep.</p>
           <BuiltByBadge />
         </div>
       </div>

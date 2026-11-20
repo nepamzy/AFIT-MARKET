@@ -14,7 +14,9 @@ import { PickupScanCard } from '@/components/domain/pickup-scan-card'
 import { RiderJobMap } from '@/components/domain/rider-job-map'
 import { CustomerContactCard } from '@/components/domain/customer-contact-card'
 import { OrderStatusPill } from '@/components/domain/order-status'
+import { Alert } from '@/components/ui/alert'
 import { Card, PageHeader } from '@/components/ui/card'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
 import { Stepper } from '@/components/ui/stepper'
 import { EmptyState } from '@/components/ui/states'
@@ -49,11 +51,13 @@ export default async function Jobs() {
         </EmptyState>
       </>
     )
-  const [assignments, offers, s] = await Promise.all([
+  const [assignments, offers, s, link] = await Promise.all([
     getAssignments(),
     getOffers(),
     locationSettings(),
+    (await createSupabaseServerClient()).rpc('my_rider_link'),
   ])
+  const shop = (link.data as { vendor_name?: string } | null)?.vendor_name
   return (
     <>
       <AutoRefresh everySeconds={assignments.some((a) => a.arrival_detected_at) ? 4 : 15} />
@@ -62,6 +66,19 @@ export default async function Jobs() {
         title="Jobs"
         subtitle={`${assignments.length} of 5 active deliveries`}
       />
+      {shop ? (
+        <p className="mb-4 rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800">
+          You deliver for {shop}. You see only this shop&apos;s orders.
+        </p>
+      ) : (
+        <Alert tone="warning" title="You are not linked to a shop" className="mb-4">
+          Riders work for one shop and see only its orders.{' '}
+          <Link className="font-semibold underline" href="/rider-apply">
+            Enter a shop&apos;s rider code
+          </Link>
+          .
+        </Alert>
+      )}
       <MetricGrid>
         <MetricCard
           label="Active deliveries"

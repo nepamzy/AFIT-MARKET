@@ -149,3 +149,27 @@ export async function listVendorRiders(vendorId: string): Promise<VendorRiderRow
   const { data } = await sb.rpc('vendor_rider_list', { p_vendor: vendorId })
   return (data as VendorRiderRow[] | null) ?? []
 }
+
+export type RiderTeamMember = {
+  id: string
+  rider_id: string
+  name: string
+  phone: string | null
+  on_shift: boolean
+  lat: number | null
+  lng: number | null
+  age_seconds: number | null
+}
+/** The shop's own riders, who is on shift, and where each last was. */
+export async function listRiderTeam(vendorId: string): Promise<RiderTeamMember[]> {
+  const sb = await createSupabaseServerClient()
+  const { data } = await sb.rpc('vendor_rider_locations', { p_vendor: vendorId })
+  return (data as RiderTeamMember[] | null) ?? []
+}
+export async function activeRiderCodes(
+  vendorId: string,
+): Promise<{ code: string; expires_at: string }[]> {
+  const sb = await createSupabaseServerClient()
+  const { data } = await sb.rpc('vendor_rider_codes_active', { p_vendor: vendorId })
+  return (data as { code: string; expires_at: string }[] | null) ?? []
+}

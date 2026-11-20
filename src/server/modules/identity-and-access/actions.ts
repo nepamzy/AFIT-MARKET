@@ -160,6 +160,19 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     if (!interests.ok) return { error: interests.error }
     interestIds = interests.ids
   }
+  // a rider works for one shop: the shop's rider code (6 digits, good for 10 minutes) is asked on the last page
+  let shopCode = ''
+  if (intent === 'rider') {
+    shopCode = String(formData.get('vendorCode') ?? '').trim()
+    if (!/^[0-9]{6}$/.test(shopCode))
+      return { error: 'Enter the 6-digit rider code your shop gave you.' }
+    if (!(await rateLimit(`shopcode:ip:${await clientIp()}`, 3600, 20))) return { error: TOO_MANY }
+    const found = await createSupabaseServiceClient().rpc('rider_code_check', { p_code: shopCode })
+    if (!found.data)
+      return {
+        error: 'That rider code is wrong or has run out of time. Ask your shop for a new one.',
+      }
+  }
   const ip = await clientIp()
   if (
     !(await rateLimit(`signup:ip:${ip}`, 3600, 10)) ||
@@ -250,6 +263,17 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
       logger.warn('sign-up details not saved', { err: e instanceof Error ? e.name : 'error' })
     }
   }
+  // The code links the new rider to the shop (the shop vouches for them). If it was used a moment ago by someone else, the
+  // rider can type another code later under Deliver on AFIT Market.
+  if (!error && newUserId && intent === 'rider' && shopCode) {
+    const joined = await createSupabaseServiceClient().rpc('rider_join_with_code', {
+      p_user: newUserId,
+      p_code: shopCode,
+      p_name: details.fullName,
+      p_phone: details.phone,
+    })
+    if (joined.error) logger.warn('rider code not applied at sign-up', { code: joined.error.code })
+  }
   // E-mail confirmation is switched off in the provider settings: the person is already signed in.
   if (outcome === 'signed_in') {
     notifyWelcome(email)
@@ -262,7 +286,9 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     message:
       intent === 'customer'
         ? 'Check your email. We sent you a confirmation code.'
-        : `Check your email. We sent you a confirmation code. After you confirm and sign in, you will be taken to the ${intent} application.`,
+        : intent === 'rider'
+          ? 'Check your email. We sent you a confirmation code. After you confirm and sign in, you will be a rider for your shop.'
+          : `Check your email. We sent you a confirmation code. After you confirm and sign in, you will be taken to the ${intent} application.`,
   }
 }
 
