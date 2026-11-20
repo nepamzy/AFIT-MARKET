@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { IdCardFields } from '@/components/domain/id-card-fields'
 import { Input } from '@/components/ui/fields'
 
 export type VendorType = 'student' | 'afit_shop' | 'other'
@@ -42,12 +43,15 @@ export function VendorChoices({
   defaults,
   onChange,
   showStudentNote,
+  askIdCard,
 }: {
   categories: CategoryChoice[]
   defaults?: Partial<VendorChoicesState>
   onChange?: (s: VendorChoicesState) => void
   /** on the application page a student's matric number comes from the account */
   showStudentNote?: boolean
+  /** on the application page a student sends pictures of the new ID card */
+  askIdCard?: boolean
 }) {
   const [s, setS] = useState<VendorChoicesState>({
     vendorType: defaults?.vendorType ?? '',
@@ -112,6 +116,7 @@ export function VendorChoices({
           </p>
         )}
       </fieldset>
+      {s.vendorType === 'student' && askIdCard && <IdCardFields />}
 
       <fieldset className="rounded-[var(--radius-control)] border border-line p-3">
         <legend className="px-1 text-sm font-bold text-navy-900">

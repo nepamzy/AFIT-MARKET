@@ -24,7 +24,7 @@ export function ApplicationForm({
       pendingLabel="Sending…"
     >
       <Input label="Business name" name="businessName" required minLength={2} maxLength={80} />
-      <VendorChoices categories={categories} defaults={defaults} showStudentNote />
+      <VendorChoices categories={categories} defaults={defaults} showStudentNote askIdCard />
       <Input
         label="Contact phone"
         name="phone"

@@ -1,5 +1,6 @@
 import { lagosDate } from '@/lib/time'
 import type { Metadata } from 'next'
+import { IdCardView } from '@/components/domain/id-card-view'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, PageHeader } from '@/components/ui/card'
@@ -17,16 +18,22 @@ export default async function Applications({
 }) {
   const sp = await searchParams
   const sb = await createSupabaseServerClient()
-  const [{ data, error }, { data: cats }] = await Promise.all([
+  const [{ data, error }, { data: cats }, { data: cards }] = await Promise.all([
     sb
       .from('vendor_applications')
       .select(
-        'id, business_name, contact_phone, description, pickup_location_text, status, decision_reason, created_at, category_id, extra_category_ids, other_category, vendor_type, shop_place',
+        'id, applicant_id, business_name, contact_phone, description, pickup_location_text, status, decision_reason, created_at, category_id, extra_category_ids, other_category, vendor_type, shop_place',
       )
       .order('created_at', { ascending: false })
       .limit(50),
     sb.rpc('admin_list_categories'),
+    sb.rpc('admin_list_id_cards'),
   ])
+  const hasCard = new Set(
+    ((cards ?? []) as { user_id: string; kind: string }[])
+      .filter((c) => c.kind === 'vendor')
+      .map((c) => c.user_id),
+  )
   if (error)
     return (
       <EmptyState title="We could not load applications">Please try again in a moment.</EmptyState>
@@ -96,6 +103,13 @@ export default async function Applications({
                         : 'Not said'}
                   {a.shop_place ? ` · shop on campus: ${a.shop_place}` : ''}
                 </p>
+                {a.vendor_type === 'student' && (
+                  <IdCardView
+                    userId={a.applicant_id}
+                    kind="vendor"
+                    sent={hasCard.has(a.applicant_id)}
+                  />
+                )}
                 {(a.alsoSells.length > 0 || a.other_category) && (
                   <p className="text-sm">
                     <strong>Also sells:</strong>{' '}

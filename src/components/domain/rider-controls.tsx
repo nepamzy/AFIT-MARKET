@@ -1,5 +1,6 @@
 'use client'
 import { AllowLocationButton } from '@/components/domain/allow-location-button'
+import { IdCardFields } from '@/components/domain/id-card-fields'
 import { LocationNotice } from '@/components/domain/location-notice'
 import { lagosTime } from '@/lib/time'
 import { useEffect, useRef, useState } from 'react'
@@ -20,6 +21,7 @@ import {
 import type { ActionState } from '@/server/modules/shared/action-helpers'
 
 export function RiderApplicationForm() {
+  const [student, setStudent] = useState(true)
   return (
     <ActionForm
       action={submitRiderApplicationAction}
@@ -43,6 +45,13 @@ export function RiderApplicationForm() {
         hint="Used only by administrators to reach you."
       />
       <Input label="How will you travel? (optional)" name="vehicle" maxLength={200} />
+      <Checkbox
+        label="I am an AFIT student"
+        name="student"
+        checked={student}
+        onChange={(e) => setStudent(e.target.checked)}
+      />
+      {student && <IdCardFields />}
       <Checkbox
         label="I understand riders are reviewed and approved before they can deliver, and that I must accept the rider terms before going active."
         name="accept"

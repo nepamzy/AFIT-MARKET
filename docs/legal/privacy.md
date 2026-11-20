@@ -19,7 +19,7 @@ Last updated: 14 November 2026
 | Hand-over QR codes (stored only as one-way hashes), attempt counters | Confirm hand-overs; stop misuse | Contract; legitimate interest |
 | **Shop location** from the shop's phone while its orders screen is open (so a rider can find the shop) | Let the rider collecting an order find the shop | Legitimate interest |
 | **Rider location** while on shift with an active delivery; **your location** only if you choose to share it with your rider during a delivery | Show you where your order is; confirm arrival | Contract; your consent for your own location |
-| Rider and vendor applications: name, contact details, answers, for riders matric number, phone number and photos of the front and back of the student ID card (stored privately; the number is encrypted) | Approve riders and shops; keep deliveries safe | Legitimate interest; consent |
+| Rider and vendor applications: name, contact details, answers, for students who apply as riders or vendors, photos of the front and back of the new student ID card; for riders also matric number and phone number (stored privately; the number is encrypted) | Approve riders and shops; keep deliveries safe | Legitimate interest; consent |
 | Vendor payout bank account (number stored encrypted; staff see only the last four digits) | Pay shops | Contract |
 | Notifications, and whether you have allowed phone alerts (a technical address from your browser) | Tell you about your orders | Contract; your consent for alerts |
 | Reviews and reports about reviews | Reputation and moderation | Legitimate interest |
@@ -51,6 +51,7 @@ Some providers store or process data outside Nigeria. We use providers that appl
 - Rider location history is **deleted after 24 hours**.
 - Orders, payments, refunds, delivery-fee receipts, ledger and audit records are kept for as long as needed for accounting, tax, fraud prevention and disputes, and for any longer period the law requires.
 - Support cases are kept while a dispute is possible.
+- Student ID card photos sent with a rider or vendor application are kept while the application and the account are open, and are deleted when the account is deleted. Only a platform administrator can open them, and each time one is opened it is logged.
 - Your account details are kept while your account is open. After closure we delete or anonymise personal data we no longer need, except records we must keep.
 - QR codes expire within minutes and are stored only as hashes.
 

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { IdCardView } from '@/components/domain/id-card-view'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DecideRiderForm, RiderStatusForm } from '@/components/domain/rider-admin-forms'
 import { Icon } from '@/components/ui/icons'
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -9,7 +11,16 @@ import { listRiderApplications, listRiderProfiles } from '@/server/modules/rider
 export const metadata: Metadata = { title: 'Riders' }
 
 export default async function Riders() {
-  const [apps, riders] = await Promise.all([listRiderApplications(), listRiderProfiles()])
+  const [apps, riders, { data: cards }] = await Promise.all([
+    listRiderApplications(),
+    listRiderProfiles(),
+    (await createSupabaseServerClient()).rpc('admin_list_id_cards'),
+  ])
+  const hasCard = new Set(
+    ((cards ?? []) as { user_id: string; kind: string }[])
+      .filter((c) => c.kind === 'rider')
+      .map((c) => c.user_id),
+  )
   const pending = apps.filter((a) => a.status === 'pending')
   return (
     <>
@@ -34,6 +45,7 @@ export default async function Riders() {
                 Phone {a.contact_phone}
                 {a.vehicle_note ? ` · ${a.vehicle_note}` : ''}
               </p>
+              <IdCardView userId={a.applicant_id} kind="rider" sent={hasCard.has(a.applicant_id)} />
               <DecideRiderForm id={a.id} />
             </Card>
           ))
