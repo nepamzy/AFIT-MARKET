@@ -107,7 +107,7 @@ ${p}${highlight}${details}${button}${note}
     ...(l.note ? ['', l.note] : []),
     '',
     '--',
-    'AFIT Market, your campus marketplace. We will never ask for your password, card details or a code by phone or message.',
+    'AFIT Market, your campus marketplace at your doorstep. We will never ask for your password, card details or a code by phone or message.',
   ].join('\n')
   return { subject: l.subject, html, text }
 }
