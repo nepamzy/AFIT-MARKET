@@ -225,9 +225,26 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <h2 className="text-lg font-extrabold text-navy-900">
             {mustPayNow ? 'Pay for your order' : 'You pay when you receive it'}
           </h2>
-          <p>
-            Total to pay: <Money kobo={order.total_kobo} className="font-bold" />
-          </p>
+          <dl className="space-y-1">
+            <div className="flex justify-between">
+              <dt>Order</dt>
+              <dd>
+                <Money kobo={order.total_kobo} />
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>Paystack charge</dt>
+              <dd>
+                <Money kobo={pv?.charge_kobo ?? 0} />
+              </dd>
+            </div>
+            <div className="flex justify-between font-bold text-navy-900">
+              <dt>Total to pay</dt>
+              <dd>
+                <Money kobo={order.total_kobo + (pv?.charge_kobo ?? 0)} />
+              </dd>
+            </div>
+          </dl>
           {mustPayNow ? (
             <>
               <p className="text-sm text-muted">
@@ -263,12 +280,37 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           className="mb-5 scroll-mt-20 space-y-3 border-2 border-gold-400 bg-accent-50/50"
         >
           <h2 className="text-lg font-extrabold text-navy-900">Payment needed</h2>
-          <p>
-            Total to pay: <Money kobo={order.total_kobo} className="font-bold" />
-            {order.expires_at && (
-              <span className="text-sm text-muted"> · hold ends {lagosTime(order.expires_at)}</span>
-            )}
-          </p>
+          <dl className="space-y-1">
+            <div className="flex justify-between">
+              <dt>Order</dt>
+              <dd>
+                <Money kobo={order.total_kobo} />
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>Paystack charge</dt>
+              <dd>
+                <Money kobo={pv?.charge_kobo ?? 0} />
+              </dd>
+            </div>
+            <div className="flex justify-between font-bold text-navy-900">
+              <dt>Total to pay</dt>
+              <dd>
+                <Money kobo={order.total_kobo + (pv?.charge_kobo ?? 0)} />
+              </dd>
+            </div>
+          </dl>
+          {order.expires_at && (
+            <p className="text-sm text-muted">Hold ends {lagosTime(order.expires_at)}</p>
+          )}
+          {(pv?.unpaid_siblings ?? 0) > 1 && pv?.checkout_id && (
+            <p className="text-sm">
+              You have {pv.unpaid_siblings} unpaid orders from this checkout.{' '}
+              <Link className="font-semibold underline" href={`/checkout/placed/${pv.checkout_id}`}>
+                Pay for all of them together
+              </Link>
+            </p>
+          )}
           <p className="text-sm text-muted">
             Your payment is held safely. The shop is paid {holdHours} hours after your order is
             completed, and you can report a problem until then.

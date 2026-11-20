@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { describeProblems, friendlyDbError, parseProblems } from '@/lib/db-errors'
 import { mockPaymentsAllowed } from '@/lib/env'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getMultiQuote, type MultiQuote } from './queries'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
 import {
   dbFailed,
@@ -36,20 +37,13 @@ export async function addToCartAction(_p: CartFormState, fd: FormData): Promise<
   if (!(await rateLimit(`cart:${who.userId}`, 600, 120)))
     return failed('Too many changes. Please wait a few minutes.')
   const sb = await createSupabaseServerClient()
-  const { data, error } = await sb.rpc('cart_add_item', {
+  const { error } = await sb.rpc('cart_add_item', {
     p_product: productId,
     p_qty: qty,
     p_options: options,
     p_replace: fd.get('replace') === '1',
   })
   if (error) return dbFailed(error)
-  if ((data as { status: string }).status === 'vendor_conflict') {
-    return {
-      conflict: true,
-      error:
-        'Your cart already has items from another vendor. You can only order from one vendor at a time.',
-    }
-  }
   revalidatePath('/cart')
   redirect('/cart')
 }
@@ -115,6 +109,67 @@ export async function placeOrderAction(_p: CheckoutState, fd: FormData): Promise
   revalidatePath('/orders')
   revalidatePath('/cart')
   redirect(`/orders/${String(data)}`)
+}
+
+/** The checkout bill, recalculated by the database whenever the customer changes a choice. */
+export async function quoteCheckoutAction(
+  choices: Record<string, 'pickup' | 'delivery'>,
+  point: string | null,
+  payAtDoor: boolean,
+): Promise<MultiQuote | null> {
+  const gated = await gate({ roles: ['customer'], aal: 'aal1' })
+  if ('state' in gated) return null
+  if (!(await rateLimit(`quote:${gated.who.userId}`, 600, 120))) return null
+  const clean: Record<string, 'pickup' | 'delivery'> = {}
+  for (const [k, v] of Object.entries(choices))
+    if (uuid.safeParse(k).success) clean[k] = v === 'delivery' ? 'delivery' : 'pickup'
+  return getMultiQuote(clean, point && uuid.safeParse(point).success ? point : null, payAtDoor)
+}
+
+/** Places one order for every shop in the cart, all in one checkout. */
+export async function placeOrdersAction(_p: CheckoutState, fd: FormData): Promise<CheckoutState> {
+  const gated = await gate({ roles: ['customer'], aal: 'aal2' })
+  if ('state' in gated) return gated.state
+  const choices: Record<string, 'pickup' | 'delivery'> = {}
+  for (const [k, v] of fd.entries()) {
+    if (!k.startsWith('fulfilment-')) continue
+    const id = k.slice('fulfilment-'.length)
+    if (uuid.safeParse(id).success) choices[id] = v === 'delivery' ? 'delivery' : 'pickup'
+  }
+  const pointRaw = String(fd.get('point') ?? '')
+  const point = uuid.safeParse(pointRaw).success ? pointRaw : null
+  const key = String(fd.get('idempotencyKey') ?? '')
+  if (key.length < 8 || key.length > 80) return failed('Please reload the page and try again.')
+  if (!(await rateLimit(`checkout:${gated.who.userId}`, 600, 20)))
+    return failed('Too many attempts. Please wait a few minutes.')
+  const sb = await createSupabaseServerClient()
+  const { data, error } = await sb.rpc('create_orders', {
+    p_choices: choices,
+    p_point: point,
+    p_key: key,
+    p_pod: fd.get('payment') === 'on_delivery',
+  })
+  if (error) {
+    if (error.message === 'checkout_blocked') {
+      const problems = describeProblems(parseProblems(error.details))
+      return { error: problems[0] ?? friendlyDbError(error), problems }
+    }
+    return dbFailed(error)
+  }
+  const made = data as {
+    checkout_id: string
+    orders: { id: string; pay_on_delivery: boolean }[]
+  }
+  for (const o of made.orders) notifyAdmin({ type: 'order_placed', orderId: o.id })
+  kickDispatch()
+  revalidatePath('/orders')
+  revalidatePath('/cart')
+  // one shop: straight to its order; several: a page that shows them all with one button to pay for them together
+  redirect(
+    made.orders.length === 1
+      ? `/orders/${made.orders[0]!.id}`
+      : `/checkout/placed/${made.checkout_id}`,
+  )
 }
 
 /** MOCK payment: exists only when APP_ENV=local AND the database flag is on. Never real money. */

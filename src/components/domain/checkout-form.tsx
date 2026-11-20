@@ -1,39 +1,64 @@
 'use client'
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useRef, useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Icon } from '@/components/ui/icons'
 import { Select } from '@/components/ui/fields'
 import { Money } from '@/components/ui/money'
-import { placeOrderAction, type CheckoutState } from '@/server/modules/cart-and-checkout/actions'
-import type { DeliveryPoint, Quote } from '@/server/modules/cart-and-checkout/queries'
+import {
+  placeOrdersAction,
+  quoteCheckoutAction,
+  type CheckoutState,
+} from '@/server/modules/cart-and-checkout/actions'
+import type { DeliveryPoint, MultiQuote } from '@/server/modules/cart-and-checkout/queries'
 
+type Choice = 'pickup' | 'delivery'
+
+/**
+ * Checkout for a cart with items from one or more shops. Each shop gets its own pickup or delivery choice and becomes its own
+ * order, so the money goes to that shop. The bill (items, Paystack's charge, total) is worked out by the database again each
+ * time a choice changes, so the number shown is the number Paystack will ask for.
+ */
 export function CheckoutForm({
-  pickup,
-  delivery,
+  initial,
+  deliveryAvailable,
   points,
   defaultPoint,
   idempotencyKey,
-  payAtDoor,
 }: {
-  pickup: Quote
-  delivery: Quote | null
+  initial: MultiQuote
+  deliveryAvailable: boolean
   points: DeliveryPoint[]
-  /** The customer's saved default place, when it is still an open delivery point. */
   defaultPoint?: string
   idempotencyKey: string
-  /** Whether paying when the order is received is switched on, and the largest order it is allowed for. */
-  payAtDoor: { enabled: boolean; maxKobo: number }
 }) {
-  const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrderAction, {})
-  const canDeliver = Boolean(delivery) && points.length > 0
-  const [mode, setMode] = useState<'pickup' | 'delivery'>('pickup')
+  const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrdersAction, {})
+  const [q, setQ] = useState<MultiQuote>(initial)
+  const [choices, setChoices] = useState<Record<string, Choice>>({})
+  const [point, setPoint] = useState<string | null>(defaultPoint ?? points[0]?.id ?? null)
   const [payment, setPayment] = useState<'now' | 'on_delivery'>('now')
-  const q = mode === 'delivery' && delivery ? delivery : pickup
-  const canPayAtDoor = payAtDoor.enabled && q.total_kobo <= payAtDoor.maxKobo
-  const payLater = payment === 'on_delivery' && canPayAtDoor
+  const [, startTransition] = useTransition()
+  const seq = useRef(0)
+
+  const choiceOf = (id: string): Choice => choices[id] ?? 'pickup'
+  const anyDelivery = q.groups.some((g) => choiceOf(g.vendor_id) === 'delivery')
+
+  // ask the database for the bill again whenever a choice changes
+  useEffect(() => {
+    const mine = ++seq.current
+    startTransition(async () => {
+      const next = await quoteCheckoutAction(choices, point, payment === 'on_delivery')
+      if (next && mine === seq.current) setQ(next)
+    })
+  }, [choices, point, payment])
+
+  const doorGroups = q.groups.filter((g) => g.pay_timing === 'door')
+  const nowGroups = q.groups.filter((g) => g.pay_timing === 'now')
+  const foodForcedNow = payment === 'on_delivery' && nowGroups.some((g) => g.is_food)
+  const anyDoor = doorGroups.length > 0
   const optionCls = (on: boolean, disabled = false) =>
     `touch-target flex items-start gap-3 rounded-[var(--radius-card)] border-2 p-4 ${disabled ? 'cursor-not-allowed border-line text-muted' : on ? 'cursor-pointer border-navy-900 bg-brand-50' : 'cursor-pointer border-line bg-card hover:border-line-strong'}`
+
   return (
     <form
       action={action}
@@ -42,63 +67,71 @@ export function CheckoutForm({
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <div className="space-y-5">
         {state.error && <Alert tone="danger">{state.error}</Alert>}
-        <fieldset className="space-y-3">
-          <legend className="mb-1 text-lg font-extrabold text-navy-900">
-            1. How do you want to get it?
-          </legend>
-          <label className={optionCls(mode === 'pickup')}>
-            <input
-              type="radio"
-              name="fulfilment"
-              value="pickup"
-              checked={mode === 'pickup'}
-              onChange={() => setMode('pickup')}
-              className="mt-1 size-5 accent-[var(--color-brand-700)]"
-            />
-            <span>
-              <span className="flex items-center gap-2 font-bold text-navy-900">
-                <Icon name="store" size={18} /> Pickup{' '}
-                <span className="font-normal text-muted">(free)</span>
-              </span>
-              <span className="block text-sm text-muted">
-                Collect from {pickup.vendor_name}. You will show a pickup code at the shop.
-              </span>
-            </span>
-          </label>
-          <label className={optionCls(mode === 'delivery', !canDeliver)}>
-            <input
-              type="radio"
-              name="fulfilment"
-              value="delivery"
-              disabled={!canDeliver}
-              checked={mode === 'delivery'}
-              onChange={() => setMode('delivery')}
-              className="mt-1 size-5 accent-[var(--color-brand-700)]"
-            />
-            <span>
-              <span className="flex items-center gap-2 font-bold text-navy-900">
-                <Icon name="truck" size={18} /> Delivery{' '}
-                {canDeliver && delivery ? (
-                  <span className="font-normal text-muted">
-                    (+
-                    <Money kobo={delivery.delivery_fee_kobo} />)
+        {q.groups.length > 1 && (
+          <Alert tone="info" title={`${q.groups.length} shops, ${q.groups.length} orders`}>
+            Each shop gets its own order, so each shop is paid for its own items. You can pay for
+            all of them together in one go.
+          </Alert>
+        )}
+        <h2 className="text-lg font-extrabold text-navy-900">1. How do you want to get it?</h2>
+        {q.groups.map((g) => {
+          const mode = choiceOf(g.vendor_id)
+          return (
+            <fieldset key={g.vendor_id} className="space-y-2">
+              <legend className="mb-1 font-bold text-navy-900">
+                {g.vendor_name}
+                {g.is_food && <span className="ml-2 text-sm font-normal text-muted">(food)</span>}
+              </legend>
+              <label className={optionCls(mode === 'pickup')}>
+                <input
+                  type="radio"
+                  name={`fulfilment-${g.vendor_id}`}
+                  value="pickup"
+                  checked={mode === 'pickup'}
+                  onChange={() => setChoices((c) => ({ ...c, [g.vendor_id]: 'pickup' }))}
+                  className="mt-1 size-5 accent-[var(--color-brand-700)]"
+                />
+                <span>
+                  <span className="flex items-center gap-2 font-bold text-navy-900">
+                    <Icon name="store" size={18} /> Pickup{' '}
+                    <span className="font-normal text-muted">(free)</span>
                   </span>
-                ) : null}
-              </span>
-              <span className="block text-sm text-muted">
-                {canDeliver
-                  ? 'A rider brings it to an approved delivery point.'
-                  : 'No delivery points are open yet.'}
-              </span>
-            </span>
-          </label>
-        </fieldset>
-        {mode === 'delivery' && (
+                  <span className="block text-sm text-muted">
+                    Collect from {g.vendor_name} with a pickup code.
+                  </span>
+                </span>
+              </label>
+              <label className={optionCls(mode === 'delivery', !deliveryAvailable)}>
+                <input
+                  type="radio"
+                  name={`fulfilment-${g.vendor_id}`}
+                  value="delivery"
+                  disabled={!deliveryAvailable}
+                  checked={mode === 'delivery'}
+                  onChange={() => setChoices((c) => ({ ...c, [g.vendor_id]: 'delivery' }))}
+                  className="mt-1 size-5 accent-[var(--color-brand-700)]"
+                />
+                <span>
+                  <span className="flex items-center gap-2 font-bold text-navy-900">
+                    <Icon name="truck" size={18} /> Delivery
+                  </span>
+                  <span className="block text-sm text-muted">
+                    {deliveryAvailable
+                      ? 'A rider brings it to an approved delivery point.'
+                      : 'No delivery points are open yet.'}
+                  </span>
+                </span>
+              </label>
+            </fieldset>
+          )
+        })}
+        {anyDelivery && (
           <Select
             label="Delivery point"
             name="point"
             required
-            defaultValue={defaultPoint ?? points[0]?.id}
+            value={point ?? ''}
+            onChange={(e) => setPoint(e.target.value)}
             hint="Delivery goes only to approved points."
           >
             {points.map((p) => (
@@ -108,17 +141,17 @@ export function CheckoutForm({
             ))}
           </Select>
         )}
-        {payAtDoor.enabled && (
+        {q.door_enabled && (
           <fieldset className="space-y-3">
             <legend className="mb-1 text-lg font-extrabold text-navy-900">
               2. When do you want to pay?
             </legend>
-            <label className={optionCls(!payLater)}>
+            <label className={optionCls(payment === 'now')}>
               <input
                 type="radio"
                 name="payment"
                 value="now"
-                checked={!payLater}
+                checked={payment === 'now'}
                 onChange={() => setPayment('now')}
                 className="mt-1 size-5 accent-[var(--color-brand-700)]"
               />
@@ -129,88 +162,131 @@ export function CheckoutForm({
                 </span>
               </span>
             </label>
-            <label className={optionCls(payLater, !canPayAtDoor)}>
+            <label className={optionCls(payment === 'on_delivery')}>
               <input
                 type="radio"
                 name="payment"
                 value="on_delivery"
-                disabled={!canPayAtDoor}
-                checked={payLater}
+                checked={payment === 'on_delivery'}
                 onChange={() => setPayment('on_delivery')}
                 className="mt-1 size-5 accent-[var(--color-brand-700)]"
               />
               <span>
                 <span className="font-bold text-navy-900">Pay when I receive it</span>
                 <span className="block text-sm text-muted">
-                  {canPayAtDoor
-                    ? 'The shop prepares your order now. You pay with Paystack on your phone when you see it, then confirm.'
-                    : 'Not available for an order this size. Please pay now.'}
+                  The shop prepares your order now. You pay with Paystack on your phone when you see
+                  it. Food is always paid before it arrives.
                 </span>
               </span>
             </label>
           </fieldset>
         )}
+        {foodForcedNow && (
+          <Alert tone="warning" title="Food is paid before it arrives">
+            {nowGroups
+              .filter((g) => g.is_food)
+              .map((g) => g.vendor_name)
+              .join(', ')}{' '}
+            sells food, so that order must be paid now. It is included in the total you pay now.
+            Your other items stay pay-when-you-receive.
+          </Alert>
+        )}
         <p className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm text-brand-800">
           <Icon name="lock" size={14} className="mr-1 inline" />
-          {payLater
-            ? 'You will pay securely with Paystack when you receive your order. You will not be able to take it until you have paid.'
-            : 'You pay securely with Paystack on the next screen.'}
+          Payments go through Paystack. Paystack adds a small charge, shown in your bill before you
+          pay.
         </p>
       </div>
       <aside
-        className="h-fit space-y-2 rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24"
+        className="h-fit space-y-3 rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24"
         aria-labelledby="summary"
       >
         <h2 id="summary" className="text-lg font-extrabold text-navy-900">
-          Order summary
+          Your bill
         </h2>
-        <ul className="space-y-1 text-sm">
-          {q.lines.map((l) => (
-            <li key={l.item_id} className="flex justify-between gap-2">
-              <span>
-                {l.quantity} × {l.name}
-                {l.options.length ? ` (${l.options.map((o) => o.name).join(', ')})` : ''}
+        {q.groups.map((g) => (
+          <div key={g.vendor_id} className="space-y-1 text-sm">
+            <p className="font-bold text-navy-900">
+              {g.vendor_name}{' '}
+              <span className="font-normal text-muted">
+                {g.pay_timing === 'door'
+                  ? '· pay when you receive it'
+                  : g.is_food && payment === 'on_delivery'
+                    ? '· food: pay before arrival'
+                    : '· pay now'}
               </span>
-              <Money kobo={l.line_total_kobo} />
-            </li>
-          ))}
-        </ul>
+            </p>
+            <ul className="space-y-0.5">
+              {g.lines.map((l) => (
+                <li key={l.item_id} className="flex justify-between gap-2">
+                  <span>
+                    {l.quantity} × {l.name}
+                    {l.options.length ? ` (${l.options.map((o) => o.name).join(', ')})` : ''}
+                  </span>
+                  <Money kobo={l.line_total_kobo} />
+                </li>
+              ))}
+              {g.delivery_fee_kobo > 0 && (
+                <li className="flex justify-between gap-2">
+                  <span>
+                    Delivery
+                    {g.delivery_fee_collection === 'direct_to_rider' &&
+                      ' (paid to your rider after delivery)'}
+                  </span>
+                  <Money kobo={g.delivery_fee_kobo} />
+                </li>
+              )}
+            </ul>
+          </div>
+        ))}
         <hr className="border-line" />
-        <dl className="space-y-1">
-          <div className="flex justify-between">
-            <dt>Items</dt>
-            <dd>
-              <Money kobo={q.items_total_kobo} />
-            </dd>
+        {q.pay_now_items_kobo > 0 && (
+          <dl className="space-y-1">
+            <div className="flex justify-between">
+              <dt>{anyDoor ? 'To pay now' : 'Items'}</dt>
+              <dd>
+                <Money kobo={q.pay_now_items_kobo} />
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt>Paystack charge</dt>
+              <dd>
+                <Money kobo={q.pay_now_charge_kobo} />
+              </dd>
+            </div>
+            <div className="flex justify-between text-lg font-extrabold text-navy-900">
+              <dt>Checkout total</dt>
+              <dd data-testid="checkout-total">
+                <Money kobo={q.pay_now_total_kobo} />
+              </dd>
+            </div>
+          </dl>
+        )}
+        {anyDoor && (
+          <div className="space-y-1 rounded-[var(--radius-control)] bg-brand-50 p-3 text-sm">
+            <p className="font-bold text-navy-900">Pay when you receive it</p>
+            {doorGroups.map((g) => (
+              <p key={g.vendor_id} className="flex justify-between gap-2">
+                <span>{g.vendor_name}</span>
+                <span>
+                  <Money kobo={g.total_kobo} /> + <Money kobo={g.door_charge_kobo} /> Paystack
+                  charge
+                </span>
+              </p>
+            ))}
           </div>
-          <div className="flex justify-between gap-3">
-            <dt>
-              Delivery
-              {q.delivery_fee_collection === 'direct_to_rider' &&
-                ' (you pay this to your rider by bank transfer after delivery; it is not part of the payment below)'}
-            </dt>
-            <dd>
-              <Money kobo={q.delivery_fee_kobo} />
-            </dd>
-          </div>
-          <div className="flex justify-between text-lg font-extrabold text-navy-900">
-            <dt>
-              {payLater
-                ? 'Total to pay when you receive it'
-                : q.delivery_fee_collection === 'direct_to_rider'
-                  ? 'Total to pay online now'
-                  : 'Total'}
-            </dt>
-            <dd data-testid="checkout-total">
-              <Money kobo={q.total_kobo} />
-            </dd>
-          </div>
-        </dl>
+        )}
         <p className="text-xs text-muted">
-          The final amount is calculated again by our server when you place the order.
+          The database works out these numbers again when you place the order.
         </p>
         <Button type="submit" variant="gold" disabled={pending} className="w-full">
-          {pending ? 'Placing order…' : payLater ? 'Place order, pay later' : 'Place order'}
+          {pending
+            ? 'Placing order…'
+            : q.groups.length > 1
+              ? `Place ${q.groups.length} orders`
+              : anyDoor
+                ? 'Place order, pay later'
+                : 'Place order'}
         </Button>
       </aside>
     </form>
