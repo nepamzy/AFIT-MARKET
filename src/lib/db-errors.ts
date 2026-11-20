@@ -50,6 +50,10 @@ const MESSAGES: Record<string, string> = {
   invalid_reason: 'Choose one of the listed reasons.',
   invalid_transition:
     'This order has already moved on, so that step is not possible. Refresh the page to see where it is now.',
+  too_many_codes: 'You already have 5 codes waiting. Wait for one to expire, or use one first.',
+  not_your_rider: 'That rider is not one of your shop’s riders.',
+  code_not_found: 'That rider code is wrong or has run out of time. Ask your shop for a new one.',
+  already_linked: 'This account is already linked to a shop.',
   refunds_not_available:
     'Refunds are not offered. If something is wrong with your order, report it instead.',
   ordering_closed:
@@ -114,6 +118,7 @@ const CHECKOUT_PROBLEMS: Record<string, string> = {
   option_selection_invalid: 'An item in your cart needs its required options.',
   delivery_point_invalid: 'Choose a delivery point.',
   vendor_mismatch: 'Your cart mixes vendors. Remove items from one of them.',
+  no_rider: 'A shop in your cart has no delivery rider yet. Choose pickup for that shop.',
 }
 
 export function friendlyDbError(

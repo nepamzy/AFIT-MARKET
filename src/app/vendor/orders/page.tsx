@@ -2,6 +2,7 @@ import { lagosDateTime } from '@/lib/time'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { AutoRefresh } from '@/components/domain/auto-refresh'
+import { AssignRiderForm } from '@/components/domain/assign-rider-form'
 import { VendorOrderActions } from '@/components/domain/vendor-order-actions'
 import { OrderStatusPill } from '@/components/domain/order-status'
 import { PageHeader } from '@/components/ui/card'
@@ -16,7 +17,11 @@ import {
   listOrdersPage,
   type OrderRow,
 } from '@/server/modules/orders-and-state-machine/queries'
-import { getMyVendor } from '@/server/modules/vendors-and-catalogue/vendor-queries'
+import {
+  getMyVendor,
+  listRiderTeam,
+  type RiderTeamMember,
+} from '@/server/modules/vendors-and-catalogue/vendor-queries'
 
 export const metadata: Metadata = { title: 'Vendor orders' }
 
@@ -24,10 +29,12 @@ function OrdersTable({
   caption,
   orders,
   items,
+  riders,
 }: {
   caption: string
   orders: OrderRow[]
   items: Awaited<ReturnType<typeof listItemsForOrders>>
+  riders: RiderTeamMember[]
 }) {
   return (
     <Table caption={caption} head={['Order', 'Type', 'Items', 'Placed', 'Status', 'Next step']}>
@@ -62,6 +69,9 @@ function OrdersTable({
           </Td>
           <Td>
             <VendorOrderActions orderId={o.id} status={o.status} />
+            {o.fulfilment === 'delivery' && ['READY', 'AWAITING_RIDER'].includes(o.status) && (
+              <AssignRiderForm orderId={o.id} riders={riders} current={o.assigned_rider_id} />
+            )}
           </Td>
         </tr>
       ))}
@@ -87,6 +97,7 @@ export default async function VendorOrders({
   const done = vendor
     ? await listOrdersPage({ vendorId: vendor.id, finished: true, page, pageSize: 25 })
     : { orders: [] as OrderRow[], hasMore: false }
+  const riders = vendor ? await listRiderTeam(vendor.id) : []
   const items = await listItemsForOrders([...open, ...done.orders].map((o) => o.id))
   return (
     <>
@@ -127,6 +138,7 @@ export default async function VendorOrders({
                   caption="Unfinished orders for your shop"
                   orders={open}
                   items={items}
+                  riders={riders}
                 />
               )}
             </section>
@@ -142,6 +154,7 @@ export default async function VendorOrders({
                 caption="Finished orders for your shop"
                 orders={done.orders}
                 items={items}
+                riders={riders}
               />
             )}
             <Pager basePath="/vendor/orders" page={page} hasMore={done.hasMore} />

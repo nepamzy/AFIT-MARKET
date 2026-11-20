@@ -1,24 +1,26 @@
 'use client'
 import { useRef } from 'react'
 
-/** Five boxes for a 5-digit code. Typing moves on by itself; a pasted code fills all five. `value` holds up to 5 digits. */
+/** Boxes for a numeric code (5 digits unless `length` says otherwise). Typing moves on by itself; a pasted code fills them all. */
 export function CodeBoxes({
   value,
   onChange,
   label,
   idPrefix = 'code',
+  length = 5,
 }: {
   value: string
   onChange: (v: string) => void
   label: string
   idPrefix?: string
+  length?: number
 }) {
   const refs = useRef<(HTMLInputElement | null)[]>([])
-  const digits = value.padEnd(5, ' ').slice(0, 5).split('')
+  const digits = value.padEnd(length, ' ').slice(0, length).split('')
   const set = (i: number, d: string) => {
     const arr = digits.map((x) => (x === ' ' ? '' : x))
     arr[i] = d
-    onChange(arr.join('').slice(0, 5))
+    onChange(arr.join('').slice(0, length))
   }
   return (
     <fieldset className="space-y-1">
@@ -35,7 +37,7 @@ export function CodeBoxes({
             autoComplete="off"
             maxLength={1}
             pattern="[0-9]"
-            aria-label={`Digit ${i + 1} of 5`}
+            aria-label={`Digit ${i + 1} of ${length}`}
             value={d === ' ' ? '' : d}
             className="size-12 rounded-[var(--radius-control)] border-2 border-line-strong bg-white text-center text-xl font-bold"
             onChange={(e) => {
@@ -47,7 +49,7 @@ export function CodeBoxes({
               if (e.key === 'Backspace' && !d.trim() && i > 0) refs.current[i - 1]?.focus()
             }}
             onPaste={(e) => {
-              const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 5)
+              const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length)
               if (!text) return
               e.preventDefault()
               onChange(text)

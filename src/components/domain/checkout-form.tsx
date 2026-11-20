@@ -104,12 +104,17 @@ export function CheckoutForm({
                   </span>
                 </span>
               </label>
-              <label className={optionCls(mode === 'delivery', !deliveryAvailable)}>
+              <label
+                className={optionCls(
+                  mode === 'delivery',
+                  !deliveryAvailable || g.rider_available === false,
+                )}
+              >
                 <input
                   type="radio"
                   name={`fulfilment-${g.vendor_id}`}
                   value="delivery"
-                  disabled={!deliveryAvailable}
+                  disabled={!deliveryAvailable || g.rider_available === false}
                   checked={mode === 'delivery'}
                   onChange={() => setChoices((c) => ({ ...c, [g.vendor_id]: 'delivery' }))}
                   className="mt-1 size-5 accent-[var(--color-brand-700)]"
@@ -119,9 +124,11 @@ export function CheckoutForm({
                     <Icon name="truck" size={18} /> Delivery
                   </span>
                   <span className="block text-sm text-muted">
-                    {deliveryAvailable
-                      ? 'A rider brings it to an approved delivery point.'
-                      : 'No delivery points are open yet.'}
+                    {g.rider_available === false
+                      ? 'This shop has no delivery rider yet, so only pickup is possible.'
+                      : deliveryAvailable
+                        ? 'A rider from this shop brings it to an approved delivery point.'
+                        : 'No delivery points are open yet.'}
                   </span>
                 </span>
               </label>

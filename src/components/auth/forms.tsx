@@ -54,7 +54,6 @@ function Notice({ state }: { state: FormState }) {
 /** `staff` is the hidden administrator entrance (/staff-login): it only hides the sign-up link. */
 export function SignInForm({ next, staff = false }: { next: string; staff?: boolean }) {
   const [state, action, pending] = useActionState(signInAction, initial)
-  const [riderCode, setRiderCode] = useState('')
   return (
     <form action={action} className="space-y-4" noValidate>
       <Notice state={state} />
@@ -81,29 +80,6 @@ export function SignInForm({ next, staff = false }: { next: string; staff?: bool
         spellCheck={false}
         required
       />
-      {!staff && (
-        <details
-          className="rounded-[var(--radius-control)] border border-line p-3"
-          data-testid="rider-code"
-        >
-          <summary className="cursor-pointer font-semibold">
-            I am a shop rider and I have a code
-          </summary>
-          <div className="mt-3 space-y-2">
-            <CodeBoxes
-              value={riderCode}
-              onChange={setRiderCode}
-              label="Shop rider code (5 digits)"
-              idPrefix="rider-code"
-            />
-            <p className="text-sm text-muted">
-              Your shop gave you this code with your e-mail and password. Type it the first time you
-              sign in. It works once.
-            </p>
-            <input type="hidden" name="riderCode" value={riderCode} />
-          </div>
-        </details>
-      )}
       <Button type="submit" variant="gold" disabled={pending} className="w-full">
         {pending ? 'Signing in…' : 'Sign in'}
       </Button>
@@ -340,6 +316,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
   const [frontQr, setFrontQr] = useState<'none' | 'ok' | 'noqr'>('none')
   const [signed, setSigned] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  const [vendorCode, setVendorCode] = useState('')
   const interestCategories = categories.filter((c) => c.slug !== 'other')
   if (state.ok) return <SignUpDone email={state.email ?? ''} message={state.message} />
 
@@ -750,6 +727,25 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
           autoComplete="new-password"
           required
         />
+        {isRider && (
+          <div
+            className="space-y-2 rounded-[var(--radius-control)] border-2 border-gold-400 p-3"
+            data-testid="vendor-code"
+          >
+            <CodeBoxes
+              value={vendorCode}
+              onChange={setVendorCode}
+              label="Enter your shop's rider code"
+              idPrefix="vendor-code"
+              length={6}
+            />
+            <p className="text-sm text-muted">
+              Every rider works for one shop. Ask the shop for a rider code: it has 6 digits, works
+              once and lasts 10 minutes. It links you to that shop.
+            </p>
+            <input type="hidden" name="vendorCode" value={vendorCode} />
+          </div>
+        )}
         <Checkbox name="adult" label="I confirm that I am 18 years old or older." required />
         <p className="text-sm text-muted">
           AFIT Market is only for people aged 18 and over. We use the date of birth you gave to
@@ -767,7 +763,11 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
           <Button type="button" variant="secondary" onClick={() => setStep(4)}>
             Back
           </Button>
-          <Button type="submit" disabled={pending} className="flex-1">
+          <Button
+            type="submit"
+            disabled={pending || (isRider && vendorCode.length < 6)}
+            className="flex-1"
+          >
             {pending ? 'Creating account…' : 'Create account'}
           </Button>
         </div>

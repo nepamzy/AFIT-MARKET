@@ -556,3 +556,37 @@ export async function removeVendorRiderAction(fd: FormData): Promise<void> {
   await sb.rpc('vendor_rider_revoke', { p_vendor: v, p_id: id })
   revalidatePath('/vendor/riders')
 }
+
+export type RiderCodeState = ActionState & { code?: string; expiresAt?: string }
+
+/** The shop owner makes a code for a new rider. It works once and lasts 10 minutes. */
+export async function generateRiderCodeAction(
+  _p: RiderCodeState,
+  fd: FormData,
+): Promise<RiderCodeState> {
+  const g = await gate({ roles: ['vendor_owner'], aal: 'aal2' })
+  if ('state' in g) return g.state
+  const v = await vendorId(fd)
+  if (!v) return failed('That shop was not found.')
+  if (!(await rateLimit(`vendor-rider-code:${g.who.userId}`, 3600, 20)))
+    return failed('Too many codes made. Please try again later.')
+  const sb = await createSupabaseServerClient()
+  const { data, error } = await sb.rpc('vendor_rider_code_generate', { p_vendor: v })
+  if (error) return dbFailed(error, 'We could not make a code. Please try again.')
+  const made = data as { code: string; expires_at: string }
+  revalidatePath('/vendor/riders')
+  return { ok: true, code: made.code, expiresAt: made.expires_at }
+}
+
+/** The shop chooses which of its riders delivers an order (leave empty to let any of its riders take it). */
+export async function assignRiderAction(fd: FormData): Promise<void> {
+  const g = await gate(asReq(VENDOR))
+  if ('state' in g) return
+  const order = String(fd.get('orderId') ?? '')
+  const riderRaw = String(fd.get('riderId') ?? '')
+  if (!uuid.safeParse(order).success) return
+  const rider = uuid.safeParse(riderRaw).success ? riderRaw : null
+  const sb = await createSupabaseServerClient()
+  await sb.rpc('vendor_assign_rider', { p_order: order, p_rider: rider })
+  revalidatePath('/vendor/orders')
+}
