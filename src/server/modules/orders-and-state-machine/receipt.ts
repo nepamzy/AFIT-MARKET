@@ -91,7 +91,7 @@ export async function buildReceiptPdf(a: {
     recipient: string
     completedAt: string
     signaturePng: Uint8Array | null
-    method: 'drawn' | 'typed_acknowledgement'
+    method: 'drawn' | 'typed_acknowledgement' | 'qr'
     typedText: string | null
     kind?: 'pickup' | 'delivery'
     arrivalAt?: string | null
@@ -313,13 +313,31 @@ export async function buildReceiptPdf(a: {
       fact('Rider arrival detected', lagosDateTime(ev.arrivalAt), M, y)
       y -= 36
     }
-    text(drawn ? 'RECIPIENT SIGNATURE' : 'ACKNOWLEDGEMENT (TYPED, NOT A DRAWN SIGNATURE)', M, y, {
-      f: bold,
-      size: 7.5,
-      color: MUTED,
-    })
+    const byQr = ev.method === 'qr'
+    text(
+      byQr
+        ? 'ACKNOWLEDGEMENT TYPE: QR CODE'
+        : drawn
+          ? 'RECIPIENT SIGNATURE'
+          : 'ACKNOWLEDGEMENT (TYPED, NOT A DRAWN SIGNATURE)',
+      M,
+      y,
+      {
+        f: bold,
+        size: 7.5,
+        color: MUTED,
+      },
+    )
     y -= 6
-    if (drawn) {
+    if (byQr) {
+      rect(M, y - 34, R - M, 34, WHITE, LINE)
+      text('Confirmed by scanning a one-time QR code (no signature was drawn).', M + 10, y - 21, {
+        f: oblique,
+        size: 10,
+        max: R - M - 20,
+      })
+      y -= 46
+    } else if (drawn) {
       try {
         const img = await doc.embedPng(ev.signaturePng!)
         const maxW = 230

@@ -148,7 +148,7 @@ export async function placeOrdersAction(_p: CheckoutState, fd: FormData): Promis
     p_choices: choices,
     p_point: point,
     p_key: key,
-    p_pod: fd.get('payment') === 'on_delivery',
+    p_pod: true,
     p_clothing: text(fd, 'clothing', 120) || null,
   })
   if (error) {

@@ -126,8 +126,11 @@ export default async function AdminCase({ params }: { params: Promise<{ id: stri
           )}
           {b.delivery_proof ? (
             <p className="text-sm">
-              Proof on file: {b.delivery_proof.kind}, {b.delivery_proof.method} signature by{' '}
-              {b.delivery_proof.recipient} at {lagosDateTime(b.delivery_proof.completed_at)}. The
+              Proof on file: {b.delivery_proof.kind},{' '}
+              {b.delivery_proof.method === 'qr'
+                ? 'QR code'
+                : `${b.delivery_proof.method} signature`}{' '}
+              by {b.delivery_proof.recipient} at {lagosDateTime(b.delivery_proof.completed_at)}. The
               signature image is only available through the audited proof tool.
             </p>
           ) : (

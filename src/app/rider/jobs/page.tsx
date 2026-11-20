@@ -1,4 +1,4 @@
-import { PayAtDoorNotice } from '@/components/domain/pay-at-door-notice'
+import { RiderPaymentGate } from '@/components/domain/pay-at-door-notice'
 import { RiderHandoff } from '@/components/domain/rider-handoff'
 import { AutoRefresh } from '@/components/domain/auto-refresh'
 import type { Metadata } from 'next'
@@ -73,7 +73,7 @@ export default async function Jobs() {
       ) : (
         <Alert tone="warning" title="You are not linked to a shop" className="mb-4">
           Riders work for one shop and see only its orders.{' '}
-          <Link className="font-semibold underline" href="/rider-apply">
+          <Link className="font-semibold underline" href="/rider/join-shop">
             Enter a shop&apos;s rider code
           </Link>
           .
@@ -153,10 +153,9 @@ export default async function Jobs() {
                 </div>
               )}
               {a.arrival_detected_at && (
-                <>
-                  <PayAtDoorNotice orderId={a.order_id} />
+                <RiderPaymentGate orderId={a.order_id}>
                   <RiderHandoff orderId={a.order_id} orderNumber={a.order_number} />
-                </>
+                </RiderPaymentGate>
               )}
               <ReportIssueForm assignmentId={a.assignment_id} />
             </Card>

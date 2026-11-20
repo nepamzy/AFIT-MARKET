@@ -1,10 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { FieldCryptoError, encryptField } from '@/server/security/field-crypto'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
+import { releasePayouts } from '@/server/modules/payouts/release'
 import { PaymentsUnavailable, resolveAccountName } from '@/server/modules/payments/paystack'
 import {
   dbFailed,
@@ -91,6 +93,8 @@ export async function saveVendorBankAction(_p: ActionState, fd: FormData): Promi
       return failed('This account is already verified. To change it, contact customer service.')
     return dbFailed(error, 'The account could not be saved. Please try again.')
   }
+  // the shop now has somewhere to be paid: send whatever is already due, without waiting for the daily run
+  after(() => releasePayouts(25).catch(() => undefined))
   revalidatePath('/vendor/earnings')
   return done('Verified and saved.')
 }
