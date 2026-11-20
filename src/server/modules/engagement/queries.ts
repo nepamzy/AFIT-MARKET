@@ -143,6 +143,9 @@ export const EDITABLE_SETTINGS = [
   'refund_fee_policy',
   'delivery_fee_collection_mode',
   'return_policy',
+  // opens ordering for customers once the AFIT board has approved the launch (type true or false)
+  'ordering_open',
+  'pay_on_delivery_enabled',
 ] as const
 
 export type SettingRow = {

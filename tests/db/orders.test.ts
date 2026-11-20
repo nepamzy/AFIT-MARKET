@@ -162,14 +162,13 @@ describe('cart and quote', () => {
     })
   })
 
-  it('enforces one vendor per cart with an explicit replace', async () => {
+  it('lets one cart hold several shops and prices each shop separately', async () => {
     await withTx(async (c) => {
       const s = await shop(c)
       const other = await mkVendor(c, { owner: await createUser(c) })
       const op = await mkProduct(c, other.id)
       await addToCart(c, AAL2(s.cust), s.p, 1)
-      const conflict = await addToCart(c, AAL2(s.cust), op, 1)
-      expect(conflict).toEqual({ status: 'vendor_conflict' })
+      expect(await addToCart(c, AAL2(s.cust), op, 1)).toEqual({ status: 'added' })
       expect(
         (
           await c.query(
@@ -177,15 +176,31 @@ describe('cart and quote', () => {
             [s.cust],
           )
         ).rows[0].n,
-      ).toBe(1)
-      expect(await addToCart(c, AAL2(s.cust), op, 1, [], true)).toEqual({ status: 'added' })
-      const lines = (await quote(c, AAL2(s.cust), 'pickup')).lines
-      expect(lines).toHaveLength(1)
-      expect(lines[0].product_id).toBe(op)
-      expect(
-        (await c.query(`select vendor_id from public.carts where user_id=$1`, [s.cust])).rows[0]
-          .vendor_id,
-      ).toBe(other.id)
+      ).toBe(2)
+      const q = await as(
+        c,
+        AAL2(s.cust),
+        async () =>
+          (await c.query(`select public.cart_quote_multi('{}'::jsonb, null, false) q`)).rows[0].q,
+      )
+      expect(q.groups).toHaveLength(2)
+      expect(new Set(q.groups.map((g: { vendor_id: string }) => g.vendor_id))).toEqual(
+        new Set([s.v.id, other.id]),
+      )
+    })
+  })
+
+  it('refuses to place an order while ordering is closed, except for a platform administrator', async () => {
+    await withTx(async (c) => {
+      const s = await shop(c)
+      await addToCart(c, AAL2(s.cust), s.p, 1)
+      await setSetting(c, 'ordering_open', false)
+      const e = await as(c, AAL2(s.cust), () =>
+        failure(c, `select public.create_order('pickup', null, 'closed-key-1')`),
+      )
+      expect(e.message).toMatch(/ordering_closed/)
+      await setSetting(c, 'ordering_open', true)
+      expect(await createOrderAs(c, AAL2(s.cust))).toBeTruthy()
     })
   })
 
