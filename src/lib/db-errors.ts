@@ -54,6 +54,8 @@ const MESSAGES: Record<string, string> = {
   not_your_rider: 'That rider is not one of your shop’s riders.',
   code_not_found: 'That rider code is wrong or has run out of time. Ask your shop for a new one.',
   already_linked: 'This account is already linked to a shop.',
+  refunds_not_available:
+    'Refunds are not offered. If something is wrong with your order, report it instead.',
   ordering_closed:
     'Ordering is not open yet: AFIT Market is waiting for approval from the AFIT board. You can keep your cart and you will be able to order as soon as it is approved.',
   clothing_too_long: 'Keep the description of what you are wearing under 120 characters.',

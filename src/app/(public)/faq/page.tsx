@@ -32,7 +32,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'Can I get a refund?',
-    a: 'You can ask for a refund or a return from the order page. A person at AFIT Market reviews it, and a refund is only marked done after it has really been processed.',
+    a: 'Reports do not lead to refunds. If something is wrong with your order, report it the same day you receive it and a person at AFIT Market reviews it. If a shop declines your paid order or does not answer in time, your payment is returned automatically.',
   },
   {
     q: 'Something went wrong with my order.',

@@ -105,13 +105,9 @@ export default async function AdminOrder({ params }: { params: Promise<{ id: str
               </ul>
             )}
             <p className="mt-3 text-sm text-muted">
-              Reconciliation and refunds:{' '}
+              Reconciliation:{' '}
               <Link href="/admin/payments" className="font-bold text-brand-700 underline">
                 Payments
-              </Link>
-              ,{' '}
-              <Link href="/admin/refunds" className="font-bold text-brand-700 underline">
-                Refunds
               </Link>
               ,{' '}
               <Link href="/admin/cases" className="font-bold text-brand-700 underline">

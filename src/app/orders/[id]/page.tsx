@@ -181,8 +181,8 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           <Alert tone="warning" className="mb-5" title="The shop declined this order">
             {declineReason && <>Reason: “{declineReason}”. </>}
             {autoRefund?.status === 'succeeded'
-              ? 'Your payment has been refunded. Your bank may take a few days to show it.'
-              : 'Your money is being refunded to the card or bank you paid with. We started it as soon as the shop declined. Your bank may take a few days to show it.'}
+              ? 'Your payment has been returned. Your bank may take a few days to show it.'
+              : 'Your money is being returned to the card or bank you paid with. We started it as soon as the shop declined. Your bank may take a few days to show it.'}
           </Alert>
         </div>
       )}
@@ -588,7 +588,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                 className="font-semibold text-brand-700 underline"
                 href={`/orders/${order.id}/help`}
               >
-                Problem with this order? Report it, or ask for a refund or return
+                Problem with this order? Report it, or ask to return an item
               </Link>
             </p>
           )}

@@ -43,7 +43,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ['About', '/about'],
       ['Delivery', '/delivery'],
       ['Payments', '/payments'],
-      ['Refunds and returns', '/refunds'],
+      ['Reports and returns', '/refunds'],
       ['Terms and conditions', '/legal/terms'],
       ['Privacy policy', '/legal/privacy'],
       ['All legal documents', '/legal'],

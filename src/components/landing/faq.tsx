@@ -17,7 +17,7 @@ const QA: [string, string][] = [
   ],
   [
     'What if something is wrong with my order?',
-    'Open the order and choose Report a problem. Staff can see it, and refunds and returns follow a set process.',
+    'Open the order and choose Report a problem. Staff can see it. Report it the same day you receive your order.',
   ],
 ]
 

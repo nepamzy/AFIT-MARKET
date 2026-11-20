@@ -2,14 +2,14 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { InfoPage } from '@/components/shells/info-page'
 
-export const metadata: Metadata = { title: 'Refunds and returns' }
+export const metadata: Metadata = { title: 'Reports and returns' }
 
 export default function Refunds() {
   return (
-    <InfoPage title="Refunds and returns" intro="How a problem with a paid order is handled.">
+    <InfoPage title="Reports and returns" intro="How a problem with an order is handled.">
       <p>
         <Link href="/legal/refunds" className="font-semibold text-brand-800 underline">
-          Read the full Refund, return and dispute policy
+          Read the full Reports, returns and cancelled orders policy
         </Link>
       </p>
       <section>
@@ -17,7 +17,8 @@ export default function Refunds() {
         <ol>
           <li>Open the order in your account.</li>
           <li>
-            Choose Report a problem, ask for a refund, or ask for a return and say what went wrong.
+            Choose Report a problem, or ask for a return, and say what went wrong. Report it on the
+            same day you receive your order: the window closes at midnight (Nigeria time).
           </li>
           <li>
             A person at AFIT Market reviews it. They may ask for more detail and can see the order
@@ -29,19 +30,15 @@ export default function Refunds() {
         <h2>What to expect</h2>
         <ul>
           <li>
-            A refund is shown as done only after it has really been processed, not when it is
-            requested or approved.
+            A report does not lead to a refund. A person decides what happens next, such as
+            arranging a return or taking action against the shop, rider or customer.
           </li>
-          <li>Approval and the payout step are separate and are done by different people.</li>
+          <li>
+            If a shop declines your paid order or does not answer in time, your payment is returned
+            automatically because you never received anything.
+          </li>
           <li>Every decision and the reason are recorded.</li>
         </ul>
-      </section>
-      <section>
-        <h2>Not decided yet</h2>
-        <p>
-          Time limits and what counts as eligible are waiting for the formal policy to be approved.
-          Until then each case is decided individually.
-        </p>
       </section>
     </InfoPage>
   )

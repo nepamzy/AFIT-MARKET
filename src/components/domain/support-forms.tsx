@@ -317,8 +317,6 @@ export function CaseStaffControls({
             <option value="no_action">No action</option>
             <option value="reject">Reject the claim</option>
             <option value="replacement">Replacement</option>
-            <option value="partial_refund">Partial refund (choose items)</option>
-            <option value="full_refund">Full refund request</option>
             <option value="return">Return (choose items)</option>
           </Select>
           <Textarea
@@ -328,10 +326,8 @@ export function CaseStaffControls({
             minLength={10}
             maxLength={1000}
           />
-          <ItemPicker items={items} field="refund_left" />
           <p className="text-sm text-muted">
-            A refund decision only creates a refund REQUEST. Finance approves and executes it
-            separately. Location data is not used to decide a case.
+            Reports do not lead to refunds. Location data is not used to decide a case.
           </p>
         </ActionForm>
       )}
