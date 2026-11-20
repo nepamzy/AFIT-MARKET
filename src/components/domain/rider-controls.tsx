@@ -1,4 +1,5 @@
 'use client'
+import { LocationNotice } from '@/components/domain/location-notice'
 import { lagosTime } from '@/lib/time'
 import { useEffect, useRef, useState } from 'react'
 import { ActionForm } from '@/components/forms/action-form'
@@ -104,9 +105,9 @@ export function GoActiveForm() {
   return (
     <ActionForm action={activate} submitLabel="Go Active" pendingLabel="Starting…">
       <p className="text-sm">
-        When you go active, your phone will ask to share your location. It is shared only while you
-        carry an accepted delivery, only with the customer you are delivering to and authorised
-        staff, and it stops when you go inactive.
+        While you are active, we use your location. It is used only while you carry an accepted
+        delivery, only with the customer you are delivering to and authorised staff, and it stops
+        when you go inactive.
       </p>
     </ActionForm>
   )
@@ -305,6 +306,12 @@ export function LocationSharing({
       aria-live="polite"
       className="space-y-1 rounded-[var(--radius-control)] border border-line p-3"
     >
+      {enabled && (
+        <LocationNotice
+          id="rider"
+          text="We are using your location until your delivery is complete."
+        />
+      )}
       <p className="font-semibold">Location sharing is {on ? 'ON' : 'OFF'}</p>
       {!enabled && (
         <p className="text-sm text-muted">

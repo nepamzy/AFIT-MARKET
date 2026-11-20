@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { Card, PageHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
+import { LocationNotice } from '@/components/domain/location-notice'
 import { Timeline } from '@/components/ui/timeline'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
@@ -145,6 +146,12 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   )
   return (
     <>
+      {!settled && order.fulfilment === 'delivery' && (
+        <LocationNotice
+          id="customer"
+          text="We are using your location until your order is complete, so your rider can find you."
+        />
+      )}
       {!settled && <AutoRefresh everySeconds={waitingForHandover ? 4 : 15} />}
       <PageHeader
         title={order.order_number}

@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { VendorOrderActions } from '@/components/domain/vendor-order-actions'
 import { OrderStatusPill } from '@/components/domain/order-status'
-import { VendorLocationBeacon } from '@/components/domain/vendor-location-beacon'
 import { PageHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
@@ -90,7 +89,6 @@ export default async function VendorOrders({
   const items = await listItemsForOrders([...open, ...done.orders].map((o) => o.id))
   return (
     <>
-      <VendorLocationBeacon />
       <PageHeader
         breadcrumbs={[{ label: 'Shop', href: '/vendor' }, { label: 'Orders' }]}
         title="Orders"
