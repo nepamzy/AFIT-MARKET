@@ -619,6 +619,7 @@ describe('Phase 9: who may and may not complete a delivery', () => {
       'my_order_review',
       'open_support_case',
       'ops_handle_delivery_exception',
+      'report_window_end', // read-only: when the customer's window to report a problem closes (end of the completion day)
       'rider_delivery_complete', // service role only: the app compares the customer's signature first (see riders.test.ts)
       'rider_qr_open', // opens a ten-minute code for an ARRIVED delivery; completes nothing
       'rider_qr_scan', // the assigned rider scans the customer's code and the delivery is confirmed

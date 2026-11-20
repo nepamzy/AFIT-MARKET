@@ -41,6 +41,7 @@ export const RIDER_NAV: NavItem[] = [
 ]
 export const ADMIN_NAV: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: 'home', group: 'Overview' },
+  { href: '/admin/emergency', label: 'Emergency', icon: 'alert', group: 'Overview' },
   { href: '/admin/orders', label: 'Orders', icon: 'package', group: 'Overview' },
   { href: '/admin/reports', label: 'Reports', icon: 'chart', group: 'Overview' },
   { href: '/admin/analytics', label: 'Analytics', icon: 'chart', group: 'Overview' },

@@ -26,7 +26,7 @@ type Row = {
 type Payouts = { counts: Record<string, number>; paid_kobo: number; rows: Row[] }
 
 const STATUS: Record<string, [string, Tone]> = {
-  scheduled: ['Waiting for the 24 hours to pass', 'info'],
+  scheduled: ['Waiting for the report window to close (midnight)', 'info'],
   held: ['On hold: complaint or refund open', 'warning'],
   processing: ['Sent to Paystack', 'brand'],
   paid: ['Paid', 'success'],
@@ -45,7 +45,7 @@ export default async function Payouts() {
       <PageHeader
         breadcrumbs={[{ label: 'Administration', href: '/admin' }, { label: 'Payouts' }]}
         title="Payouts"
-        subtitle="Shops are paid automatically 24 hours after an order is completed, unless a complaint or refund is open. You do not need to do anything here."
+        subtitle="Shops are paid automatically when the report window closes (midnight, Nigeria time, on the day the order is completed), unless a complaint or refund is open. You do not need to do anything here."
       />
       <MetricGrid>
         <MetricCard

@@ -39,3 +39,15 @@ export const lagosTime = (v: string | number | Date, withSeconds = false) =>
   })
     .format(asDate(v))
     .replace(/\b(am|pm)\b/i, (m) => m.toLowerCase())
+
+/**
+ * The end of the day, Nigeria time (WAT, UTC+1, no daylight saving), on which `from` falls: the moment the window to report
+ * a problem closes and the shop becomes payable. It matches `app_private.report_window_end` in the database.
+ */
+export const reportWindowEnd = (from: string | number | Date): Date => {
+  const hour = 3_600_000
+  const shifted = new Date(new Date(from).getTime() + hour)
+  return new Date(
+    Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate() + 1) - hour,
+  )
+}

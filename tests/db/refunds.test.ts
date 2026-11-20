@@ -367,7 +367,7 @@ describe('approval is not execution: roles, separation of duties and the provide
           ).code,
         ).toBe(PRIV_DENIED)
       }
-      for (const mode of ['paystack_live', 'paystack_test', 'none', 'real']) {
+      for (const mode of ['none', 'real']) {
         const e = await callFails(c, AAL2(fin), `select public.refund_begin_execution($1,$2)`, [
           r.id,
           mode,

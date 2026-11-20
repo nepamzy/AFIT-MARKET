@@ -46,7 +46,7 @@ We keep a commission of **4.5% of the product value of each completed order** (a
 
 ## 8. Payouts
 
-8.1 We pay you **automatically 24 hours after each order is completed**, by bank transfer (Paystack) to your verified payout account. The amount is the product value less our commission and less any refund. An open complaint or refund holds the payment until it is settled. Delivery fees are not part of your payout.
+8.1 We pay you **automatically at midnight (Nigeria time) on the day each order is completed**, by bank transfer (Paystack) to your verified payout account. The amount is the product value less our commission and less any refund. An open complaint or refund holds the payment until it is settled. Delivery fees are not part of your payout.
 
 8.2 **Payout account.** You choose a bank and enter an account number; we ask the payment provider for the account name and show it for you to confirm. Once verified it cannot be changed unless you contact support, who may unlock it after a check; each unlock is recorded. The number is stored encrypted and staff see only the last four digits.
 

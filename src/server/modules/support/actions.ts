@@ -4,6 +4,13 @@ import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { paystackConfig } from '@/lib/env'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import {
+  RefundRejected,
+  createRefund,
+  type RefundOutcome,
+} from '@/server/modules/payments/paystack'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
 import type { AccessRequirement } from '@/server/modules/identity-and-access/policy'
@@ -200,24 +207,116 @@ export async function refundDecideAction(_p: ActionState, fd: FormData): Promise
   )
 }
 
-/** Executes through the FAKE provider only (fails closed outside the local environment). No real money moves. */
+/**
+ * Executes an approved refund. With Paystack set up, the money is really sent back to the customer's original payment through
+ * Paystack. Without it (local development only) the FAKE provider answers instead and no money moves.
+ */
 export async function refundExecuteAction(_p: ActionState, fd: FormData): Promise<ActionState> {
   const id = refundId(fd)
   if (!id) return failed('That refund was not found.')
+  const g = await gate(FINANCE)
+  if ('state' in g) return g.state
+  const sb = await createSupabaseServerClient()
+  const cfg = paystackConfig()
+
+  if (cfg) {
+    const mode = cfg.mode === 'live' ? 'paystack_live' : 'paystack_test'
+    const begin = await sb.rpc('refund_begin_execution', { p_refund: id, p_mode: mode })
+    if (begin.error)
+      return dbFailed(
+        begin.error,
+        'This refund cannot be executed right now. Refresh and check its status.',
+      )
+    const { amount_kobo, reference } = begin.data as {
+      amount_kobo: number
+      reference: string | null
+    }
+    if (!reference) {
+      await sb.rpc('refund_record_outcome', {
+        p_refund: id,
+        p_outcome: 'failed',
+        p_provider_ref: null,
+        p_detail: 'no payment reference to refund',
+      })
+      revalidatePath('/admin/refunds')
+      return failed('This order has no recorded payment to refund.')
+    }
+    let outcome: RefundOutcome
+    try {
+      outcome = await createRefund({
+        reference,
+        amountKobo: amount_kobo,
+        note: 'Your refund from AFIT Market.',
+      })
+    } catch (e) {
+      logger.error('paystack refund failed', { err: e instanceof Error ? e.name : 'error' })
+      if (e instanceof RefundRejected) {
+        await sb.rpc('refund_record_outcome', {
+          p_refund: id,
+          p_outcome: 'failed',
+          p_provider_ref: null,
+          p_detail: `paystack refused: ${e.message}`.slice(0, 300),
+        })
+        revalidatePath('/admin/refunds')
+        return failed(`Paystack refused the refund: ${e.message}`)
+      }
+      await sb.rpc('refund_record_outcome', {
+        p_refund: id,
+        p_outcome: 'unknown',
+        p_provider_ref: null,
+        p_detail: 'Paystack did not answer',
+      })
+      revalidatePath('/admin/refunds')
+      return failed(
+        'Paystack did not answer. The refund now needs reconciliation before anything else.',
+      )
+    }
+    if (outcome.ref)
+      await createSupabaseServiceClient().rpc('refund_set_provider_ref', {
+        p_refund: id,
+        p_ref: outcome.ref,
+      })
+    if (outcome.state === 'processed') {
+      const rec = await sb.rpc('refund_record_outcome', {
+        p_refund: id,
+        p_outcome: 'succeeded',
+        p_provider_ref: outcome.ref ?? `paystack-refund-${id}`,
+        p_detail: 'paystack processed the refund',
+      })
+      revalidatePath('/admin/refunds')
+      if (rec.error)
+        return failed(
+          'Paystack refunded, but the result could not be recorded. It needs reconciliation.',
+        )
+      return done('Refund sent through Paystack.')
+    }
+    if (outcome.state === 'failed') {
+      await sb.rpc('refund_record_outcome', {
+        p_refund: id,
+        p_outcome: 'failed',
+        p_provider_ref: null,
+        p_detail: 'paystack could not complete the refund',
+      })
+      revalidatePath('/admin/refunds')
+      return failed('Paystack could not complete the refund. The amount is available again.')
+    }
+    revalidatePath('/admin/refunds')
+    return done(
+      'Paystack accepted the refund and is processing it. It is marked done when Paystack confirms.',
+    )
+  }
+
   const scenario = (
     ['success', 'failure', 'timeout'].includes(text(fd, 'scenario', 10))
       ? text(fd, 'scenario', 10)
       : 'success'
   ) as FakeScenario
-  const g = await gate(FINANCE)
-  if ('state' in g) return g.state
   let provider
   try {
     provider = getRefundProvider()
   } catch {
     return failed('Refund execution is not available in this environment.')
   }
-  const sb = await createSupabaseServerClient()
   const begin = await sb.rpc('refund_begin_execution', { p_refund: id, p_mode: provider.mode })
   if (begin.error)
     return dbFailed(
