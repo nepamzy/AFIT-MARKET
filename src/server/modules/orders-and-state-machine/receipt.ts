@@ -30,8 +30,8 @@ const R = W - M
 
 const STATUS_LABEL: Record<string, string> = {
   COMPLETED: 'Completed',
-  PARTIALLY_REFUNDED: 'Partly refunded',
-  REFUNDED: 'Refunded',
+  PARTIALLY_REFUNDED: 'Completed',
+  REFUNDED: 'Cancelled',
   PAID: 'Paid',
   VENDOR_REVIEW: 'Paid, waiting for the shop',
   ACCEPTED: 'Accepted',

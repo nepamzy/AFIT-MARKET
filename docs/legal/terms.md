@@ -2,7 +2,7 @@
 
 Last updated: 14 November 2026
 
-These terms are the agreement between you and **NOBS AGENT** (company registration in progress), the operator of **AFIT Market** ("we", "us"). Support: afitmarket01@gmail.com, WhatsApp 0911 5930 445. By creating an account or placing an order you accept these terms. Read them together with our Privacy Policy, Refund, Return and Dispute Policy, and Payments, Delivery Fee and Payouts notice.
+These terms are the agreement between you and **NOBS AGENT** (company registration in progress), the operator of **AFIT Market** ("we", "us"). Support: afitmarket01@gmail.com, WhatsApp 0911 5930 445. By creating an account or placing an order you accept these terms. Read them together with our Privacy Policy, Reports, Returns and Cancelled Orders Policy, and Payments, Delivery Fee and Payouts notice.
 
 ## 1. What AFIT Market is
 
@@ -36,7 +36,7 @@ These terms are the agreement between you and **NOBS AGENT** (company registrati
 
 4.3 An order must be paid within **30 minutes** of being placed, or it is cancelled and the stock is released.
 
-4.4 After payment (or, for an order paid on delivery, after you place it) the shop must **accept or decline** your order. The shop has **15 hours** to answer. If the shop declines (it must give you a reason, which you will see on your order) or does not answer in time, the order is cancelled and **your payment is refunded in full automatically** to the way you paid. Refunds can take a few working days to reach your bank or card, depending on your bank.
+4.4 After payment (or, for an order paid on delivery, after you place it) the shop must **accept or decline** your order. The shop has **15 hours** to answer. If the shop declines (it must give you a reason, which you will see on your order) or does not answer in time, the order is cancelled.
 
 4.5 Your payment is held by us until the order is completed and is released to the shop at midnight (Nigeria time) on the day of completion, unless a complaint is open (see the Payments notice). Until then you can report a problem, so report it the same day you receive your order.
 
@@ -56,13 +56,13 @@ These terms are the agreement between you and **NOBS AGENT** (company registrati
 
 ## 7. Cancellation and changes
 
-7.1 You may cancel an order that is still unpaid. After payment, an order can be cancelled by the shop's decision to decline it, by our refund process, or by support.
+7.1 You may cancel an order that is still unpaid. After payment, an order can be cancelled by the shop's decision to decline it, or by support.
 
-7.2 We may cancel an order and refund you if something is clearly wrong (for example a wrong price, an item that is no longer available, or suspected fraud).
+7.2 We may cancel an order if something is clearly wrong (for example a wrong price, an item that is no longer available, or suspected fraud).
 
-## 8. Problems, refunds and your legal rights
+## 8. Problems and your legal rights
 
-8.1 If something is wrong with your order, report it from your order page within the time shown there. Our Refund, Return and Dispute Policy explains how we decide.
+8.1 If something is wrong with your order, report it from your order page within the time shown there. Our Reports, Returns and Cancelled Orders Policy explains how we decide.
 
 8.2 **Nothing in these terms limits any right you have under Nigerian law that cannot be excluded**, including your rights under the Federal Competition and Consumer Protection Act 2018. If a vendor sells you goods that are unsafe, defective or not as described, you may be entitled to a remedy whatever these terms say.
 

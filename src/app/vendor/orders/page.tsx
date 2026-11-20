@@ -117,7 +117,7 @@ export default async function VendorOrders({
         <MetricCard
           label="Finished on this page"
           value={done.orders.length}
-          note="Completed, cancelled, refunded or unpaid"
+          note="Completed, cancelled or unpaid"
           icon="check-circle"
           accent="success"
         />

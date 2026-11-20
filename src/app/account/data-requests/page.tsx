@@ -18,8 +18,8 @@ export default async function DataRequests() {
       <Card className="mb-6 space-y-3">
         <p className="text-sm">
           A person reviews every request; nothing happens automatically. Records the law or our
-          dispute process requires us to keep, such as payments and refunds, may have to be kept. We
-          will tell you what was done and what was kept.
+          dispute process requires us to keep, such as payments, may have to be kept. We will tell
+          you what was done and what was kept.
         </p>
         <DataRequestForm />
       </Card>

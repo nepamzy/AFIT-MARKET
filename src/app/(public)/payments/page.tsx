@@ -22,10 +22,10 @@ export default function Payments() {
       <section>
         <h2>When the shop is paid</h2>
         <p>
-          Your payment is held safely. The shop is paid automatically when the day your order is
-          completed ends (midnight, Nigeria time). Until then you can report a problem from your
-          order page and ask for your money back, so report it on the same day you receive your
-          order. A complaint that is still open holds the shop&apos;s payment until it is settled.
+          The shop is paid automatically when the day your order is completed ends (midnight,
+          Nigeria time). If something is wrong, report it from your order page on the same day you
+          receive your order. A report that is still open holds the shop&apos;s payment until it is
+          settled.
         </p>
       </section>
       <section>

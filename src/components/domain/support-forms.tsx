@@ -146,8 +146,7 @@ export function CustomerReturnForm({
         maxLength={500}
       />
       <p className="text-sm text-muted">
-        A return is separate from a refund. Do not send anything back until support approves the
-        return.
+        Do not send anything back until support approves the return.
       </p>
     </ActionForm>
   )
@@ -326,9 +325,7 @@ export function CaseStaffControls({
             minLength={10}
             maxLength={1000}
           />
-          <p className="text-sm text-muted">
-            Reports do not lead to refunds. Location data is not used to decide a case.
-          </p>
+          <p className="text-sm text-muted">Location data is not used to decide a case.</p>
         </ActionForm>
       )}
       {status === 'decided' && (

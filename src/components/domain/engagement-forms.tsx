@@ -56,7 +56,7 @@ export function PreferenceForm({ emailEnabled }: { emailEnabled: boolean }) {
   return (
     <ActionForm action={setNotificationPreferenceAction} submitLabel="Save" pendingLabel="Saving…">
       <Checkbox
-        label="Email me about my orders, reports and refunds"
+        label="Email me about my orders and reports"
         name="email_enabled"
         defaultChecked={emailEnabled}
       />
