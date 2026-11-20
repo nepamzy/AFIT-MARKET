@@ -1,6 +1,7 @@
 import { lagosDateTime } from '@/lib/time'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { AutoRefresh } from '@/components/domain/auto-refresh'
 import { VendorOrderActions } from '@/components/domain/vendor-order-actions'
 import { OrderStatusPill } from '@/components/domain/order-status'
 import { PageHeader } from '@/components/ui/card'
@@ -89,6 +90,7 @@ export default async function VendorOrders({
   const items = await listItemsForOrders([...open, ...done.orders].map((o) => o.id))
   return (
     <>
+      <AutoRefresh everySeconds={15} />
       <PageHeader
         breadcrumbs={[{ label: 'Shop', href: '/vendor' }, { label: 'Orders' }]}
         title="Orders"

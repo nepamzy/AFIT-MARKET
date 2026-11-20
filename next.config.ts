@@ -7,10 +7,14 @@ const commonHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
 ]
-const POLICY = (geo: string) => ({
+// Location is allowed for this site's own pages (never for embedded third parties). Nothing asks for it except the screens that
+// say so: the rider's shift, the customer while their order is on its way, and the shop's phone while it has open orders. The
+// browser still asks each person once. (It used to be blocked everywhere but the rider and order pages, so the shop's phone and
+// the "Allow location" button never got the browser's question.)
+const POLICY = {
   key: 'Permissions-Policy',
-  value: `camera=(self), microphone=(), geolocation=${geo}, payment=()`,
-})
+  value: 'camera=(self), microphone=(), geolocation=(self), payment=()',
+}
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -19,7 +23,6 @@ const nextConfig: NextConfig = {
   // the rider sign-up sends two ID card photos with the form, which is more than the 1 MB default
   experimental: { authInterrupts: true, serverActions: { bodySizeLimit: '4mb' } },
   async headers() {
-    // Location is blocked everywhere EXCEPT the rider area (where a rider who chose Go Active can share it).
     return [
       { source: '/:path*', headers: commonHeaders },
       // site pictures, the logo and ready-made item photos never change under the same name: keep them in the browser and on the network
@@ -32,11 +35,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      { source: '/rider', headers: [POLICY('(self)')] },
-      { source: '/rider/:path*', headers: [POLICY('(self)')] },
-      // A customer may choose to share where they are with the rider while a delivery is active.
-      { source: '/orders/:path*', headers: [POLICY('(self)')] },
-      { source: '/((?!rider(?:/|$)|orders(?:/|$)).*)', headers: [POLICY('()')] },
+      { source: '/:path*', headers: [POLICY] },
     ]
   },
 }
