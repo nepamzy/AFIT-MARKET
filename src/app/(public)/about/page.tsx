@@ -53,7 +53,7 @@ export default function About() {
       </ul>
       <section>
         <h2>Who we are</h2>
-        <p>AFIT Market is a marketplace for the Kaduna campus community.</p>
+        <p>AFIT Market is your campus marketplace, at your doorstep.</p>
       </section>
       <div className="flex flex-wrap gap-3">
         <ButtonLink href="/products" variant="gold">

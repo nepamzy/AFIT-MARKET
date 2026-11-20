@@ -227,6 +227,7 @@ export async function fixPricing(c: Q, o: { delivery?: number } = {}) {
   await setSetting(c, 'platform_fee_bps', 0) // retired: the customer pays no platform fee
   await setSetting(c, 'vendor_commission_bps', 450)
   await setSetting(c, 'commission_afit_bps', 300)
+  await setSetting(c, 'ordering_open', true) // orders are only placed once the AFIT board has approved the launch
 }
 
 export const AAL2 = (id: string): Principal => ({ id, aal: 'aal2' })
@@ -262,6 +263,7 @@ export async function createOrderAs(
   point: string | null = null,
   key?: string,
 ) {
+  await setSetting(c, 'ordering_open', true)
   return as(
     c,
     who,

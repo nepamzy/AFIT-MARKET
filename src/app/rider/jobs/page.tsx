@@ -12,6 +12,7 @@ import {
 } from '@/components/domain/rider-controls'
 import { PickupScanCard } from '@/components/domain/pickup-scan-card'
 import { RiderJobMap } from '@/components/domain/rider-job-map'
+import { CustomerContactCard } from '@/components/domain/customer-contact-card'
 import { OrderStatusPill } from '@/components/domain/order-status'
 import { Card, PageHeader } from '@/components/ui/card'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
@@ -122,6 +123,7 @@ export default async function Jobs() {
               <p>
                 <strong>Deliver to:</strong> {a.deliver_to}
               </p>
+              <CustomerContactCard assignmentId={a.assignment_id} />
               {a.status === 'accepted' && <PickupScanCard />}
               {a.status === 'picked_up' && <StartRouteButton assignmentId={a.assignment_id} />}
               {a.status === 'en_route' && !a.arrival_detected_at && (

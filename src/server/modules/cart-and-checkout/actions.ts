@@ -15,6 +15,7 @@ import {
   failed,
   gate,
   gateOrRedirect,
+  text,
   type ActionState,
 } from '@/server/modules/shared/action-helpers'
 
@@ -148,6 +149,7 @@ export async function placeOrdersAction(_p: CheckoutState, fd: FormData): Promis
     p_point: point,
     p_key: key,
     p_pod: fd.get('payment') === 'on_delivery',
+    p_clothing: text(fd, 'clothing', 120) || null,
   })
   if (error) {
     if (error.message === 'checkout_blocked') {

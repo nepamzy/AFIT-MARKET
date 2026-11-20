@@ -6,6 +6,7 @@ import { connection } from 'next/server'
 import type { ReactNode } from 'react'
 import { OfflineBanner } from '@/components/ui/states'
 import { RegisterServiceWorker } from '@/components/register-sw'
+import { OrderingNotice } from '@/components/domain/ordering-notice'
 import { AppBar } from '@/components/app-bar'
 import { PushRebind } from '@/components/push-rebind'
 import { NotificationSound } from '@/components/notification-sound'
@@ -56,6 +57,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         >
           Skip to main content
         </a>
+        <OrderingNotice />
         <AppBar publicKey={pushConfig()?.publicKey ?? null} />
         <OfflineBanner />
         <NotificationSound />

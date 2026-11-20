@@ -35,7 +35,7 @@ Last updated: 14 November 2026
 ## 3. Who sees your data
 
 - **Vendors** see what they need to prepare your order (the items, the delivery point and your name for the order). They do not get your e-mail unless you give it to them.
-- **Riders** see the delivery details for their own jobs only, and the hand-over QR code at the door.
+- **Riders** see the delivery details for their own jobs only: your name, the phone number you gave when you signed up (so they can call you when they arrive), what you said you are wearing (if you chose to say), and the hand-over QR code at the door. They can see these only while the delivery is on its way.
 - **Our staff** see only what their role needs. Sensitive access, such as opening an ID photo, is logged.
 - **Service providers (processors):** Paystack (payments and bank transfers), Supabase (database and sign-in), Vercel (hosting and analytics), Brevo (e-mail), Google (analytics), and the push services of your browser. They may only use data to provide their service to us.
 - **Authorities:** where the law requires, or to protect people from harm.
