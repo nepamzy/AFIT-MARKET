@@ -39,7 +39,6 @@ export function CheckoutForm({
   const [q, setQ] = useState<MultiQuote>(initial)
   const [choices, setChoices] = useState<Record<string, Choice>>({})
   const [point, setPoint] = useState<string | null>(defaultPoint ?? points[0]?.id ?? null)
-  const [payment, setPayment] = useState<'now' | 'on_delivery'>('now')
   const [, startTransition] = useTransition()
   const seq = useRef(0)
 
@@ -50,14 +49,14 @@ export function CheckoutForm({
   useEffect(() => {
     const mine = ++seq.current
     startTransition(async () => {
-      const next = await quoteCheckoutAction(choices, point, payment === 'on_delivery')
+      const next = await quoteCheckoutAction(choices, point, true)
       if (next && mine === seq.current) setQ(next)
     })
-  }, [choices, point, payment])
+  }, [choices, point])
 
   const doorGroups = q.groups.filter((g) => g.pay_timing === 'door')
   const nowGroups = q.groups.filter((g) => g.pay_timing === 'now')
-  const foodForcedNow = payment === 'on_delivery' && nowGroups.some((g) => g.is_food)
+  const foodNow = nowGroups.filter((g) => g.is_food)
   const anyDoor = doorGroups.length > 0
   const optionCls = (on: boolean, disabled = false) =>
     `touch-target flex items-start gap-3 rounded-[var(--radius-card)] border-2 p-4 ${disabled ? 'cursor-not-allowed border-line text-muted' : on ? 'cursor-pointer border-navy-900 bg-brand-50' : 'cursor-pointer border-line bg-card hover:border-line-strong'}`
@@ -160,53 +159,21 @@ export function CheckoutForm({
           </Select>
         )}
         {q.door_enabled && (
-          <fieldset className="space-y-3">
-            <legend className="mb-1 text-lg font-extrabold text-navy-900">
-              2. When do you want to pay?
-            </legend>
-            <label className={optionCls(payment === 'now')}>
-              <input
-                type="radio"
-                name="payment"
-                value="now"
-                checked={payment === 'now'}
-                onChange={() => setPayment('now')}
-                className="mt-1 size-5 accent-[var(--color-brand-700)]"
-              />
-              <span>
-                <span className="font-bold text-navy-900">Pay now</span>
-                <span className="block text-sm text-muted">
-                  You pay securely with Paystack on the next screen.
-                </span>
+          <Alert tone="info" title="When you pay">
+            {doorGroups.length > 0 && (
+              <span className="block">
+                Orders from shops that do not sell food are paid{' '}
+                <strong>when you receive them</strong>. The shop prepares your order now, and you
+                pay with Paystack on your phone when you see it. The rider or shop waits for your
+                payment before you confirm.
               </span>
-            </label>
-            <label className={optionCls(payment === 'on_delivery')}>
-              <input
-                type="radio"
-                name="payment"
-                value="on_delivery"
-                checked={payment === 'on_delivery'}
-                onChange={() => setPayment('on_delivery')}
-                className="mt-1 size-5 accent-[var(--color-brand-700)]"
-              />
-              <span>
-                <span className="font-bold text-navy-900">Pay when I receive it</span>
-                <span className="block text-sm text-muted">
-                  The shop prepares your order now. You pay with Paystack on your phone when you see
-                  it. Food is always paid before it arrives.
-                </span>
+            )}
+            {foodNow.length > 0 && (
+              <span className="block">
+                {foodNow.map((g) => g.vendor_name).join(', ')} sells food, so that order is paid{' '}
+                <strong>now</strong>, before it is made. It is included in the total you pay now.
               </span>
-            </label>
-          </fieldset>
-        )}
-        {foodForcedNow && (
-          <Alert tone="warning" title="Food is paid before it arrives">
-            {nowGroups
-              .filter((g) => g.is_food)
-              .map((g) => g.vendor_name)
-              .join(', ')}{' '}
-            sells food, so that order must be paid now. It is included in the total you pay now.
-            Your other items stay pay-when-you-receive.
+            )}
           </Alert>
         )}
         <p className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm text-brand-800">
@@ -229,7 +196,7 @@ export function CheckoutForm({
               <span className="font-normal text-muted">
                 {g.pay_timing === 'door'
                   ? '· pay when you receive it'
-                  : g.is_food && payment === 'on_delivery'
+                  : g.is_food
                     ? '· food: pay before arrival'
                     : '· pay now'}
               </span>

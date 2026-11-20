@@ -86,4 +86,21 @@ describe('receipt pdf', () => {
     })
     expect(plain.length).toBeGreaterThan(1000)
   })
+  it('says the acknowledgement was a QR code when no signature was drawn', async () => {
+    const pdf = await buildReceiptPdf({
+      order: order(),
+      items,
+      history: [],
+      evidence: {
+        recipient: 'Ada',
+        completedAt: '2026-10-31T09:00:00Z',
+        signaturePng: null,
+        method: 'qr',
+        typedText: null,
+        kind: 'delivery',
+        arrivalAt: null,
+      },
+    })
+    expect(Buffer.from(pdf.slice(0, 5)).toString()).toBe('%PDF-')
+  })
 })

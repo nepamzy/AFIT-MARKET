@@ -207,7 +207,7 @@ export async function getHandoverEvidence(orderId: string) {
     recipient_name: string
     signature_png: string | null
     completed_at: string
-    capture_method: 'drawn' | 'typed_acknowledgement'
+    capture_method: 'drawn' | 'typed_acknowledgement' | 'qr'
     typed_text: string | null
     evidence_kind: 'pickup' | 'delivery'
     arrival_detected_at: string | null
