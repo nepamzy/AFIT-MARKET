@@ -2,6 +2,7 @@ import 'server-only'
 import { logger } from '@/lib/logger'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
+import { kickDispatch } from '@/server/modules/engagement/dispatch'
 import {
   PaymentsUnavailable,
   createTransferRecipient,
@@ -61,6 +62,8 @@ export async function releasePayouts(limit = 25): Promise<ReleaseResult> {
     } else out.failed++
   }
   if (out.failed > 0) notifyAdmin({ type: 'payout_failed', count: out.failed })
+  // tell the shops they have been paid right away (phone alert), without waiting for the next scheduled run
+  if (out.paid > 0) kickDispatch()
   return out
 }
 

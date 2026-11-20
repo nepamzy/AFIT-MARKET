@@ -48,7 +48,8 @@ const MESSAGES: Record<string, string> = {
   token_not_needed: 'A handover code is only needed before the vendor hands over the parcel.',
   tracking_not_active: 'Location sharing is only on during an active shift with a delivery.',
   invalid_reason: 'Choose one of the listed reasons.',
-  invalid_transition: 'That step is not possible for this delivery right now.',
+  invalid_transition:
+    'This order has already moved on, so that step is not possible. Refresh the page to see where it is now.',
   assignment_not_releasable: 'That delivery can no longer be released.',
   note_required: 'Please add a short note.',
   reason_required: 'Please give a short reason.',

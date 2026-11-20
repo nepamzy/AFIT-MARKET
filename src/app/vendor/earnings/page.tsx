@@ -1,4 +1,4 @@
-import { lagosDate } from '@/lib/time'
+import { lagosDate, lagosDateTime } from '@/lib/time'
 import type { Metadata } from 'next'
 import { Alert } from '@/components/ui/alert'
 import { BarChart } from '@/components/ui/bar-chart'
@@ -19,6 +19,8 @@ export const metadata: Metadata = { title: 'Earnings' }
 
 const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 1)}%`
 const day = (v: string) => lagosDate(v)
+// payments are sent by a run every morning at 7:00 am (Nigeria time); a payment whose time has passed is simply waiting for it
+const isPast = (v: string) => new Date(v).getTime() <= Date.now()
 
 export default async function Earnings() {
   const vendor = await getMyVendor()
@@ -43,7 +45,10 @@ export default async function Earnings() {
         subtitle="What your completed orders add up to after AFIT Market's commission."
       />
       <Alert tone="info" plain title="You are paid automatically">
-        {s.payout.note}
+        You are paid automatically when the day your order is completed ends (midnight, Nigeria
+        time), so the customer has time to report a problem. Payments are sent every morning at 7:00
+        am, and you get a message in the app when yours has been sent. A complaint that is still
+        open holds that payment until it is settled.
         {s.payout.status === 'automatic' && (
           <span className="mt-1 block" data-testid="payout-summary">
             Paid so far: <Money kobo={s.payout.paid_kobo ?? 0} /> ({s.payout.paid_orders ?? 0}{' '}
@@ -252,7 +257,11 @@ export default async function Earnings() {
                 ) : o.payout_status === 'skipped' ? (
                   <Badge tone="neutral">Nothing to pay</Badge>
                 ) : o.payout_status ? (
-                  <Badge tone="neutral">Due {o.payout_at ? day(o.payout_at) : 'soon'}</Badge>
+                  <Badge tone="neutral">
+                    {o.payout_at && isPast(o.payout_at)
+                      ? 'Being sent: next morning run, 7:00 am'
+                      : `Due ${o.payout_at ? lagosDateTime(o.payout_at) : 'soon'}`}
+                  </Badge>
                 ) : (
                   <span className="text-muted">Before automatic payments</span>
                 ),
