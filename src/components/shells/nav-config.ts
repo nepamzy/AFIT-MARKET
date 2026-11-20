@@ -55,7 +55,6 @@ export const ADMIN_NAV: NavItem[] = [
   { href: '/admin/settlements', label: 'Settlements', icon: 'coins', group: 'Money' },
   { href: '/admin/payouts', label: 'Payouts', icon: 'coins', group: 'Money' },
   { href: '/admin/delivery-fee-payments', label: 'Delivery fees', icon: 'truck', group: 'Money' },
-  { href: '/admin/refunds', label: 'Refunds', icon: 'refund', group: 'Money' },
   { href: '/admin/cases', label: 'Disputes and reports', icon: 'help', group: 'Support' },
   { href: '/admin/returns', label: 'Returns', icon: 'return', group: 'Support' },
   { href: '/admin/reviews', label: 'Reviews', icon: 'star', group: 'Support' },

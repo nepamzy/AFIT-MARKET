@@ -19,7 +19,7 @@ const STEPS: [string, string][] = [
     'For pickup, the customer shows a pickup code and signs. For delivery, the assigned rider shows a code on their phone; only hand the parcel to that person. Use Handover to confirm.',
   ],
   [
-    'Returns and refunds',
+    'Returns',
     'If a customer reports a problem, support decides. Approved returns appear under Returns; confirm when the item arrives back.',
   ],
   [

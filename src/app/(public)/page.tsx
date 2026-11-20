@@ -51,7 +51,7 @@ const WHY: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'help',
     title: 'Help when it goes wrong',
-    text: 'Report a problem on any order and staff step in. Refunds and returns follow clear rules.',
+    text: 'Report a problem on any order and staff step in. Returns follow clear rules.',
   },
 ]
 
