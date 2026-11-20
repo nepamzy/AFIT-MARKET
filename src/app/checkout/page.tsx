@@ -6,6 +6,8 @@ import { PageHeader } from '@/components/ui/card'
 import { Stepper } from '@/components/ui/stepper'
 import { EmptyState } from '@/components/ui/states'
 import { ButtonLink } from '@/components/ui/button'
+import { orderingOpen } from '@/server/modules/cart-and-checkout/ordering'
+import { loadPrincipal } from '@/server/modules/identity-and-access/guard'
 import { getMultiQuote, listDeliveryPoints } from '@/server/modules/cart-and-checkout/queries'
 import { listSavedPlaces } from '@/server/modules/customer/queries'
 
@@ -15,6 +17,9 @@ export default async function CheckoutPage() {
   const [points, places] = await Promise.all([listDeliveryPoints(), listSavedPlaces()])
   const preferred = places.find((s) => s.is_default && s.point_active)?.delivery_point_id
   const q = await getMultiQuote({}, null, false)
+  // platform administrators may place test orders while ordering is closed (the database allows the same)
+  const [open, who] = await Promise.all([orderingOpen(), loadPrincipal()])
+  const closed = !open && !who.roles.includes('platform_admin')
   if (!q)
     return <EmptyState title="We could not load checkout">Please try again in a moment.</EmptyState>
   if (q.empty) redirect('/cart')
@@ -41,6 +46,7 @@ export default async function CheckoutPage() {
         points={points}
         defaultPoint={preferred}
         idempotencyKey={`co-${randomUUID()}`}
+        closed={closed}
       />
       <p className="mt-4">
         <ButtonLink href="/cart" variant="ghost">

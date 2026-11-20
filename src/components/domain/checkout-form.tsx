@@ -3,7 +3,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from 'reac
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { Icon } from '@/components/ui/icons'
-import { Select } from '@/components/ui/fields'
+import { Input, Select } from '@/components/ui/fields'
 import { Money } from '@/components/ui/money'
 import {
   placeOrdersAction,
@@ -25,12 +25,15 @@ export function CheckoutForm({
   points,
   defaultPoint,
   idempotencyKey,
+  closed = false,
 }: {
   initial: MultiQuote
   deliveryAvailable: boolean
   points: DeliveryPoint[]
   defaultPoint?: string
   idempotencyKey: string
+  /** Ordering is not open yet (waiting for the AFIT board): the order button is switched off. */
+  closed?: boolean
 }) {
   const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrdersAction, {})
   const [q, setQ] = useState<MultiQuote>(initial)
@@ -125,6 +128,14 @@ export function CheckoutForm({
             </fieldset>
           )
         })}
+        {anyDelivery && (
+          <Input
+            label="What are you wearing? (optional)"
+            name="clothing"
+            maxLength={120}
+            hint="Your rider sees this when they arrive, so they can find you. For example: a black shirt and blue jeans. Your rider can also see your phone number to call you."
+          />
+        )}
         {anyDelivery && (
           <Select
             label="Delivery point"
@@ -279,7 +290,13 @@ export function CheckoutForm({
         <p className="text-xs text-muted">
           The database works out these numbers again when you place the order.
         </p>
-        <Button type="submit" variant="gold" disabled={pending} className="w-full">
+        {closed && (
+          <Alert tone="warning" title="Ordering opens soon">
+            AFIT Market is awaiting approval from the AFIT board. Your cart is saved, and you can
+            order as soon as it is approved.
+          </Alert>
+        )}
+        <Button type="submit" variant="gold" disabled={pending || closed} className="w-full">
           {pending
             ? 'Placing order…'
             : q.groups.length > 1

@@ -9,6 +9,8 @@ import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
 import { describeProblems } from '@/lib/db-errors'
 import { clearCartAction, setQuantityAction } from '@/server/modules/cart-and-checkout/actions'
+import { orderingOpen } from '@/server/modules/cart-and-checkout/ordering'
+import { loadPrincipal } from '@/server/modules/identity-and-access/guard'
 import { getMultiQuote } from '@/server/modules/cart-and-checkout/queries'
 
 export const metadata: Metadata = { title: 'Your cart' }
@@ -35,6 +37,8 @@ export default async function CartPage() {
         </EmptyState>
       </>
     )
+  const [open, who] = await Promise.all([orderingOpen(), loadPrincipal()])
+  const closed = !open && !who.roles.includes('platform_admin')
   const warnings = describeProblems(q.problems)
   const allLines = q.groups.flatMap((g) => g.lines)
   const itemCount = allLines.reduce((n, l) => n + l.quantity, 0)
@@ -155,9 +159,16 @@ export default async function CartPage() {
             Paystack&apos;s charge are shown in your bill at checkout, before you pay. Prices are
             checked again when you place the order.
           </p>
-          <ButtonLink href="/checkout" variant="gold" className="w-full">
-            Proceed to checkout
-          </ButtonLink>
+          {closed ? (
+            <Alert tone="warning" title="Awaiting approval from the AFIT board">
+              Your cart is saved. Ordering opens as soon as the AFIT board approves, and then you
+              can check out here.
+            </Alert>
+          ) : (
+            <ButtonLink href="/checkout" variant="gold" className="w-full">
+              Proceed to checkout
+            </ButtonLink>
+          )}
           <div className="flex items-center justify-between">
             <Link href="/products" className="text-sm font-bold text-brand-700 hover:underline">
               Continue shopping

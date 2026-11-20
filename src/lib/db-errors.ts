@@ -50,6 +50,9 @@ const MESSAGES: Record<string, string> = {
   invalid_reason: 'Choose one of the listed reasons.',
   invalid_transition:
     'This order has already moved on, so that step is not possible. Refresh the page to see where it is now.',
+  ordering_closed:
+    'Ordering is not open yet: AFIT Market is waiting for approval from the AFIT board. You can keep your cart and you will be able to order as soon as it is approved.',
+  clothing_too_long: 'Keep the description of what you are wearing under 120 characters.',
   assignment_not_releasable: 'That delivery can no longer be released.',
   note_required: 'Please add a short note.',
   reason_required: 'Please give a short reason.',
