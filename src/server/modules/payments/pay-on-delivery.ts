@@ -20,4 +20,9 @@ export type PaymentView = {
   paid: boolean
   amount_kobo: number
   can_pay_now: boolean
+  /** Paystack's charge on top of the amount, shown before the customer is sent to pay. */
+  charge_kobo?: number
+  checkout_id?: string | null
+  is_food?: boolean
+  unpaid_siblings?: number
 } | null

@@ -9,12 +9,12 @@ import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
 import { describeProblems } from '@/lib/db-errors'
 import { clearCartAction, setQuantityAction } from '@/server/modules/cart-and-checkout/actions'
-import { getQuote } from '@/server/modules/cart-and-checkout/queries'
+import { getMultiQuote } from '@/server/modules/cart-and-checkout/queries'
 
 export const metadata: Metadata = { title: 'Your cart' }
 
 export default async function CartPage() {
-  const q = await getQuote('pickup', null)
+  const q = await getMultiQuote({}, null, false)
   if (!q)
     return (
       <EmptyState title="We could not load your cart">Please try again in a moment.</EmptyState>
@@ -36,7 +36,9 @@ export default async function CartPage() {
       </>
     )
   const warnings = describeProblems(q.problems)
-  const itemCount = q.lines.reduce((n, l) => n + l.quantity, 0)
+  const allLines = q.groups.flatMap((g) => g.lines)
+  const itemCount = allLines.reduce((n, l) => n + l.quantity, 0)
+  const itemsTotal = q.groups.reduce((n, g) => n + g.items_total_kobo, 0)
   const qtyForm = (itemId: string, qty: number, label: string, icon: 'plus' | 'minus') => (
     <form action={setQuantityAction}>
       <input type="hidden" name="itemId" value={itemId} />
@@ -55,11 +57,7 @@ export default async function CartPage() {
     <>
       <PageHeader
         title="Your cart"
-        subtitle={
-          q.vendor_name
-            ? `From ${q.vendor_name} · ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`
-            : undefined
-        }
+        subtitle={`${q.groups.length} ${q.groups.length === 1 ? 'shop' : 'shops'} · ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
         breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Cart' }]}
       />
       {warnings.length > 0 && (
@@ -72,64 +70,90 @@ export default async function CartPage() {
         </Alert>
       )}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <ul className="space-y-3">
-          {q.lines.map((l) => (
-            <li key={l.item_id}>
-              <article className="flex gap-3 rounded-[var(--radius-card)] border border-line bg-card p-3 shadow-[var(--shadow-card)]">
-                <NoImageTile icon="bag" className="aspect-square! w-20! shrink-0 rounded-xl" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="font-bold text-navy-900">{l.name}</p>
-                      {l.options.length > 0 && (
-                        <p className="text-sm text-muted">
-                          {l.options.map((o) => o.name).join(', ')}
-                        </p>
-                      )}
-                      <p className="text-sm text-muted">
-                        <Money kobo={l.unit_price_kobo} /> each
-                      </p>
-                    </div>
-                    <Money
-                      kobo={l.line_total_kobo}
-                      className="text-lg font-extrabold text-navy-900"
-                    />
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    {qtyForm(l.item_id, l.quantity - 1, `Decrease quantity of ${l.name}`, 'minus')}
-                    <span
-                      aria-label={`Quantity ${l.quantity}`}
-                      className="w-8 text-center font-bold"
-                    >
-                      {l.quantity}
-                    </span>
-                    {qtyForm(l.item_id, l.quantity + 1, `Increase quantity of ${l.name}`, 'plus')}
-                    <form action={setQuantityAction} className="ml-auto">
-                      <input type="hidden" name="itemId" value={l.item_id} />
-                      <button
-                        type="submit"
-                        name="remove"
-                        value="1"
-                        className="touch-target inline-flex items-center gap-1 px-2 text-sm font-bold text-danger-700 hover:underline"
-                      >
-                        <Icon name="trash" size={16} /> Remove
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              </article>
-            </li>
+        <div className="space-y-6">
+          {q.groups.map((g) => (
+            <section key={g.vendor_id} aria-label={g.vendor_name} className="space-y-3">
+              <h2 className="flex flex-wrap items-baseline justify-between gap-2 text-lg font-extrabold text-navy-900">
+                <span>{g.vendor_name}</span>
+                <span className="text-sm font-bold text-muted">
+                  Subtotal <Money kobo={g.items_total_kobo} />
+                </span>
+              </h2>
+              <ul className="space-y-3">
+                {g.lines.map((l) => (
+                  <li key={l.item_id}>
+                    <article className="flex gap-3 rounded-[var(--radius-card)] border border-line bg-card p-3 shadow-[var(--shadow-card)]">
+                      <NoImageTile
+                        icon="bag"
+                        className="aspect-square! w-20! shrink-0 rounded-xl"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="font-bold text-navy-900">{l.name}</p>
+                            {l.options.length > 0 && (
+                              <p className="text-sm text-muted">
+                                {l.options.map((o) => o.name).join(', ')}
+                              </p>
+                            )}
+                            <p className="text-sm text-muted">
+                              <Money kobo={l.unit_price_kobo} /> each
+                            </p>
+                          </div>
+                          <Money
+                            kobo={l.line_total_kobo}
+                            className="text-lg font-extrabold text-navy-900"
+                          />
+                        </div>
+                        <div className="mt-2 flex items-center gap-2">
+                          {qtyForm(
+                            l.item_id,
+                            l.quantity - 1,
+                            `Decrease quantity of ${l.name}`,
+                            'minus',
+                          )}
+                          <span
+                            aria-label={`Quantity ${l.quantity}`}
+                            className="w-8 text-center font-bold"
+                          >
+                            {l.quantity}
+                          </span>
+                          {qtyForm(
+                            l.item_id,
+                            l.quantity + 1,
+                            `Increase quantity of ${l.name}`,
+                            'plus',
+                          )}
+                          <form action={setQuantityAction} className="ml-auto">
+                            <input type="hidden" name="itemId" value={l.item_id} />
+                            <button
+                              type="submit"
+                              name="remove"
+                              value="1"
+                              className="touch-target inline-flex items-center gap-1 px-2 text-sm font-bold text-danger-700 hover:underline"
+                            >
+                              <Icon name="trash" size={16} /> Remove
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
         <aside className="h-fit space-y-3 rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-[var(--shadow-card)] lg:sticky lg:top-24">
           <h2 className="text-lg font-extrabold text-navy-900">Order summary</h2>
           <p className="flex justify-between">
             <span>Items</span>
-            <Money kobo={q.items_total_kobo} className="font-bold" />
+            <Money kobo={itemsTotal} className="font-bold" />
           </p>
           <p className="text-sm text-muted">
-            The delivery fee (if you choose delivery) is added at checkout. There is no other
-            service fee. Prices are checked again when you place the order.
+            Each shop gets its own order. The delivery fee (if you choose delivery) and
+            Paystack&apos;s charge are shown in your bill at checkout, before you pay. Prices are
+            checked again when you place the order.
           </p>
           <ButtonLink href="/checkout" variant="gold" className="w-full">
             Proceed to checkout

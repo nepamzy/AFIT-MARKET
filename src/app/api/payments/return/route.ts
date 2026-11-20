@@ -24,13 +24,35 @@ export async function GET(req: NextRequest) {
   const { data } = await sb.auth.getUser()
   if (!data.user) return back(`/login?next=${encodeURIComponent('/orders')}`)
   const svc = createSupabaseServiceClient()
-  const { data: txn } = await svc
-    .from('payment_transactions')
-    .select('order_id, orders!inner(customer_id)')
+  // A payment covers one order or several (one checkout with more than one shop): look the reference up as a payment
+  // group first, then as a single legacy transaction.
+  const { data: grp } = await svc
+    .from('payment_groups')
+    .select('id, customer_id, payment_group_orders(order_id, orders(checkout_id))')
     .eq('reference', reference)
     .maybeSingle()
-  const owner = (txn as { orders?: { customer_id?: string } } | null)?.orders?.customer_id
-  if (!txn || owner !== data.user.id) return back('/orders')
+  type Grp = {
+    customer_id: string
+    payment_group_orders: { order_id: string; orders: { checkout_id: string | null } | null }[]
+  }
+  const g = grp as Grp | null
+  let landing = '/orders'
+  if (g) {
+    if (g.customer_id !== data.user.id) return back('/orders')
+    const ids = g.payment_group_orders.map((x) => x.order_id)
+    const checkout = g.payment_group_orders[0]?.orders?.checkout_id ?? null
+    landing =
+      ids.length === 1 ? `/orders/${ids[0]}` : checkout ? `/checkout/placed/${checkout}` : '/orders'
+  } else {
+    const { data: txn } = await svc
+      .from('payment_transactions')
+      .select('order_id, orders!inner(customer_id)')
+      .eq('reference', reference)
+      .maybeSingle()
+    const owner = (txn as { orders?: { customer_id?: string } } | null)?.orders?.customer_id
+    if (!txn || owner !== data.user.id) return back('/orders')
+    landing = `/orders/${txn.order_id as string}`
+  }
   if (await rateLimit(`payverify:${data.user.id}`, 300, 20)) {
     try {
       const v = await verifyTransaction(reference)
@@ -40,5 +62,5 @@ export async function GET(req: NextRequest) {
       logger.error('payment verify failed', { err: String(e) })
     }
   }
-  return back(`/orders/${txn.order_id as string}`)
+  return back(landing)
 }

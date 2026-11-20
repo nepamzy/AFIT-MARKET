@@ -6,29 +6,27 @@ import { PageHeader } from '@/components/ui/card'
 import { Stepper } from '@/components/ui/stepper'
 import { EmptyState } from '@/components/ui/states'
 import { ButtonLink } from '@/components/ui/button'
-import { getQuote, listDeliveryPoints } from '@/server/modules/cart-and-checkout/queries'
+import { getMultiQuote, listDeliveryPoints } from '@/server/modules/cart-and-checkout/queries'
 import { listSavedPlaces } from '@/server/modules/customer/queries'
-import { payOnDeliveryRules } from '@/server/modules/payments/pay-on-delivery'
 
 export const metadata: Metadata = { title: 'Checkout' }
 
 export default async function CheckoutPage() {
-  const [pickup, points, places] = await Promise.all([
-    getQuote('pickup', null),
-    listDeliveryPoints(),
-    listSavedPlaces(),
-  ])
+  const [points, places] = await Promise.all([listDeliveryPoints(), listSavedPlaces()])
   const preferred = places.find((s) => s.is_default && s.point_active)?.delivery_point_id
-  if (!pickup)
+  const q = await getMultiQuote({}, null, false)
+  if (!q)
     return <EmptyState title="We could not load checkout">Please try again in a moment.</EmptyState>
-  if (pickup.empty) redirect('/cart')
-  const delivery = points[0] ? await getQuote('delivery', points[0].id) : null
-  const payAtDoor = await payOnDeliveryRules()
+  if (q.empty) redirect('/cart')
   return (
     <>
       <PageHeader
         title="Checkout"
-        subtitle={pickup.vendor_name ? `Order from ${pickup.vendor_name}` : undefined}
+        subtitle={
+          q.groups.length === 1
+            ? `Order from ${q.groups[0]!.vendor_name}`
+            : `Orders from ${q.groups.length} shops`
+        }
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'Cart', href: '/cart' },
@@ -36,14 +34,13 @@ export default async function CheckoutPage() {
         ]}
       />
       <Stepper steps={['Delivery', 'Payment', 'Confirmation']} current={0} />
-      {/* The key is created per page view; if the form is submitted twice, the server returns the same order. */}
+      {/* The key is created per page view; if the form is submitted twice, the server returns the same orders. */}
       <CheckoutForm
-        pickup={pickup}
-        delivery={delivery}
+        initial={q}
+        deliveryAvailable={points.length > 0}
         points={points}
         defaultPoint={preferred}
         idempotencyKey={`co-${randomUUID()}`}
-        payAtDoor={payAtDoor}
       />
       <p className="mt-4">
         <ButtonLink href="/cart" variant="ghost">

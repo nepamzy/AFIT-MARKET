@@ -48,3 +48,40 @@ export async function payWithPaystackAction(_p: ActionState, fd: FormData): Prom
   }
   redirect(url)
 }
+
+/** Starts one Paystack payment for every unpaid order of a checkout (several shops, one payment). */
+export async function payCheckoutAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const checkoutId = String(fd.get('checkoutId') ?? '')
+  if (!z.uuid().safeParse(checkoutId).success) return failed('That checkout was not found.')
+  const gated = await gate({ roles: ['customer'], aal: 'aal2' })
+  if ('state' in gated) return gated.state
+  if (!paystackConfig()) return failed('Online payment is not open yet.')
+  if (!(await rateLimit(`payinit:${gated.who.userId}`, 600, 15)))
+    return failed('Too many payment attempts. Please wait a few minutes.')
+  const sb = await createSupabaseServerClient()
+  const { data, error } = await sb.rpc('payment_prepare_checkout', { p_checkout: checkoutId })
+  if (error) return dbFailed(error)
+  const prep = data as { reference: string; amount_kobo: number; order_number: string }
+  const { data: u } = await sb.auth.getUser()
+  const email = u.user?.email
+  if (!email) return failed('Please sign in again.')
+  let url: string
+  try {
+    const init = await initializeTransaction({
+      email,
+      amountKobo: Number(prep.amount_kobo),
+      reference: prep.reference,
+      callbackUrl: `${serverEnv().SITE_URL}/api/payments/return`,
+      orderNumber: prep.order_number,
+    })
+    await createSupabaseServiceClient().rpc('payment_set_access_code', {
+      p_reference: prep.reference,
+      p_access_code: init.access_code,
+    })
+    url = init.authorization_url
+  } catch (e) {
+    logger.error('paystack initialize failed', { err: String(e) })
+    return failed('We could not reach the payment provider. Please try again in a moment.')
+  }
+  redirect(url)
+}
