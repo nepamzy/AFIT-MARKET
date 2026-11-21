@@ -18,6 +18,8 @@ import {
 import { applyPaymentEvent } from './apply'
 import { verifyToCall } from './events'
 import { initializeTransaction, verifyTransaction } from './paystack'
+import { buildSplit } from './split'
+import { ensureSubaccounts } from './subaccounts'
 
 /** Starts a Paystack payment for an unpaid order. The amount is read from the database, not the form. */
 export async function payWithPaystackAction(_p: ActionState, fd: FormData): Promise<ActionState> {
@@ -30,9 +32,17 @@ export async function payWithPaystackAction(_p: ActionState, fd: FormData): Prom
     return failed('Too many payment attempts. Please wait a few minutes.')
 
   const sb = await createSupabaseServerClient()
+  // each shop's own Paystack sub-account (only when that is switched on): made before the payment is prepared
+  const own = await sb.from('orders').select('vendor_id').eq('id', orderId)
+  await ensureSubaccounts((own.data ?? []).map((o) => o.vendor_id as string))
   const { data, error } = await sb.rpc('payment_prepare', { p_order: orderId })
   if (error) return dbFailed(error)
-  const prep = data as { reference: string; amount_kobo: number; order_number: string }
+  const prep = data as {
+    reference: string
+    amount_kobo: number
+    order_number: string
+    split_shares?: unknown
+  }
   const { data: u } = await sb.auth.getUser()
   const email = u.user?.email
   if (!email) return failed('Please sign in again.')
@@ -45,6 +55,7 @@ export async function payWithPaystackAction(_p: ActionState, fd: FormData): Prom
       reference: prep.reference,
       callbackUrl: `${serverEnv().SITE_URL}/api/payments/return`,
       orderNumber: prep.order_number,
+      split: buildSplit(prep.split_shares, Number(prep.amount_kobo)),
     })
     await createSupabaseServiceClient().rpc('payment_set_access_code', {
       p_reference: prep.reference,
@@ -68,9 +79,16 @@ export async function payCheckoutAction(_p: ActionState, fd: FormData): Promise<
   if (!(await rateLimit(`payinit:${gated.who.userId}`, 600, 15)))
     return failed('Too many payment attempts. Please wait a few minutes.')
   const sb = await createSupabaseServerClient()
+  const own = await sb.from('orders').select('vendor_id').eq('checkout_id', checkoutId)
+  await ensureSubaccounts([...new Set((own.data ?? []).map((o) => o.vendor_id as string))])
   const { data, error } = await sb.rpc('payment_prepare_checkout', { p_checkout: checkoutId })
   if (error) return dbFailed(error)
-  const prep = data as { reference: string; amount_kobo: number; order_number: string }
+  const prep = data as {
+    reference: string
+    amount_kobo: number
+    order_number: string
+    split_shares?: unknown
+  }
   const { data: u } = await sb.auth.getUser()
   const email = u.user?.email
   if (!email) return failed('Please sign in again.')
@@ -82,6 +100,7 @@ export async function payCheckoutAction(_p: ActionState, fd: FormData): Promise<
       reference: prep.reference,
       callbackUrl: `${serverEnv().SITE_URL}/api/payments/return`,
       orderNumber: prep.order_number,
+      split: buildSplit(prep.split_shares, Number(prep.amount_kobo)),
     })
     await createSupabaseServiceClient().rpc('payment_set_access_code', {
       p_reference: prep.reference,

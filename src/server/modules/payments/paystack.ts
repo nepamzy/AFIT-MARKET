@@ -1,6 +1,7 @@
 import 'server-only'
 import { z } from 'zod'
 import { paystackConfig } from '@/lib/env'
+import type { PaystackSplit } from './split'
 
 export class PaymentsUnavailable extends Error {}
 
@@ -47,6 +48,8 @@ export async function initializeTransaction(a: {
   reference: string
   callbackUrl: string
   orderNumber: string
+  /** Gives each shop's own Paystack sub-account its share (see split.ts). Absent: everything stays in the main account. */
+  split?: PaystackSplit | null
 }) {
   const json = await call('/transaction/initialize', {
     method: 'POST',
@@ -57,6 +60,7 @@ export async function initializeTransaction(a: {
       reference: a.reference,
       callback_url: a.callbackUrl,
       metadata: { order_number: a.orderNumber },
+      ...(a.split ? { split: a.split } : {}),
     },
   })
   const r = initResponse.parse(json).data
@@ -124,6 +128,7 @@ const transferEnvelope = z.object({
       status: z.string().optional(),
       transfer_code: z.string().optional(),
       recipient_code: z.string().optional(),
+      subaccount_code: z.string().optional(),
       reference: z.string().optional(),
     })
     .partial()
@@ -180,6 +185,27 @@ export async function createTransferRecipient(a: {
   })
   const code = r.body?.data?.recipient_code
   if (!r.ok || !code) throw new Error(`Paystack could not save the recipient (${r.status})`)
+  return code
+}
+
+/** A Paystack sub-account for a shop's bank account: that shop's share of a payment settles straight into it. Created once. */
+export async function createSubaccount(a: {
+  businessName: string
+  bankCode: string
+  accountNumber: string
+  commissionPercent: number
+}): Promise<string> {
+  const r = await raw('/subaccount', 'POST', {
+    business_name: a.businessName.slice(0, 100),
+    settlement_bank: a.bankCode,
+    bank_code: a.bankCode,
+    account_number: a.accountNumber,
+    // required by Paystack; the real amounts are sent with every payment (a flat split), this is only the fallback
+    percentage_charge: a.commissionPercent,
+    description: 'AFIT Market shop',
+  })
+  const code = r.body?.data?.subaccount_code
+  if (!r.ok || !code) throw new Error(`Paystack could not create the sub-account (${r.status})`)
   return code
 }
 
