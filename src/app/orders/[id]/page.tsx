@@ -26,7 +26,7 @@ import { PickupShopMap } from '@/components/domain/pickup-shop-map'
 import { CustomerDeliveryQr } from '@/components/domain/customer-delivery-qr'
 import { mockPaymentsAllowed, paystackConfig, paystackIsLive } from '@/lib/env'
 import { cancelOrderAction, mockPayAction } from '@/server/modules/cart-and-checkout/actions'
-import { payWithPaystackAction } from '@/server/modules/payments/actions'
+import { confirmPaymentAction, payWithPaystackAction } from '@/server/modules/payments/actions'
 import type { PaymentView } from '@/server/modules/payments/pay-on-delivery'
 import {
   getOrder,
@@ -254,6 +254,18 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
               ) : (
                 <p className="font-medium text-warning-700">Online payment is not open yet.</p>
               )}
+              {paystack && (
+                <div className="space-y-1 border-t border-line pt-3">
+                  <p className="text-sm text-muted">Already paid? Press the button below.</p>
+                  <ActionForm
+                    action={confirmPaymentAction}
+                    submitLabel="Confirm my payment"
+                    pendingLabel="Checking…"
+                  >
+                    <input type="hidden" name="orderId" value={order.id} />
+                  </ActionForm>
+                </div>
+              )}
             </>
           ) : (
             <p className="text-sm text-muted">
@@ -313,6 +325,15 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
                   paystackIsLive() ? 'Pay with Paystack' : 'Pay with Paystack (test mode)'
                 }
                 pendingLabel="Opening payment…"
+              >
+                <input type="hidden" name="orderId" value={order.id} />
+              </ActionForm>
+            )}
+            {paystack && (
+              <ActionForm
+                action={confirmPaymentAction}
+                submitLabel="I have paid: confirm my payment"
+                pendingLabel="Checking…"
               >
                 <input type="hidden" name="orderId" value={order.id} />
               </ActionForm>

@@ -7,7 +7,7 @@ import { Card, PageHeader } from '@/components/ui/card'
 import { Money } from '@/components/ui/money'
 import { paystackConfig, paystackIsLive } from '@/lib/env'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { payCheckoutAction } from '@/server/modules/payments/actions'
+import { confirmPaymentAction, payCheckoutAction } from '@/server/modules/payments/actions'
 import { z } from 'zod'
 
 export const metadata: Metadata = { title: 'Your orders' }
@@ -89,6 +89,18 @@ export default async function PlacedPage({ params }: { params: Promise<{ id: str
             </ActionForm>
           ) : (
             <p className="font-medium text-warning-700">Online payment is not open yet.</p>
+          )}
+          {paystackConfig() && (
+            <div className="space-y-1 border-t border-line pt-3">
+              <p className="text-sm text-muted">Already paid? Press the button below.</p>
+              <ActionForm
+                action={confirmPaymentAction}
+                submitLabel="Confirm my payment"
+                pendingLabel="Checking…"
+              >
+                <input type="hidden" name="checkoutId" value={id} />
+              </ActionForm>
+            </div>
           )}
         </Card>
       )}
