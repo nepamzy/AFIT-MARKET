@@ -7,6 +7,8 @@ import { DataTable } from '@/components/ui/data-table'
 import { LinkTabs, SearchBar } from '@/components/ui/list-controls'
 import { Pager } from '@/components/ui/pager'
 import { EmptyState } from '@/components/ui/states'
+import { IdFrontThumb } from '@/components/domain/id-front-thumb'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ADMIN_PAGE_SIZE, listUsers } from '@/server/modules/admin/queries'
 
 export const metadata: Metadata = { title: 'Users' }
@@ -38,7 +40,14 @@ export default async function UsersPage({
   const tab = TABS.find((t) => t[0] === sp.tab) ?? TABS[0]
   const n = Number(sp.page)
   const page = Number.isInteger(n) && n >= 1 ? n : 1
-  const data = await listUsers(q, tab[2], page)
+  const [data, { data: cards }] = await Promise.all([
+    listUsers(q, tab[2], page),
+    (await createSupabaseServerClient()).rpc('admin_list_id_cards'),
+  ])
+  // students who sent the new ID card with a shop or rider application: show its front beside their name
+  const cardKind = new Map<string, 'vendor' | 'rider'>()
+  for (const c of (cards ?? []) as { user_id: string; kind: string }[])
+    if (c.kind === 'vendor' || c.kind === 'rider') cardKind.set(c.user_id, c.kind)
   const href = (k: string) =>
     `/admin/users?${new URLSearchParams({ ...(q ? { q } : {}), ...(k === 'all' ? {} : { tab: k }) })}`
   return (
@@ -89,12 +98,19 @@ export default async function UsersPage({
             columns={[
               {
                 header: 'Name',
-                cell: (u) =>
-                  u.display_name ? (
-                    <span className="font-bold text-navy-900">{u.display_name}</span>
-                  ) : (
-                    <span className="text-muted">Name not set</span>
-                  ),
+                cell: (u) => {
+                  const kind = cardKind.get(u.id)
+                  return (
+                    <span className="flex items-center gap-3">
+                      {kind && <IdFrontThumb userId={u.id} kind={kind} />}
+                      {u.display_name ? (
+                        <span className="font-bold text-navy-900">{u.display_name}</span>
+                      ) : (
+                        <span className="text-muted">Name not set</span>
+                      )}
+                    </span>
+                  )
+                },
               },
               { header: 'Email', cell: (u) => u.email },
               {
