@@ -2,6 +2,7 @@ import 'server-only'
 import { after } from 'next/server'
 import { logger } from '@/lib/logger'
 import { formatNaira } from '@/lib/money'
+import { renderEmail } from '@/server/modules/engagement/email-templates'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
 
 /**
@@ -76,12 +77,26 @@ export function maskEmail(email: string): string {
 const IDENT = /[^A-Za-z0-9._-]/g
 const ident = (s: string, max: number) => clean(s, max).replace(IDENT, '')
 
+const ALERT_EMOJI: Record<AdminAlertEvent['type'], string> = {
+  signup: '\uD83D\uDC4B',
+  vendor_application: '\uD83C\uDFEA',
+  rider_application: '\uD83D\uDEB4',
+  order_placed: '\uD83D\uDECD\uFE0F',
+  payment: '\uD83D\uDCB3',
+  refund_requested: '\uD83D\uDCB8',
+  return_requested: '\uD83D\uDCE6',
+  support_case: '\uD83D\uDCDD',
+  contact_message: '\u2709\uFE0F',
+  delivery_fee: '\uD83D\uDEB2',
+  payout_failed: '\u26A0\uFE0F',
+}
+
 /** Subject and body for an event. Pure function: nothing here touches the network or the environment. */
 export function buildAdminAlert(
   event: AdminAlertEvent,
   siteUrl: string,
   now: Date = new Date(),
-): { subject: string; text: string } {
+): { subject: string; text: string; html: string } {
   const lines: string[] = []
   let subject: string
   let link = '/admin'
@@ -157,8 +172,20 @@ export function buildAdminAlert(
   }
   const when = now.toLocaleString('en-GB', { timeZone: 'Africa/Lagos', hour12: false })
   const base = siteUrl.replace(/\/+$/, '')
+  const branded = renderEmail({
+    subject,
+    preheader: lines[0] ?? subject,
+    emoji: ALERT_EMOJI[event.type],
+    heading: subject.replace(/^\[AFIT Market\]\s*/, ''),
+    paragraphs: lines,
+    details: [['Time (Lagos)', when]],
+    button: { label: 'Open in the admin area', url: `${base}${link}` },
+    note: 'Automatic alert from AFIT Market.',
+    siteUrl,
+  })
   return {
     subject,
+    html: branded.html,
     text: [
       ...lines,
       '',
@@ -188,7 +215,7 @@ export async function sendAdminAlert(
       logger.warn('admin alert dropped: daily cap reached')
       return 'capped'
     }
-    const { subject, text } = buildAdminAlert(
+    const { subject, text, html } = buildAdminAlert(
       event,
       deps.siteUrl ?? process.env.SITE_URL ?? 'http://localhost:3000',
     )
@@ -203,6 +230,7 @@ export async function sendAdminAlert(
         sender: { name: config.fromName, email: config.from },
         to: [{ email: config.to }],
         subject,
+        htmlContent: html,
         textContent: text,
       }),
       signal: AbortSignal.timeout(5000),
