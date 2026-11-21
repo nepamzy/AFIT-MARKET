@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { IdCardView } from '@/components/domain/id-card-view'
+import { IdFrontThumb } from '@/components/domain/id-front-thumb'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DecideRiderForm, RiderStatusForm } from '@/components/domain/rider-admin-forms'
 import { Icon } from '@/components/ui/icons'
@@ -63,9 +64,13 @@ export default async function Riders() {
               <li key={r.user_id}>
                 <Card className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-navy-900 text-gold-400">
-                      <Icon name="bike" size={22} />
-                    </span>
+                    {hasCard.has(r.user_id) ? (
+                      <IdFrontThumb userId={r.user_id} kind="rider" />
+                    ) : (
+                      <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-navy-900 text-gold-400">
+                        <Icon name="bike" size={22} />
+                      </span>
+                    )}
                     <p className="flex flex-wrap items-center gap-2">
                       <span className="font-extrabold text-navy-900">{r.full_name}</span>
                       <StatusBadge
