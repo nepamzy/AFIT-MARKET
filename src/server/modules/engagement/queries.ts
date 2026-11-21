@@ -146,6 +146,8 @@ export const EDITABLE_SETTINGS = [
   // opens ordering for customers once the AFIT board has approved the launch (type true or false)
   'ordering_open',
   'pay_on_delivery_enabled',
+  // pay each shop through its own Paystack sub-account (see Admin, Settings); leave off until the Paystack side is ready
+  'payment_split_enabled',
 ] as const
 
 export type SettingRow = {
