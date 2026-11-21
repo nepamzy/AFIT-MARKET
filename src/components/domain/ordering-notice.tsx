@@ -1,8 +1,10 @@
-import { orderingOpen } from '@/server/modules/cart-and-checkout/ordering'
+import { loadPrincipal } from '@/server/modules/identity-and-access/guard'
+import { canOrderNow } from '@/server/modules/cart-and-checkout/ordering'
 
-/** A strip across the top of every page while ordering is closed (waiting for the AFIT board's approval). */
+/** A strip across the top of every page while ordering is closed to this person (waiting for the AFIT board's approval). */
 export async function OrderingNotice() {
-  if (await orderingOpen()) return null
+  const who = await loadPrincipal()
+  if (await canOrderNow(who.userId ?? null, who.roles.includes('platform_admin'))) return null
   return (
     <p
       role="status"

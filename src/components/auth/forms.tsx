@@ -295,10 +295,19 @@ function PersonIcon({ kind }: { kind: PersonType }) {
   )
 }
 
-export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] }) {
+export function SignUpForm({
+  categories = [],
+  invite = '',
+  vendorInviteOnly = false,
+}: {
+  categories?: CategoryChoice[]
+  /** A valid personal invitation link token (shop sign-up). */
+  invite?: string
+  vendorInviteOnly?: boolean
+}) {
   const [state, action, pending] = useActionState(signUpAction, initial)
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1)
-  const [intent, setIntent] = useState<Intent>('customer')
+  const [intent, setIntent] = useState<Intent>(invite ? 'vendor' : 'customer')
   const [personType, setPersonType] = useState<PersonType | null>(null)
   const [studentId, setStudentId] = useState('')
   const [idCard, setIdCard] = useState<string | null>(null)
@@ -333,9 +342,14 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         (vendor.vendorType !== 'student' || studentId.trim().length >= 3)
       : intent !== 'customer' ||
         (personType !== null && (personType !== 'student' || studentId.trim().length >= 3))
+  const noInvite = isVendor && vendorInviteOnly && !invite
   const goNext = () => {
     setProblem(null)
     if (step === 1) {
+      if (noInvite)
+        return setProblem(
+          'Shop sign-up is by invitation during our beta. Open your personal invitation link, or ask AFIT Market for one.',
+        )
       if (isVendor) {
         if (!vendor.vendorType)
           return setProblem(
@@ -409,6 +423,7 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
         </p>
       )}
       <input type="hidden" name="intent" value={intent} />
+      {invite && <input type="hidden" name="invite" value={invite} />}
       {intent === 'customer' && personType && (
         <input type="hidden" name="personType" value={personType} />
       )}
@@ -467,6 +482,15 @@ export function SignUpForm({ categories = [] }: { categories?: CategoryChoice[] 
             Choosing Vendor or Rider takes you to the application after you sign in; nothing is
             switched on until it is approved.
           </p>
+          {noInvite && (
+            <p
+              role="status"
+              className="relative z-10 mt-2 rounded-[var(--radius-control)] bg-gold-100 px-3 py-2 text-sm font-semibold text-navy-900"
+            >
+              Shop sign-up is by invitation during our beta. Use your personal invitation link, or
+              ask AFIT Market for one.
+            </p>
+          )}
         </fieldset>
 
         {intent === 'customer' && (

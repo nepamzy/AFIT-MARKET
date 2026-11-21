@@ -24,6 +24,8 @@ import {
   type VendorChoices,
 } from '@/server/modules/vendors-and-catalogue/vendor-choices'
 import { checkAccess, loadPrincipal } from './guard'
+import { checkInvite, vendorInviteOnly } from '@/server/modules/vendor-invites/invites'
+
 import { parseInterests, parseSignupDetails } from './signup-details'
 import {
   PERSON_TYPES,
@@ -106,6 +108,16 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
           'We could not find the QR code on the front of your ID card. Only the new ID card has one. Use a clear, flat photo of the whole front.',
       }
     rider = { matric, phone, front: front.jpeg, back: back.jpeg }
+  }
+  // During the beta a shop can only sign up with a personal invitation link, and the link works once.
+  const inviteToken = String(formData.get('invite') ?? '').trim()
+  if (intent === 'vendor' && (await vendorInviteOnly())) {
+    if (!(await rateLimit(`invite:ip:${await clientIp()}`, 3600, 30))) return { error: TOO_MANY }
+    if (!(await checkInvite(inviteToken)))
+      return {
+        error:
+          'Shop sign-up is by invitation during our beta, and this invitation link is missing, already used or cancelled. Ask AFIT Market for a new link.',
+      }
   }
   // vendors say who they are (a student, a shop AFIT already knows, or other) and what the shop sells (one or more categories)
   let vendorChoices: Extract<VendorChoices, { ok: true }> | undefined
@@ -262,6 +274,15 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     } catch (e) {
       logger.warn('sign-up details not saved', { err: e instanceof Error ? e.name : 'error' })
     }
+  }
+  // The invitation link is used up by this new shop account. If someone else used it a moment earlier, the shop application
+  // will say an invitation is needed.
+  if (!error && newUserId && intent === 'vendor' && inviteToken) {
+    const used = await createSupabaseServiceClient().rpc('vendor_invite_consume', {
+      p_token: inviteToken,
+      p_user: newUserId,
+    })
+    if (used.error || used.data !== true) logger.warn('shop invitation not applied at sign-up')
   }
   // The code links the new rider to the shop (the shop vouches for them). If it was used a moment ago by someone else, the
   // rider can type another code later under Deliver on AFIT Market.

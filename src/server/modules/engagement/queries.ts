@@ -148,6 +148,8 @@ export const EDITABLE_SETTINGS = [
   'pay_on_delivery_enabled',
   // pay each shop through its own Paystack sub-account (see Admin, Settings); leave off until the Paystack side is ready
   'payment_split_enabled',
+  // shop sign-up by personal invitation link only (on during the beta)
+  'vendor_invite_only',
 ] as const
 
 export type SettingRow = {

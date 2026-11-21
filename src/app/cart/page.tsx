@@ -9,7 +9,7 @@ import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
 import { describeProblems } from '@/lib/db-errors'
 import { clearCartAction, setQuantityAction } from '@/server/modules/cart-and-checkout/actions'
-import { orderingOpen } from '@/server/modules/cart-and-checkout/ordering'
+import { canOrderNow } from '@/server/modules/cart-and-checkout/ordering'
 import { loadPrincipal } from '@/server/modules/identity-and-access/guard'
 import { getMultiQuote } from '@/server/modules/cart-and-checkout/queries'
 
@@ -37,8 +37,8 @@ export default async function CartPage() {
         </EmptyState>
       </>
     )
-  const [open, who] = await Promise.all([orderingOpen(), loadPrincipal()])
-  const closed = !open && !who.roles.includes('platform_admin')
+  const who = await loadPrincipal()
+  const closed = !(await canOrderNow(who.userId ?? null, who.roles.includes('platform_admin')))
   const warnings = describeProblems(q.problems)
   const allLines = q.groups.flatMap((g) => g.lines)
   const itemCount = allLines.reduce((n, l) => n + l.quantity, 0)
