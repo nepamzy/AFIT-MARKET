@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/ui/card'
 import { Card } from '@/components/ui/card'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
 import { ProductPhoto } from '@/components/ui/product-photo'
+import { WhatsAppLink } from '@/components/landing/whatsapp'
 import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
 import {
@@ -56,6 +57,14 @@ export default async function Catalogue() {
         Add a photo to each item: items with a clear photo sell better. Customers see a simple
         placeholder tile for items without one.
       </Alert>
+      <Alert tone="info" plain title="Many items?">
+        <span className="flex flex-wrap items-center gap-3">
+          <span>
+            If you have a lot of items, contact us and we will help you put them on your menu.
+          </span>
+          <WhatsAppLink label="Message us on WhatsApp" />
+        </span>
+      </Alert>
       <div className="mt-4">
         {products.length === 0 ? (
           <EmptyState
@@ -69,30 +78,34 @@ export default async function Catalogue() {
             {products.map((p) => (
               <li key={p.id}>
                 <Card className="flex flex-wrap items-center justify-between gap-3">
-                  <ProductPhoto
-                    productId={p.id}
-                    icon="bag"
-                    fresh
-                    className="aspect-square! w-12! shrink-0 rounded-lg"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      href={`/vendor/catalogue/${p.id}`}
-                      className="font-semibold hover:underline"
-                    >
-                      {p.name}
-                    </Link>
-                    <p className="text-sm text-muted">
-                      {[
-                        p.section,
-                        p.stock_quantity === null
-                          ? 'Unlimited stock'
-                          : `${p.stock_quantity} in stock`,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </p>
-                  </div>
+                  <Link
+                    href={`/vendor/catalogue/${p.id}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-lg hover:bg-brand-50"
+                    aria-label={`Open ${p.name} to edit`}
+                  >
+                    <ProductPhoto
+                      productId={p.id}
+                      icon="bag"
+                      fresh
+                      className="aspect-square! w-12! shrink-0 rounded-lg"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold">{p.name}</span>
+                      <span className="block text-sm text-muted">
+                        {[
+                          p.section,
+                          p.stock_quantity === null
+                            ? 'Unlimited stock'
+                            : `${p.stock_quantity} in stock`,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                      <span className="block text-sm font-semibold text-brand-700">
+                        Tap to open and edit
+                      </span>
+                    </span>
+                  </Link>
                   <div className="flex flex-wrap items-center gap-2">
                     <Money kobo={p.price_kobo} className="font-semibold" />
                     <Badge tone={p.is_available && p.stock_quantity !== 0 ? 'success' : 'neutral'}>

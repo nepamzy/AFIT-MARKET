@@ -6,7 +6,7 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { Card } from '@/components/ui/card'
 import { Icon } from '@/components/ui/icons'
 import { ProductCard } from '@/components/ui/product-card'
-import { ShopFront } from '@/components/ui/shop-front'
+import { ShopBanner } from '@/components/ui/shop-banner'
 import { Section } from '@/components/ui/section'
 import { EmptyState } from '@/components/ui/states'
 import { ReportReviewForm } from '@/components/domain/engagement-forms'
@@ -71,7 +71,7 @@ export default async function VendorPage({
         ]}
       />
       <div className="mb-6 overflow-hidden rounded-[var(--radius-card)] border border-line bg-card shadow-[var(--shadow-card)]">
-        <ShopFront categorySlug={vendor.category} className="aspect-[16/5]" />
+        <ShopBanner slug={slug} className="aspect-[16/5]" />
         <div className="flex flex-wrap items-start justify-between gap-3 p-5">
           <div className="min-w-0">
             <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">{vendor.name}</h1>
