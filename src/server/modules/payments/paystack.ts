@@ -219,6 +219,16 @@ export async function createSubaccount(a: {
   return code
 }
 
+/** Switches a shop's old sub-account off at Paystack (it is no longer used for any payment). Never throws: a failure is only logged by the caller. */
+export async function deactivateSubaccount(code: string): Promise<void> {
+  await call(`/subaccount/${encodeURIComponent(code)}`, { method: 'PUT', json: { active: false } })
+}
+
+/** Deletes an old transfer recipient at Paystack. */
+export async function deleteTransferRecipient(code: string): Promise<void> {
+  await call(`/transferrecipient/${encodeURIComponent(code)}`, { method: 'DELETE' })
+}
+
 /** Sends money from the Paystack balance to a recipient. The reference makes a repeat harmless: Paystack refuses a second use. */
 export async function startTransfer(a: {
   amountKobo: number

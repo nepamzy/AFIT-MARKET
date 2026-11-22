@@ -13,10 +13,8 @@ import { Money } from '@/components/ui/money'
 import { LocationNotice } from '@/components/domain/location-notice'
 import { Timeline } from '@/components/ui/timeline'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { ReviewForm } from '@/components/domain/engagement-forms'
 import { myOrderReview } from '@/server/modules/engagement/queries'
-import { deliveryFeeForOrder } from '@/server/modules/delivery-fee/queries'
 import { ActionForm } from '@/components/forms/action-form'
 import { CustomerScanButton } from '@/components/domain/customer-scan-button'
 import { QrImage } from '@/components/domain/qr-image'
@@ -59,7 +57,6 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const review = ['COMPLETED', 'PARTIALLY_REFUNDED'].includes(order.status)
     ? await myOrderReview(order.id)
     : null
-  const dfp = order.fulfilment === 'delivery' ? await deliveryFeeForOrder(order.id) : null
   // an order that is paid when it is received: is it paid yet, and is this the moment to pay?
   const pv = (
     await (await createSupabaseServerClient()).rpc('order_payment_view', { p_order: order.id })
@@ -364,35 +361,10 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
         </Card>
       )}
 
-      {dfp && dfp.state !== 'not_applicable' && (
-        <Card className="mb-5 space-y-2 border-brand-700">
-          <h2 className="text-lg font-extrabold text-navy-900">
-            Delivery fee
-            {dfp.state === 'payment' && dfp.status === 'awaiting_transfer' && (
-              <Badge tone="warning" className="ml-2">
-                To do
-              </Badge>
-            )}
-          </h2>
-          <p>
-            {dfp.state === 'payment'
-              ? dfp.status === 'awaiting_transfer'
-                ? 'Your order was delivered. Send the delivery fee straight to your rider by bank transfer.'
-                : 'You pay this delivery fee directly to your rider by bank transfer. Open it to see where things stand.'
-              : dfp.state === 'ready_to_open'
-                ? 'The delivery fee was not part of your online payment. You pay it to your rider by bank transfer.'
-                : dfp.state === 'rider_details_missing'
-                  ? 'Your rider has not added bank details yet. This page updates when they do; you have not been charged.'
-                  : 'You will pay the delivery fee to your rider by bank transfer after your order is delivered. It is not part of the online payment, and a button appears here when it is time.'}
-          </p>
-          {(dfp.state === 'payment' || dfp.state === 'ready_to_open') && (
-            <Link
-              href={`/orders/${order.id}/delivery-fee`}
-              className="inline-block font-semibold text-brand-700 underline"
-            >
-              Pay Delivery Fee
-            </Link>
-          )}
+      {order.fulfilment === 'delivery' && (
+        <Card className="mb-5 space-y-1">
+          <h2 className="text-lg font-extrabold text-navy-900">Delivery fee</h2>
+          <p>The delivery fee is already part of your payment. There is nothing to pay your rider.</p>
         </Card>
       )}
 

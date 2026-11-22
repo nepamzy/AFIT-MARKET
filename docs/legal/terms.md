@@ -42,9 +42,9 @@ These terms are the agreement between you and **NOBS AGENT** (company registrati
 
 ## 5. Delivery fee
 
-5.1 If you choose delivery, the delivery fee is shown at checkout. It is **not** part of your online payment. You pay it **directly to the rider by bank transfer** after the order is delivered. Your order page shows the rider's account details. After you transfer, tell the app you have paid; the rider confirms receipt and a receipt is generated.
+5.1 If you choose delivery, the delivery fee is shown at checkout. It is **part of your one online payment** and is added to your total at checkout. You do not pay the rider separately.
 
-5.2 We do not hold or handle the delivery fee money and cannot check your bank. Keep your transfer receipt. You will not be asked to pay the delivery fee twice for the same order.
+5.2 The shop pays its own rider. You will not be asked to pay the delivery fee twice for the same order.
 
 ## 6. Collecting and receiving your order
 

@@ -8,7 +8,12 @@ import { FieldCryptoError, encryptField } from '@/server/security/field-crypto'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
 import { releasePayouts } from '@/server/modules/payouts/release'
 import { ensureSubaccounts } from '@/server/modules/payments/subaccounts'
-import { PaymentsUnavailable, resolveAccountName } from '@/server/modules/payments/paystack'
+import {
+  PaymentsUnavailable,
+  deactivateSubaccount,
+  deleteTransferRecipient,
+  resolveAccountName,
+} from '@/server/modules/payments/paystack'
 import {
   dbFailed,
   done,
@@ -81,7 +86,7 @@ export async function saveVendorBankAction(_p: ActionState, fd: FormData): Promi
     return failed('The account cannot be saved right now. Please try again later.')
   }
   const sb = await createSupabaseServerClient()
-  const { error } = await sb.rpc('vendor_save_bank', {
+  const { data: saved, error } = await sb.rpc('vendor_save_bank', {
     p_vendor: me.id,
     p_bank_code: bank.code,
     p_bank_name: bank.name,
@@ -90,12 +95,20 @@ export async function saveVendorBankAction(_p: ActionState, fd: FormData): Promi
     p_name: name,
   })
   if (error) {
-    if (error.message.includes('bank_locked'))
-      return failed('This account is already verified. To change it, contact customer service.')
     return dbFailed(error, 'The account could not be saved. Please try again.')
   }
   // the shop now has somewhere to be paid: send whatever is already due, without waiting for the daily run
+  const old = (saved ?? {}) as { old_subaccount?: string | null; old_recipient?: string | null }
   after(async () => {
+    // a changed account: the former one is removed from Paystack, then the new one is set up
+    if (old.old_subaccount)
+      await deactivateSubaccount(old.old_subaccount).catch((e) =>
+        logger.error('old sub-account not switched off', { err: String(e) }),
+      )
+    if (old.old_recipient)
+      await deleteTransferRecipient(old.old_recipient).catch((e) =>
+        logger.error('old transfer recipient not deleted', { err: String(e) }),
+      )
     await ensureSubaccounts([me.id])
     await releasePayouts(25).catch(() => undefined)
   })
