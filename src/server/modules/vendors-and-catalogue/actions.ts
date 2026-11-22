@@ -600,3 +600,33 @@ export async function assignRiderAction(fd: FormData): Promise<void> {
   await sb.rpc('vendor_assign_rider', { p_order: order, p_rider: rider })
   revalidatePath('/vendor/orders')
 }
+
+/** The shop's banner picture (already shrunk to a JPEG in the browser). No picture chosen and nothing to remove changes nothing. */
+export async function saveBannerAction(_p: ActionState, fd: FormData): Promise<ActionState> {
+  const g = await gate(asReq(VENDOR))
+  if ('state' in g) return g.state
+  const v = await vendorId(fd)
+  if (!v) return failed('Vendor not found.')
+  const sb = await createSupabaseServerClient()
+  const imageUrl = String(fd.get('banner') ?? '')
+  if (imageUrl) {
+    const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(imageUrl)
+    const buf = m ? Buffer.from(m[1]!, 'base64') : null
+    if (!buf || buf.length < 500 || buf.length > 450_000 || buf[0] !== 0xff || buf[1] !== 0xd8)
+      return failed('That picture could not be used. Try another one.')
+    const r = await sb.rpc('vendor_set_banner', {
+      p_vendor: v,
+      p_jpeg: '\\x' + buf.toString('hex'),
+    })
+    if (r.error) return dbFailed(r.error, 'Only the shop owner can change the banner.')
+    revalidatePath('/vendor/profile')
+    return done('Banner saved.')
+  }
+  if (String(fd.get('removeBanner') ?? '') === '1') {
+    const r = await sb.rpc('vendor_remove_banner', { p_vendor: v })
+    if (r.error) return dbFailed(r.error, 'Only the shop owner can change the banner.')
+    revalidatePath('/vendor/profile')
+    return done('Banner removed. A shop picture is drawn for you instead.')
+  }
+  return done('Nothing to change.')
+}

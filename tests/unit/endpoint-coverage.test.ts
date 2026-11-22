@@ -18,6 +18,7 @@ describe('every API route authenticates its caller', () => {
   const PUBLIC_BY_DESIGN = [
     'src/app/api/health/route.ts',
     'src/app/api/products/[id]/image/route.ts',
+    'src/app/api/vendors/[slug]/banner/route.ts',
     // visit and install counter: anonymous visitors by design; stores only a kind, a short source tag and a device type
     'src/app/api/track/route.ts',
   ]

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, PageHeader } from '@/components/ui/card'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
 import { Section } from '@/components/ui/section'
+import { BannerField } from '@/components/domain/banner-field'
 import { ShopCategoriesForm } from '@/components/domain/shop-categories-form'
 import { listCategories } from '@/server/modules/vendors-and-catalogue/public'
 import { EmptyState } from '@/components/ui/states'
@@ -70,6 +71,19 @@ export default async function ShopPage() {
             </Button>
           </form>
         </Card>
+        <Section
+          id="banner"
+          title="Shop banner"
+          description="The picture at the top of your shop page."
+        >
+          <Card>
+            {owner ? (
+              <BannerField vendorId={vendor.id} slug={vendor.slug} disabled={disabled} />
+            ) : (
+              <p className="text-muted">Only the owner can change the banner.</p>
+            )}
+          </Card>
+        </Section>
         <Section id="profile" title="Profile" description="What customers see on your shop page.">
           <Card>
             {owner ? (
