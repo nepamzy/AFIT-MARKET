@@ -30,6 +30,7 @@ export const VENDOR_NAV: NavItem[] = [
   { href: '/vendor/riders', label: 'My riders', icon: 'truck', group: 'Shop' },
   { href: '/vendor/reviews', label: 'Reviews', icon: 'star', group: 'Shop' },
   { href: '/vendor/help', label: 'Help', icon: 'help', group: 'Shop' },
+  { href: '/account/phone', label: 'Alerts and location', icon: 'bell', group: 'Shop' },
 ]
 export const RIDER_NAV: NavItem[] = [
   { href: '/rider', label: 'Home', icon: 'home' },
@@ -37,6 +38,7 @@ export const RIDER_NAV: NavItem[] = [
   { href: '/rider/history', label: 'History', icon: 'clock' },
   { href: '/rider/payments', label: 'Payments', icon: 'card' },
   { href: '/rider/profile', label: 'Profile', icon: 'user' },
+  { href: '/account/phone', label: 'Alerts', icon: 'bell' },
   { href: '/account', label: 'Account', icon: 'shield' },
 ]
 export const ADMIN_NAV: NavItem[] = [
