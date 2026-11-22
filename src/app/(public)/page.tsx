@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { VendorCardView } from '@/components/domain/vendor-card'
+import { ChannelCard } from '@/components/landing/channel-card'
 import { ContactBand } from '@/components/landing/contact-band'
 import { Faq } from '@/components/landing/faq'
 import { HeroPhoto } from '@/components/landing/hero-photo'
@@ -275,6 +276,9 @@ export default async function Home() {
       </Reveal>
 
       <Reveal>
+        <div className="mx-auto max-w-6xl px-4 pb-6">
+          <ChannelCard />
+        </div>
         <ContactBand />
       </Reveal>
 

@@ -11,8 +11,8 @@ export async function OrderingNotice() {
       data-testid="ordering-notice"
       className="bg-gold-400 px-4 py-2 text-center text-sm font-bold text-navy-900"
     >
-      Awaiting approval from the AFIT board. You can sign up, apply to sell or deliver, and fill
-      your cart. Orders open as soon as it is approved.
+      Awaiting final approval from the AFIT board. You can sign up, apply to sell or deliver, and fill
+      your cart. Orders open as soon as final approval is given.
     </p>
   )
 }

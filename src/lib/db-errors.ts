@@ -66,7 +66,7 @@ const MESSAGES: Record<string, string> = {
   already_linked: 'This account is already linked to a shop.',
   refunds_not_available: 'If something is wrong with your order, report it instead.',
   ordering_closed:
-    'Ordering is not open yet: AFIT Market is waiting for approval from the AFIT board. You can keep your cart and you will be able to order as soon as it is approved.',
+    'Ordering is not open yet: AFIT Market is waiting for final approval from the AFIT board. You can keep your cart and you will be able to order as soon as it is approved.',
   clothing_too_long: 'Keep the description of what you are wearing under 120 characters.',
   assignment_not_releasable: 'That delivery can no longer be released.',
   note_required: 'Please add a short note.',

@@ -4,6 +4,9 @@ export const WHATSAPP_NUMBER_DISPLAY = '0911 5930 445'
 export const WHATSAPP_NUMBER_INTL = '2349115930445'
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER_INTL}?text=${encodeURIComponent('Hello AFIT Market, I need help with…')}`
 
+/** The official AFIT Market WhatsApp Channel (news, new shops, opening dates, offers). */
+export const WHATSAPP_CHANNEL_URL = 'https://whatsapp.com/channel/0029VbEAtIxE50UlAyV7W80b'
+
 export const SUPPORT_EMAIL_DEFAULT = 'afitmarket01@gmail.com'
 
 /** The public support e-mail address. SUPPORT_EMAIL can override it; otherwise the default above is shown. */

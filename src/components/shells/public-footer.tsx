@@ -3,7 +3,12 @@ import { WhatsAppLogo } from '@/components/landing/whatsapp'
 import { ShareButtons } from '@/components/domain/share-buttons'
 import { BuiltByBadge } from '@/components/ui/built-by-badge'
 import { Logo } from '@/components/ui/logo'
-import { WHATSAPP_NUMBER_DISPLAY, WHATSAPP_URL, supportEmail } from '@/lib/contact'
+import {
+  WHATSAPP_CHANNEL_URL,
+  WHATSAPP_NUMBER_DISPLAY,
+  WHATSAPP_URL,
+  supportEmail,
+} from '@/lib/contact'
 
 const COLS: { title: string; links: [string, string][] }[] = [
   {
@@ -35,6 +40,7 @@ const COLS: { title: string; links: [string, string][] }[] = [
       ['Help and FAQ', '/faq'],
       ['Contact us', '/contact'],
       ['Report a problem', '/cases'],
+      ['WhatsApp channel', WHATSAPP_CHANNEL_URL],
     ],
   },
   {

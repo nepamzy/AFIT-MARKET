@@ -1,3 +1,4 @@
+import { ChannelCard } from '@/components/landing/channel-card'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { signOutAction } from '@/server/modules/identity-and-access/actions'
@@ -177,6 +178,7 @@ export async function AppShell({
         </header>
         <main id="main" className="mx-auto max-w-6xl px-4 py-6 pb-24 md:pb-10">
           {children}
+          <ChannelCard className="mt-8" />
         </main>
       </div>
       <BottomNav items={items} moreHref={moreHref} />
