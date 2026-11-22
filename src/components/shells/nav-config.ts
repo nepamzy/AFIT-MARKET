@@ -49,6 +49,7 @@ export const ADMIN_NAV: NavItem[] = [
   { href: '/admin/applications', label: 'Applications', icon: 'file', group: 'People' },
   { href: '/admin/vendors', label: 'Vendors', icon: 'store', group: 'People' },
   { href: '/admin/riders', label: 'Riders', icon: 'bike', group: 'People' },
+  { href: '/admin/invites', label: 'Vendor invitations', icon: 'store', group: 'People' },
   { href: '/admin/rider-issues', label: 'Rider issues', icon: 'alert', group: 'People' },
   { href: '/admin/roles', label: 'Roles', icon: 'key', group: 'People' },
   { href: '/admin/payments', label: 'Payments', icon: 'card', group: 'Money' },

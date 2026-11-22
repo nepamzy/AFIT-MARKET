@@ -35,6 +35,12 @@ export const SETTING_INFO: Record<string, SettingInfo> = {
     help: 'On: each payment is split by Paystack, the shop gets its share on Paystack’s normal settlement schedule, and AFIT keeps only its commission. Turn it On only after the Paystack key is set and you have done a small real test. Off: shops are paid by transfer after the waiting time.',
     kind: { type: 'switch', on: 'On', off: 'Off' },
   },
+  vendor_invite_only: {
+    group: 'main',
+    title: 'Shop sign-up by invitation only',
+    help: 'On (beta): a shop can only sign up with a personal invitation link from Admin → Vendor invitations, and each link works once. Off: anyone can sign up as a shop.',
+    kind: { type: 'switch', on: 'Invitation only', off: 'Open to everyone' },
+  },
   vendor_commission_bps: {
     group: 'money',
     title: 'Commission AFIT keeps from each shop order',

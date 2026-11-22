@@ -6,6 +6,8 @@ const MESSAGES: Record<string, string> = {
   'authentication required': 'Please sign in to continue.',
   'MFA (aal2) required': 'Please confirm your authenticator code to continue.',
   forbidden: 'You are not allowed to do this.',
+  invite_required:
+    'Shop sign-up is by invitation during our beta. Ask AFIT Market for your personal invitation link.',
   one_business_role:
     'This account already runs a shop, so it cannot also be a rider. A rider needs a separate account.',
   'vendor is not active': 'This vendor account is not active.',
