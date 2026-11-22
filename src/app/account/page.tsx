@@ -37,6 +37,12 @@ export default async function AccountPage() {
       text: 'Updates and email settings.',
     },
     {
+      href: '/account/phone',
+      icon: 'pin',
+      title: 'Alerts and location',
+      text: 'Phone alerts, the app and your location.',
+    },
+    {
       href: '/account/security',
       icon: 'shield',
       title: 'Security',
