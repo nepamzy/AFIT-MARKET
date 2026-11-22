@@ -1,5 +1,6 @@
 'use client'
 import jsQR from 'jsqr'
+import { findQrNearBottomRight } from '@/lib/qr-region'
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
 import { Button, ButtonLink } from '@/components/ui/button'
@@ -204,8 +205,7 @@ async function readCard(file: File): Promise<{ url: string; qr: boolean } | null
     const g = c.getContext('2d')!
     g.drawImage(img, 0, 0)
     const d = g.getImageData(0, 0, c.width, c.height)
-    const code = jsQR(d.data, d.width, d.height, { inversionAttempts: 'attemptBoth' })
-    return { url, qr: Boolean(code) }
+    return { url, qr: findQrNearBottomRight(jsQR, d.data, d.width, d.height) }
   } catch {
     return { url, qr: false }
   }
@@ -548,7 +548,6 @@ export function SignUpForm({
                 id="idcard-file"
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="block w-full text-sm"
                 onChange={async (e) => {
                   const f = e.target.files?.[0]
@@ -582,7 +581,6 @@ export function SignUpForm({
                 id="rider-id-front"
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="block w-full text-sm"
                 onChange={async (e) => {
                   const f = e.target.files?.[0]
@@ -619,7 +617,6 @@ export function SignUpForm({
                 id="rider-id-back"
                 type="file"
                 accept="image/*"
-                capture="environment"
                 className="block w-full text-sm"
                 onChange={async (e) => {
                   const f = e.target.files?.[0]

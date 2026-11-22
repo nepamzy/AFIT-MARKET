@@ -309,7 +309,17 @@ export async function saveProductAction(_p: ActionState, fd: FormData): Promise<
     p_stock: stock,
     p_options: groups.groups,
   })
-  if (error) return dbFailed(error, 'Check the name (2-80 characters) and price.')
+  if (error) {
+    // the database's own words (never the item's text) so a failure can be traced from the log
+    logger.warn('product not saved', {
+      code: error.code,
+      msg: String(error.message ?? '').slice(0, 120),
+    })
+    return dbFailed(
+      error,
+      'Check the name (2-80 characters), the price and the options, then try again.',
+    )
+  }
   const productId = uuid.safeParse(rawId).success ? rawId : String(data)
   // the photo (already shrunk in the browser) is kept with the product; a failure here never loses the product itself
   let photo: 'none' | 'saved' | 'removed' | 'failed' = 'none'

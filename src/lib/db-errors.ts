@@ -6,6 +6,12 @@ const MESSAGES: Record<string, string> = {
   'authentication required': 'Please sign in to continue.',
   'MFA (aal2) required': 'Please confirm your authenticator code to continue.',
   forbidden: 'You are not allowed to do this.',
+  'unknown product':
+    'This item is no longer on your menu. Go back to the catalogue and open it again.',
+  'invalid options': 'You can add at most 10 option groups.',
+  'each option group needs': 'Each option group needs between 1 and 20 choices.',
+  'invalid option group limits':
+    'Check the option group: “At least” cannot be more than “At most”, and “At most” cannot be more than the number of choices.',
   invite_required:
     'Shop sign-up is by invitation during our beta. Ask AFIT Market for your personal invitation link.',
   one_business_role:
