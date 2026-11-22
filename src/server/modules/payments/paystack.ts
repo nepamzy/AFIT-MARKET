@@ -37,7 +37,14 @@ async function call(path: string, init: RequestInit & { json?: unknown } = {}) {
     signal: AbortSignal.timeout(10_000),
     cache: 'no-store',
   })
-  if (!res.ok) throw new Error(`Paystack responded ${res.status}`)
+  if (!res.ok) {
+    // Paystack says why in `message` (never anything secret): keep it so the logs show the reason
+    const why = await res.json().then(
+      (j: { message?: unknown }) => String(j?.message ?? '').slice(0, 200),
+      () => '',
+    )
+    throw new Error(`Paystack responded ${res.status}${why ? `: ${why}` : ''}`)
+  }
   return res.json() as Promise<unknown>
 }
 
@@ -205,7 +212,10 @@ export async function createSubaccount(a: {
     description: 'AFIT Market shop',
   })
   const code = r.body?.data?.subaccount_code
-  if (!r.ok || !code) throw new Error(`Paystack could not create the sub-account (${r.status})`)
+  if (!r.ok || !code)
+    throw new Error(
+      `Paystack could not create the sub-account (${r.status}${r.body?.message ? `: ${r.body.message.slice(0, 200)}` : ''})`,
+    )
   return code
 }
 
