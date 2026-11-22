@@ -276,7 +276,7 @@ export function CheckoutForm({
         </p>
         {closed && (
           <Alert tone="warning" title="Ordering opens soon">
-            AFIT Market is awaiting approval from the AFIT board. Your cart is saved, and you can
+            AFIT Market is awaiting final approval from the AFIT board. Your cart is saved, and you can
             order as soon as it is approved.
           </Alert>
         )}

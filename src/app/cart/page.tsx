@@ -161,7 +161,7 @@ export default async function CartPage() {
             checked again when you place the order.
           </p>
           {closed ? (
-            <Alert tone="warning" title="Awaiting approval from the AFIT board">
+            <Alert tone="warning" title="Awaiting final approval from the AFIT board">
               Your cart is saved. Ordering opens as soon as the AFIT board approves, and then you
               can check out here.
             </Alert>

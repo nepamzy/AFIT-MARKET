@@ -3,7 +3,8 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { artKind, shopFrontSvg } from '@/lib/art/scenes'
 import { clientIp, rateLimit } from '@/server/modules/identity-and-access/security'
 
-const SHARED = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'
+// always re-checked (a quick 304 when unchanged), so a new banner shows at once
+const SHARED = 'public, max-age=0, s-maxage=30, must-revalidate'
 const FRESH = 'private, no-cache'
 const CSP = "default-src 'none'; style-src 'unsafe-inline'"
 
