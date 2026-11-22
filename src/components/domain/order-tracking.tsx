@@ -1,7 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
-import { postCustomerLocationAction } from '@/server/modules/location/customer-actions'
-import { AllowLocationButton } from './allow-location-button'
+import { useEffect, useState } from 'react'
 import { LiveMap, type MapPin } from './live-map'
 
 type Tracking =
@@ -32,7 +30,6 @@ const WHY: Record<string, string> = {
 export function OrderTracking({ orderId, mapKey }: { orderId: string; mapKey?: string | null }) {
   const [t, setT] = useState<Tracking | null>(null)
   const [err, setErr] = useState(false)
-  const share = useShareLocation(orderId)
   useEffect(() => {
     let stop = false
     const load = async () => {
@@ -71,15 +68,6 @@ export function OrderTracking({ orderId, mapKey }: { orderId: string; mapKey?: s
       lat: dest.lat,
       lng: dest.lng,
       label: dest.label ?? 'Delivery point',
-    })
-  // a rough fix (Wi-Fi or network based, often many kilometres off) is not drawn: it would put the customer in another city
-  if (share.me && share.me.accuracy <= 300)
-    pins.push({
-      id: 'me',
-      lat: share.me.lat,
-      lng: share.me.lng,
-      label: 'You',
-      radiusM: share.me.accuracy,
     })
 
   const body = !t ? (
@@ -123,114 +111,6 @@ export function OrderTracking({ orderId, mapKey }: { orderId: string; mapKey?: s
         />
       )}
       {body}
-      <AllowLocationButton />
-      <p className="text-sm text-muted">
-        Your rider can see where you are while they are on this delivery. It starts by itself when
-        your order is on its way and stops when the order is finished, as set out in our terms.
-      </p>
-      {share.note && (
-        <p role="status" className="text-sm">
-          {share.note}
-        </p>
-      )}
     </div>
   )
-}
-
-/** The customer's own position, sent only while they have switched sharing on. */
-function useShareLocation(orderId: string) {
-  const [on, setOn] = useState(false)
-  const [me, setMe] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
-  const [note, setNote] = useState<string | null>(null)
-  const watch = useRef<number | null>(null)
-  const lastSent = useRef(0)
-
-  const halt = () => {
-    if (watch.current !== null) navigator.geolocation.clearWatch(watch.current)
-    watch.current = null
-  }
-  const remember = (v: 'on' | 'off') => {
-    try {
-      localStorage.setItem('afit-share-location', v)
-    } catch {
-      /* private window: the choice just is not remembered */
-    }
-  }
-  const start = () => {
-    remember('on')
-    if (!('geolocation' in navigator)) {
-      setNote('This browser cannot share location.')
-      return
-    }
-    setNote('Waiting for your location…')
-    setOn(true)
-    watch.current = navigator.geolocation.watchPosition(
-      async (pos) => {
-        if (pos.coords.accuracy > 300)
-          setNote(
-            `Your phone gave only a rough location (about ${Math.round(pos.coords.accuracy / 1000) || 1} km off). Turn on GPS or precise location and go outside if you can.`,
-          )
-        setMe({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        })
-        const now = Date.now()
-        if (now - lastSent.current < 8000) return
-        lastSent.current = now
-        const r = await postCustomerLocationAction(orderId, {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracyM: pos.coords.accuracy,
-        })
-        if (r.accepted) setNote('Your rider can see where you are.')
-        else if (r.reason === 'no_active_delivery')
-          setNote('Sharing starts once your rider has collected your order.')
-        else if (r.reason === 'inaccurate') setNote('Your location is not accurate enough yet.')
-      },
-      (err) => {
-        halt()
-        setOn(false)
-        setNote(
-          err.code === 1
-            ? 'Location permission was denied. Allow location for this site to share it.'
-            : 'We could not get your location.',
-        )
-      },
-      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
-    )
-  }
-  // Sharing is on by default, so the rider can find the customer from the moment the order is accepted without the
-  // customer tapping anything. The browser asks for permission once; a customer who stopped sharing, or whose browser
-  // has blocked location, is not asked again.
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      try {
-        if (localStorage.getItem('afit-share-location') === 'off') return
-      } catch {
-        /* private window: treat as on */
-      }
-      let state: PermissionState | 'unknown' = 'unknown'
-      try {
-        state = (await navigator.permissions?.query({ name: 'geolocation' }))?.state ?? 'unknown'
-      } catch {
-        /* no permissions API: the browser will ask when sharing starts */
-      }
-      if (cancelled) return
-      if (state === 'denied') {
-        setNote(
-          'Location is blocked for this site, so your rider cannot see where you are. Allow location in your browser settings to turn it on.',
-        )
-        return
-      }
-      start()
-    })()
-    return () => {
-      cancelled = true
-      halt()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  return { on, me, note }
 }

@@ -143,13 +143,20 @@ export async function placeOrdersAction(_p: CheckoutState, fd: FormData): Promis
   if (key.length < 8 || key.length > 80) return failed('Please reload the page and try again.')
   if (!(await rateLimit(`checkout:${gated.who.userId}`, 600, 20)))
     return failed('Too many attempts. Please wait a few minutes.')
+  const wantsDelivery = Object.values(choices).includes('delivery')
+  const outfit = text(fd, 'clothing', 90)
+  if (wantsDelivery && outfit.length < 3)
+    return failed('Please say what you are wearing, so your rider can find you.')
+  // the rider reads one line on arrival: the outfit, then (if given) where the customer is
+  const place = text(fd, 'place', 25)
+  const clothing = wantsDelivery ? (place ? `${outfit} | At: ${place}` : outfit) : null
   const sb = await createSupabaseServerClient()
   const { data, error } = await sb.rpc('create_orders', {
     p_choices: choices,
     p_point: point,
     p_key: key,
     p_pod: true,
-    p_clothing: text(fd, 'clothing', 120) || null,
+    p_clothing: clothing,
   })
   if (error) {
     if (error.message === 'checkout_blocked') {
