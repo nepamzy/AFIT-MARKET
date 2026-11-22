@@ -71,9 +71,21 @@ export default async function Earnings() {
                 <span className="block font-mono">{bank.account_masked}</span>
               </p>
               <Badge tone="success">Verified</Badge>
-              <p className="text-sm text-muted">
-                This account cannot be changed unless you contact customer service.
-              </p>
+              {owner ? (
+                <details className="rounded-lg border border-line p-3">
+                  <summary className="cursor-pointer font-semibold text-brand-700">
+                    Change payout account
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    <p className="text-sm text-muted">
+                      Your old account is removed and new payments go to the new one.
+                    </p>
+                    <VendorBankForm banks={banks} />
+                  </div>
+                </details>
+              ) : (
+                <p className="text-sm text-muted">Only the shop owner can change this account.</p>
+              )}
             </>
           ) : owner ? (
             <>

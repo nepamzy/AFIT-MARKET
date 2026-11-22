@@ -78,9 +78,6 @@ export function VendorBankForm({ banks }: { banks: { name: string; code: string 
         )}
         {found && !found.ok && <p className="font-medium text-danger-700">{found.message}</p>}
       </div>
-      <p className="text-sm text-muted">
-        Once verified, the account cannot be changed unless you contact customer service.
-      </p>
     </ActionForm>
   )
 }

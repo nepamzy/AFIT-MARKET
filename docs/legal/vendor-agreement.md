@@ -48,7 +48,7 @@ We keep a commission of **4.5% of the total of each completed order** (items aft
 
 8.1 We pay you **automatically at midnight (Nigeria time) on the day each order is completed**, by bank transfer (Paystack) to your verified payout account. The amount is the order total (including any delivery fee) less our commission. You pay your own riders from it. An open report holds the payment until it is settled.
 
-8.2 **Payout account.** You choose a bank and enter an account number; we ask the payment provider for the account name and show it for you to confirm. Once verified it cannot be changed unless you contact support, who may unlock it after a check; each unlock is recorded. The number is stored encrypted and staff see only the last four digits.
+8.2 **Payout account.** You choose a bank and enter an account number; we ask the payment provider for the account name and show it for you to confirm. You may change it at any time from your Earnings page; the former account is then removed from our payment provider and every change is recorded. The number is stored encrypted and staff see only the last four digits.
 
 ## 9. Reports and returns
 
