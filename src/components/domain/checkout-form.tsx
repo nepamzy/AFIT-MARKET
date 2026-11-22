@@ -136,10 +136,12 @@ export function CheckoutForm({
         })}
         {anyDelivery && (
           <Input
-            label="What are you wearing? (optional)"
+            label="What are you wearing?"
             name="clothing"
-            maxLength={120}
-            hint="Your rider sees this when they arrive, so they can find you. For example: a black shirt and blue jeans. Your rider can also see your phone number to call you."
+            required
+            minLength={3}
+            maxLength={90}
+            hint="Required. Your rider reads this when they arrive, so they can find you. For example: a black shirt and blue jeans. Your rider can also see your phone number to call you."
           />
         )}
         {anyDelivery && (
@@ -157,6 +159,14 @@ export function CheckoutForm({
               </option>
             ))}
           </Select>
+        )}
+        {anyDelivery && (
+          <Input
+            label="Where exactly? (if it is not listed above)"
+            name="place"
+            maxLength={25}
+            hint="Optional. Type the spot in a few words, for example: Block C, gate 2."
+          />
         )}
         {q.door_enabled && (
           <Alert tone="info" title="When you pay">
