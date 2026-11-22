@@ -4,7 +4,7 @@ import { Button, ButtonLink } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
 import { PageHeader } from '@/components/ui/card'
 import { Icon } from '@/components/ui/icons'
-import { NoImageTile } from '@/components/ui/product-card'
+import { ProductPhoto } from '@/components/ui/product-photo'
 import { Money } from '@/components/ui/money'
 import { EmptyState } from '@/components/ui/states'
 import { describeProblems } from '@/lib/db-errors'
@@ -87,8 +87,9 @@ export default async function CartPage() {
                 {g.lines.map((l) => (
                   <li key={l.item_id}>
                     <article className="flex gap-3 rounded-[var(--radius-card)] border border-line bg-card p-3 shadow-[var(--shadow-card)]">
-                      <NoImageTile
-                        icon="bag"
+                      <ProductPhoto
+                        productId={l.product_id}
+                        label={l.name}
                         className="aspect-square! w-20! shrink-0 rounded-xl"
                       />
                       <div className="min-w-0 flex-1">

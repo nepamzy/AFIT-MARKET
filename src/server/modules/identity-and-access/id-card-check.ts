@@ -1,5 +1,6 @@
 import jpeg from 'jpeg-js'
 import jsQR from 'jsqr'
+import { findQrNearBottomRight } from '@/lib/qr-region'
 
 /** A Nigerian mobile number, typed as 0803 123 4567 or +234 803 123 4567. Returns the number as +234XXXXXXXXXX, or null. */
 export function normalizePhone(v: string): string | null {
@@ -15,10 +16,8 @@ export function normalizePhone(v: string): string | null {
 export function jpegHasQr(buf: Buffer): boolean {
   try {
     const img = jpeg.decode(buf, { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 256 })
-    const code = jsQR(new Uint8ClampedArray(img.data), img.width, img.height, {
-      inversionAttempts: 'attemptBoth',
-    })
-    return Boolean(code)
+    // the code is at the bottom right of the front: look there first (see qr-region.ts)
+    return findQrNearBottomRight(jsQR, new Uint8ClampedArray(img.data), img.width, img.height)
   } catch {
     return false
   }
