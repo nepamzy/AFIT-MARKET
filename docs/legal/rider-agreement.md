@@ -40,7 +40,7 @@ While you are on shift with an active delivery the app uses your phone's locatio
 
 ## 7. Delivery fees
 
-The delivery fee shown to the customer is paid **directly to you by bank transfer** from the customer after delivery. You add your bank details in the app; they are stored encrypted and shown to the customer of an order you are delivering. We do not hold or guarantee delivery-fee money. The customer tells the app they have made the transfer and you confirm that you received the amount. You are responsible for checking that your account has been credited before you confirm. A receipt is then generated for the customer.
+The delivery fee is paid by the customer as part of the one online payment, to the shop. **The shop pays you**, as agreed between you and the shop; AFIT Market does not pay riders and does not guarantee any rider payment. You do not collect money from the customer.
 
 ## 8. Safety and conduct
 

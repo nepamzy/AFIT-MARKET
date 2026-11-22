@@ -42,11 +42,11 @@ You may add riders for your own shop. Each is given a one-time sign-in code and 
 
 ## 7. Commission
 
-We keep a commission of **4.5% of the product value of each completed order** (after any product discount). Delivery fees are not included. The rate at completion is saved with the order. Customers pay no extra fee.
+We keep a commission of **4.5% of the total of each completed order** (items after any product discount, plus the delivery fee when delivery is chosen), the same for delivery and pickup. The rate at completion is saved with the order. Customers pay no extra fee.
 
 ## 8. Payouts
 
-8.1 We pay you **automatically at midnight (Nigeria time) on the day each order is completed**, by bank transfer (Paystack) to your verified payout account. The amount is the product value less our commission. An open report holds the payment until it is settled. Delivery fees are not part of your payout.
+8.1 We pay you **automatically at midnight (Nigeria time) on the day each order is completed**, by bank transfer (Paystack) to your verified payout account. The amount is the order total (including any delivery fee) less our commission. You pay your own riders from it. An open report holds the payment until it is settled.
 
 8.2 **Payout account.** You choose a bank and enter an account number; we ask the payment provider for the account name and show it for you to confirm. Once verified it cannot be changed unless you contact support, who may unlock it after a check; each unlock is recorded. The number is stored encrypted and staff see only the last four digits.
 

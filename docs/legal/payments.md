@@ -12,7 +12,7 @@ At checkout you see the **item total**, the **delivery fee** (if you choose deli
 
 ## 2. The delivery fee
 
-The delivery fee is **not** part of the online payment. You pay it **directly to the rider by bank transfer** after delivery, using the account details on your order page. AFIT Market does not hold the delivery fee and cannot check your bank, so keep your transfer receipt; a receipt is generated on your order page. The fee is not part of the commission base.
+The delivery fee is **part of your one online payment**: it is added at checkout and you pay it together with your items through Paystack. There is nothing more to pay the rider afterwards. The shop pays its own rider. Our commission is taken from the whole payment, delivery fee included.
 
 ## 3. How the shop is paid
 
@@ -20,11 +20,11 @@ The delivery fee is **not** part of the online payment. You pay it **directly to
 
 3.2 **at midnight (Nigeria time) on the day an order is completed**, we send the shop its payout by bank transfer (Paystack) to the shop's verified bank account. Until then you can report a problem, so please report it the same day you receive your order. **A report that is still open holds the payout** until it is settled.
 
-3.3 The payout is the product value of the order **less our commission**. If a transfer fails we retry automatically and alert our team.
+3.3 The payout is the order total (items and delivery fee) **less our commission**; the shop pays its own rider from it. If a transfer fails we retry automatically and alert our team.
 
 ## 4. Our commission
 
-We charge shops a commission of **4.5% of the product value** of each completed order (after any product discount). Delivery fees are not included. Rounding is to the nearest kobo (half up). The rate at completion is saved with the order. Customers pay no commission.
+We charge shops a commission of **4.5% of the total** of each completed order (items after any product discount, plus the delivery fee if delivery was chosen). The same rate applies to delivery and pickup. Rounding is to the nearest kobo (half up). The rate at completion is saved with the order. Customers pay no commission.
 
 ## 5. Reports
 
