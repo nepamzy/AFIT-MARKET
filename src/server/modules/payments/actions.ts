@@ -21,6 +21,44 @@ import { initializeTransaction, verifyTransaction } from './paystack'
 import { buildSplit } from './split'
 import { ensureSubaccounts } from './subaccounts'
 
+type Prep = {
+  reference: string
+  amount_kobo: number
+  order_number: string
+  split_shares?: unknown
+}
+
+/**
+ * Starts the Paystack payment for a prepared payment. If Paystack refuses the shop split, the payment is started again WITHOUT
+ * the split (and the shares are cleared in our books, so those orders are paid to the shop by transfer as before). A customer
+ * is never stopped from paying because of the split.
+ */
+async function startPayment(prep: Prep, email: string): Promise<string> {
+  const base = {
+    email,
+    amountKobo: Number(prep.amount_kobo),
+    reference: prep.reference,
+    callbackUrl: `${serverEnv().SITE_URL}/api/payments/return`,
+    orderNumber: prep.order_number,
+  }
+  const split = buildSplit(prep.split_shares, Number(prep.amount_kobo))
+  const svc = createSupabaseServiceClient()
+  let init
+  try {
+    init = await initializeTransaction({ ...base, split })
+  } catch (e) {
+    if (!split) throw e
+    logger.error('paystack refused the shop split; paying without it', { err: String(e) })
+    await svc.rpc('payment_group_clear_split', { p_reference: prep.reference })
+    init = await initializeTransaction({ ...base, split: null })
+  }
+  await svc.rpc('payment_set_access_code', {
+    p_reference: prep.reference,
+    p_access_code: init.access_code,
+  })
+  return init.authorization_url
+}
+
 /** Starts a Paystack payment for an unpaid order. The amount is read from the database, not the form. */
 export async function payWithPaystackAction(_p: ActionState, fd: FormData): Promise<ActionState> {
   const orderId = String(fd.get('orderId') ?? '')
@@ -37,31 +75,14 @@ export async function payWithPaystackAction(_p: ActionState, fd: FormData): Prom
   await ensureSubaccounts((own.data ?? []).map((o) => o.vendor_id as string))
   const { data, error } = await sb.rpc('payment_prepare', { p_order: orderId })
   if (error) return dbFailed(error)
-  const prep = data as {
-    reference: string
-    amount_kobo: number
-    order_number: string
-    split_shares?: unknown
-  }
+  const prep = data as Prep
   const { data: u } = await sb.auth.getUser()
   const email = u.user?.email
   if (!email) return failed('Please sign in again.')
 
   let url: string
   try {
-    const init = await initializeTransaction({
-      email,
-      amountKobo: Number(prep.amount_kobo),
-      reference: prep.reference,
-      callbackUrl: `${serverEnv().SITE_URL}/api/payments/return`,
-      orderNumber: prep.order_number,
-      split: buildSplit(prep.split_shares, Number(prep.amount_kobo)),
-    })
-    await createSupabaseServiceClient().rpc('payment_set_access_code', {
-      p_reference: prep.reference,
-      p_access_code: init.access_code,
-    })
-    url = init.authorization_url
+    url = await startPayment(prep, email)
   } catch (e) {
     logger.error('paystack initialize failed', { err: String(e) })
     return failed('We could not reach the payment provider. Please try again in a moment.')
@@ -83,30 +104,13 @@ export async function payCheckoutAction(_p: ActionState, fd: FormData): Promise<
   await ensureSubaccounts([...new Set((own.data ?? []).map((o) => o.vendor_id as string))])
   const { data, error } = await sb.rpc('payment_prepare_checkout', { p_checkout: checkoutId })
   if (error) return dbFailed(error)
-  const prep = data as {
-    reference: string
-    amount_kobo: number
-    order_number: string
-    split_shares?: unknown
-  }
+  const prep = data as Prep
   const { data: u } = await sb.auth.getUser()
   const email = u.user?.email
   if (!email) return failed('Please sign in again.')
   let url: string
   try {
-    const init = await initializeTransaction({
-      email,
-      amountKobo: Number(prep.amount_kobo),
-      reference: prep.reference,
-      callbackUrl: `${serverEnv().SITE_URL}/api/payments/return`,
-      orderNumber: prep.order_number,
-      split: buildSplit(prep.split_shares, Number(prep.amount_kobo)),
-    })
-    await createSupabaseServiceClient().rpc('payment_set_access_code', {
-      p_reference: prep.reference,
-      p_access_code: init.access_code,
-    })
-    url = init.authorization_url
+    url = await startPayment(prep, email)
   } catch (e) {
     logger.error('paystack initialize failed', { err: String(e) })
     return failed('We could not reach the payment provider. Please try again in a moment.')
