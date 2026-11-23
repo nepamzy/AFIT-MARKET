@@ -88,6 +88,7 @@ export default async function UsersPage({
           </p>
           <DataTable
             caption="Users"
+            roomy
             rows={data.rows}
             rowKey={(u) => u.id}
             empty={
@@ -99,10 +100,8 @@ export default async function UsersPage({
               {
                 header: 'Name',
                 cell: (u) => {
-                  const kind = cardKind.get(u.id)
                   return (
                     <span className="flex items-center gap-3">
-                      {kind && <IdFrontThumb userId={u.id} kind={kind} />}
                       {u.display_name ? (
                         <span className="font-bold text-navy-900">{u.display_name}</span>
                       ) : (
@@ -137,14 +136,20 @@ export default async function UsersPage({
               { header: 'Joined', cell: (u) => lagosDate(u.created_at) },
               {
                 header: 'Actions',
-                cell: (u) => (
-                  <Link
-                    className="font-bold text-brand-700 hover:underline"
-                    href={`/admin/users/${u.id}`}
-                  >
-                    View
-                  </Link>
-                ),
+                cell: (u) => {
+                  const kind = cardKind.get(u.id)
+                  return (
+                    <span className="flex items-center gap-4">
+                      {kind && <IdFrontThumb userId={u.id} kind={kind} />}
+                      <Link
+                        className="font-bold text-brand-700 hover:underline"
+                        href={`/admin/users/${u.id}`}
+                      >
+                        View
+                      </Link>
+                    </span>
+                  )
+                },
               },
             ]}
           />

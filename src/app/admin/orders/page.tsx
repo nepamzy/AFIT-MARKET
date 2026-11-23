@@ -8,7 +8,7 @@ import { LinkTabs } from '@/components/ui/list-controls'
 import { Money } from '@/components/ui/money'
 import { Pager } from '@/components/ui/pager'
 import { EmptyState } from '@/components/ui/states'
-import { listOrdersPage } from '@/server/modules/orders-and-state-machine/queries'
+import { customerNamesFor, listOrdersPage } from '@/server/modules/orders-and-state-machine/queries'
 
 export const metadata: Metadata = { title: 'Orders' }
 
@@ -41,6 +41,7 @@ export default async function AdminOrders({
           ? { finished: true }
           : {}),
   })
+  const names = await customerNamesFor(orders.map((o) => o.customer_id))
   const href = (k: string) =>
     `/admin/orders?${new URLSearchParams({ ...(q ? { q } : {}), ...(k === 'all' ? {} : { tab: k }) })}`
   return (
@@ -114,6 +115,7 @@ export default async function AdminOrders({
               </Link>
             ),
           },
+          { header: 'Customer', cell: (o) => names.get(o.customer_id) ?? 'Customer' },
           { header: 'Shop', cell: (o) => o.vendor_name },
           { header: 'Type', cell: (o) => (o.fulfilment === 'delivery' ? 'Delivery' : 'Pickup') },
           { header: 'Total', align: 'right', cell: (o) => <Money kobo={o.total_kobo} /> },

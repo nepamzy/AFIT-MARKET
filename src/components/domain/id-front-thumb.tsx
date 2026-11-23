@@ -8,7 +8,7 @@ export function IdFrontThumb({ userId, kind }: { userId: string; kind: 'vendor' 
         src={src}
         alt="Front of the student ID card"
         loading="lazy"
-        className="h-12 w-[4.5rem] rounded-[var(--radius-control)] border border-line object-cover"
+        className="h-20 w-32 rounded-[var(--radius-control)] border border-line object-cover"
       />
     </a>
   )

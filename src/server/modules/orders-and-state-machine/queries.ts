@@ -239,3 +239,20 @@ export async function listItemsForOrders(orderIds: string[]) {
   }
   return map
 }
+
+/**
+ * The names of the customers behind a list of orders, for the shop and staff screens that already show those orders (the order
+ * rows themselves were read under row security, so the caller may see them). Name only, nothing else about the customer.
+ */
+export async function customerNamesFor(customerIds: string[]): Promise<Map<string, string>> {
+  const ids = [...new Set(customerIds)].filter((id) => z.uuid().safeParse(id).success)
+  const out = new Map<string, string>()
+  if (ids.length === 0) return out
+  const { data } = await createSupabaseServiceClient()
+    .from('profiles')
+    .select('id, display_name')
+    .in('id', ids)
+  for (const p of (data ?? []) as { id: string; display_name: string | null }[])
+    if (p.display_name) out.set(p.id, p.display_name)
+  return out
+}

@@ -1,3 +1,4 @@
+import { VendorHowItWorks } from '@/components/domain/vendor-how-it-works'
 import type { Metadata } from 'next'
 import { ApplicationForm } from '@/components/domain/application-form'
 import type { VendorChoicesState } from '@/components/domain/vendor-choices'
@@ -68,6 +69,11 @@ export default async function ApplyPage() {
         <Card className="max-w-xl">
           <ApplicationForm categories={cats} commissionBps={commissionBps} defaults={defaults} />
         </Card>
+      )}
+      {!mine && !pending && (
+        <div className="mt-6">
+          <VendorHowItWorks commissionPercent={commissionBps / 100} />
+        </div>
       )}
       {(apps ?? []).filter((a) => a.status !== 'pending').length > 0 && (
         <section className="mt-6" aria-labelledby="past">

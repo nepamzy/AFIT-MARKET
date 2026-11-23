@@ -20,12 +20,15 @@ export function DataTable<T>({
   rows,
   rowKey,
   empty,
+  roomy = false,
 }: {
   caption: string
   columns: Column<T>[]
   rows: T[]
   rowKey: (row: T) => string
   empty?: ReactNode
+  /** More space above and below each row (for rows that carry a picture). */
+  roomy?: boolean
 }) {
   if (rows.length === 0 && empty) return <>{empty}</>
   return (
@@ -60,7 +63,11 @@ export function DataTable<T>({
                 {columns.map((c) => (
                   <td
                     key={c.header}
-                    className={cn('px-4 py-3 align-middle', c.align === 'right' && 'text-right')}
+                    className={cn(
+                      'px-4 align-middle',
+                      roomy ? 'py-6' : 'py-3',
+                      c.align === 'right' && 'text-right',
+                    )}
                   >
                     {c.cell(r)}
                   </td>
@@ -70,7 +77,7 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-      <ul aria-label={caption} className="space-y-3 md:hidden">
+      <ul aria-label={caption} className={cn(roomy ? 'space-y-5' : 'space-y-3', 'md:hidden')}>
         {rows.map((r) => (
           <li
             key={rowKey(r)}

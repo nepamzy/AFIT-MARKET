@@ -127,9 +127,9 @@ export default async function Earnings() {
         <h2 className="text-lg font-bold">How the commission works</h2>
         <p>
           AFIT Market keeps a commission of <strong>{pct(s.rates.commission_bps)}</strong> of the
-          product value of each completed order (after any product discount). Delivery fees are not
-          part of it. The rate in force when an order completes is saved with that order and does
-          not change later.
+          total of each completed order (items after any product discount, plus the delivery fee
+          when delivery is chosen). The rate in force when an order completes is saved with that
+          order and does not change later.
         </p>
       </Card>
 
