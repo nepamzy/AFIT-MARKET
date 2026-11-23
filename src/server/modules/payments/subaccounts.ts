@@ -2,7 +2,10 @@ import 'server-only'
 import { logger } from '@/lib/logger'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { decryptField } from '@/server/security/field-crypto'
-import { PaymentsUnavailable, createSubaccount } from './paystack'
+import { PaymentsUnavailable, createSubaccount, setSubaccountPercent } from './paystack'
+
+/** Sub-account percentages already brought up to date by this server instance (so the call is made once, not on every payment). */
+const syncedPercent = new Map<string, number>()
 
 /** Is "pay each shop through its own Paystack sub-account" switched on? (Admin settings, `payment_split_enabled`.) */
 export async function splitEnabled(): Promise<boolean> {
@@ -33,6 +36,22 @@ export async function ensureSubaccounts(vendorIds: string[]): Promise<void> {
     ])
     const bps = Number(rate?.value)
     const percent = Number.isFinite(bps) && bps >= 0 ? bps / 100 /* default */ : 5
+    // shops that already have a sub-account: bring its stored percentage up to the current commission
+    const { data: existing } = await sb
+      .from('vendor_bank_accounts')
+      .select('paystack_subaccount_code')
+      .in('vendor_id', vendorIds)
+      .not('paystack_subaccount_code', 'is', null)
+    for (const e of (existing ?? []) as { paystack_subaccount_code: string }[]) {
+      const code = e.paystack_subaccount_code
+      if (syncedPercent.get(code) === percent) continue
+      try {
+        await setSubaccountPercent(code, percent)
+        syncedPercent.set(code, percent)
+      } catch (err) {
+        logger.error('sub-account percentage not updated', { err: String(err).slice(0, 160) })
+      }
+    }
     for (const b of (banks ?? []) as unknown as {
       vendor_id: string
       bank_code: string

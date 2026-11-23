@@ -219,6 +219,14 @@ export async function createSubaccount(a: {
   return code
 }
 
+/** Keeps a sub-account's fallback percentage in step with the platform commission (the real amounts are sent with every payment). */
+export async function setSubaccountPercent(code: string, percent: number): Promise<void> {
+  await call(`/subaccount/${encodeURIComponent(code)}`, {
+    method: 'PUT',
+    json: { percentage_charge: percent },
+  })
+}
+
 /** Switches a shop's old sub-account off at Paystack (it is no longer used for any payment). Never throws: a failure is only logged by the caller. */
 export async function deactivateSubaccount(code: string): Promise<void> {
   await call(`/subaccount/${encodeURIComponent(code)}`, { method: 'PUT', json: { active: false } })
