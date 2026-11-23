@@ -1,4 +1,5 @@
 'use client'
+import { OtpCode } from '@/components/ui/otp-code'
 import jsQR from 'jsqr'
 import { findQrNearBottomRight } from '@/lib/qr-region'
 import Link from 'next/link'
@@ -105,6 +106,7 @@ export function SignInForm({ next, staff = false }: { next: string; staff?: bool
 function SignUpDone({ email, message }: { email: string; message?: string }) {
   const [resend, resendAction, resending] = useActionState(resendConfirmationAction, initial)
   const [confirm, confirmAction, confirming] = useActionState(confirmEmailCodeAction, initial)
+  const [emailCode, setEmailCode] = useState('')
   return (
     <div className="space-y-4" data-testid="signup-done">
       <p className="text-center text-5xl" aria-hidden="true">
@@ -119,16 +121,23 @@ function SignUpDone({ email, message }: { email: string; message?: string }) {
             {confirm.error}
           </p>
         )}
-        <Input
-          label="Confirmation code"
+        <OtpCode
           name="code"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={10}
-          required
+          label="Confirmation code"
+          value={emailCode}
+          onChange={setEmailCode}
+          length={6}
+          max={8}
+          status={confirming ? 'checking' : confirm.ok ? 'ok' : confirm.error ? 'bad' : 'idle'}
+          autoFocus
           hint={`Open the message from AFIT Market sent to ${email}, copy the code and paste it here.`}
         />
-        <Button type="submit" variant="gold" disabled={confirming} className="w-full">
+        <Button
+          type="submit"
+          variant="gold"
+          disabled={confirming || emailCode.length < 6}
+          className="w-full"
+        >
           {confirming ? 'Checking…' : 'Confirm my email'}
         </Button>
       </form>
@@ -874,6 +883,7 @@ export function ForgotPasswordForm() {
 
 export function ResetPasswordForm({ email }: { email: string }) {
   const [state, action, pending] = useActionState(resetPasswordAction, initial)
+  const [resetCode, setResetCode] = useState('')
   return (
     <form action={action} className="space-y-4" noValidate>
       <Notice state={state} />
@@ -886,14 +896,13 @@ export function ResetPasswordForm({ email }: { email: string }) {
         required
         defaultValue={state.email ?? email}
       />
-      <Input
-        label="6-digit code"
+      <OtpCode
         name="code"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        pattern="[0-9]*"
-        maxLength={6}
-        required
+        label="6-digit code"
+        value={resetCode}
+        onChange={setResetCode}
+        length={6}
+        status={pending ? 'checking' : state.error ? 'bad' : 'idle'}
       />
       <Input
         label="New password"
