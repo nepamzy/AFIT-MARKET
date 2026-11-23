@@ -191,23 +191,59 @@ async function shrinkToJpeg(file: File): Promise<string | null> {
   }
 }
 
-/** The same photo as it will be sent (shrunk), and whether a QR code can be read in it. Only the NEW student ID card has one on the front. */
-async function readCard(file: File): Promise<{ url: string; qr: boolean } | null> {
+/**
+ * The same photo as it will be sent (shrunk), and whether a QR code can be read in it. Only the NEW student ID card has one, at
+ * the BOTTOM RIGHT of the front. The search uses the phone's own barcode reader when it has one and looks hardest at the
+ * bottom-right part of the ORIGINAL (full size) photo; that sharp bottom-right piece is also sent, so the server can read it too.
+ */
+async function readCard(
+  file: File,
+): Promise<{ url: string; qr: boolean; crop: string | null } | null> {
   const url = await shrinkToJpeg(file)
   if (!url) return null
   try {
-    const img = new Image()
-    img.src = url
-    await img.decode()
+    const bmp = await createImageBitmap(file)
+    // the bottom-right 60% x 60% of the original photo, at most 1100 px wide
+    const sx = Math.floor(bmp.width * 0.4)
+    const sy = Math.floor(bmp.height * 0.4)
+    const sw = bmp.width - sx
+    const sh = bmp.height - sy
+    const k = Math.min(1, 1100 / Math.max(sw, sh))
     const c = document.createElement('canvas')
-    c.width = img.naturalWidth
-    c.height = img.naturalHeight
+    c.width = Math.max(1, Math.round(sw * k))
+    c.height = Math.max(1, Math.round(sh * k))
     const g = c.getContext('2d')!
-    g.drawImage(img, 0, 0)
+    g.drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height)
+    let qr = false
+    try {
+      const BD = (
+        window as unknown as {
+          BarcodeDetector?: new (o: object) => {
+            detect: (i: ImageBitmapSource) => Promise<unknown[]>
+          }
+        }
+      ).BarcodeDetector
+      if (BD) qr = (await new BD({ formats: ['qr_code'] }).detect(c)).length > 0
+    } catch {
+      /* no barcode reader on this phone: the code below does the work */
+    }
     const d = g.getImageData(0, 0, c.width, c.height)
-    return { url, qr: findQrNearBottomRight(jsQR, d.data, d.width, d.height) }
+    if (!qr) qr = findQrNearBottomRight(jsQR, d.data, d.width, d.height)
+    if (!qr) {
+      const img = new Image()
+      img.src = url
+      await img.decode()
+      const c2 = document.createElement('canvas')
+      c2.width = img.naturalWidth
+      c2.height = img.naturalHeight
+      const g2 = c2.getContext('2d')!
+      g2.drawImage(img, 0, 0)
+      const d2 = g2.getImageData(0, 0, c2.width, c2.height)
+      qr = findQrNearBottomRight(jsQR, d2.data, d2.width, d2.height)
+    }
+    return { url, qr, crop: c.toDataURL('image/jpeg', 0.9) }
   } catch {
-    return { url, qr: false }
+    return { url, qr: false, crop: null }
   }
 }
 
@@ -312,6 +348,7 @@ export function SignUpForm({
   const [studentId, setStudentId] = useState('')
   const [idCard, setIdCard] = useState<string | null>(null)
   const [idBack, setIdBack] = useState<string | null>(null)
+  const [idQrCrop, setIdQrCrop] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
   const [fullName, setFullName] = useState('')
   const [dob, setDob] = useState('')
@@ -334,12 +371,13 @@ export function SignUpForm({
   const isStudent =
     (intent === 'customer' && personType === 'student') ||
     (isVendor && vendor.vendorType === 'student')
+  // riders and student shop owners must add the front (with its QR code) and the back of the new ID card
+  const needsFullId = isRider || (isVendor && vendor.vendorType === 'student')
   const riderReady = studentId.trim().length >= 3 && !!idCard && !!idBack && frontQr === 'ok'
   const step1Ready = isRider
     ? riderReady
     : isVendor
-      ? vendorChoicesReady(vendor, categories) &&
-        (vendor.vendorType !== 'student' || studentId.trim().length >= 3)
+      ? vendorChoicesReady(vendor, categories) && (vendor.vendorType !== 'student' || riderReady)
       : intent !== 'customer' ||
         (personType !== null && (personType !== 'student' || studentId.trim().length >= 3))
   const noInvite = isVendor && vendorInviteOnly && !invite
@@ -366,7 +404,7 @@ export function SignUpForm({
       if (intent === 'customer' && !personType)
         return setProblem('Choose whether you are a student, military, a lecturer or other.')
       if (isStudent && studentId.trim().length < 3) return setProblem('Enter your matric number.')
-      if (isRider) {
+      if (needsFullId) {
         if (studentId.trim().length < 3) return setProblem('Enter your matric number.')
         if (!idCard) return setProblem('Add a clear photo of the front of your ID card.')
         if (frontQr !== 'ok')
@@ -431,7 +469,8 @@ export function SignUpForm({
       {(isStudent || isRider) && idCard && <input type="hidden" name="idCard" value={idCard} />}
       <input type="hidden" name="phone" value={phone} />
       <input type="hidden" name="interests" value={JSON.stringify(interests)} />
-      {isRider && idBack && <input type="hidden" name="idCardBack" value={idBack} />}
+      {needsFullId && idBack && <input type="hidden" name="idCardBack" value={idBack} />}
+      {needsFullId && idQrCrop && <input type="hidden" name="idCardQr" value={idQrCrop} />}
       {isVendor && vendor.vendorType === 'student' && (
         <input type="hidden" name="personType" value="student" />
       )}
@@ -531,7 +570,7 @@ export function SignUpForm({
           />
         )}
 
-        {isStudent && (
+        {isStudent && !needsFullId && (
           <div className="space-y-3 rounded-[var(--radius-control)] border border-line p-3">
             <Input
               label="Matric number"
@@ -563,9 +602,11 @@ export function SignUpForm({
             </div>
           </div>
         )}
-        {isRider && (
+        {needsFullId && (
           <div className="space-y-3 rounded-[var(--radius-control)] border border-line p-3">
-            <p className="font-semibold text-navy-900">Rider details</p>
+            <p className="font-semibold text-navy-900">
+              {isRider ? 'Rider details' : 'Student shop owner details'}
+            </p>
             <Input
               label="Matric number"
               name="riderMatricInput"
@@ -586,11 +627,13 @@ export function SignUpForm({
                   const f = e.target.files?.[0]
                   setProblem(null)
                   setIdCard(null)
+                  setIdQrCrop(null)
                   setFrontQr('none')
                   if (!f) return
                   const r = await readCard(f)
                   if (!r) return setProblem('That photo could not be used. Try another one.')
                   setIdCard(r.url)
+                  setIdQrCrop(r.crop)
                   setFrontQr(r.qr ? 'ok' : 'noqr')
                 }}
               />

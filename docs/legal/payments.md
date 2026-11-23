@@ -24,7 +24,7 @@ The delivery fee is **part of your one online payment**: it is added at checkout
 
 ## 4. Our commission
 
-We charge shops a commission of **4.5% of the total** of each completed order (items after any product discount, plus the delivery fee if delivery was chosen). The same rate applies to delivery and pickup. Rounding is to the nearest kobo (half up). The rate at completion is saved with the order. Customers pay no commission.
+We charge shops a commission of **5% of the total** of each completed order (items after any product discount, plus the delivery fee if delivery was chosen). The same rate applies to delivery and pickup. Rounding is to the nearest kobo (half up). The rate at completion is saved with the order. Customers pay no commission.
 
 ## 5. Reports
 

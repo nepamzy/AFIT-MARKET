@@ -32,7 +32,7 @@ export async function ensureSubaccounts(vendorIds: string[]): Promise<void> {
       sb.from('platform_settings').select('value').eq('key', 'vendor_commission_bps').maybeSingle(),
     ])
     const bps = Number(rate?.value)
-    const percent = Number.isFinite(bps) && bps >= 0 ? bps / 100 : 4.5
+    const percent = Number.isFinite(bps) && bps >= 0 ? bps / 100 /* default */ : 5
     for (const b of (banks ?? []) as unknown as {
       vendor_id: string
       bank_code: string

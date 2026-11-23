@@ -56,8 +56,8 @@ export default function VendorHelp() {
       <Section title="Good to know" id="notes">
         <Card className="space-y-2">
           <p>
-            <strong>Commission.</strong> AFIT Market keeps 4.5% of the product value of completed
-            orders. Delivery fees are not part of it.
+            <strong>Commission.</strong> AFIT Market keeps 5% of the total of completed orders
+            (items and delivery fee). You pay your own riders from the rest.
           </p>
           <p>
             <strong>Pausing.</strong> Use Pause orders on your dashboard if you cannot take new

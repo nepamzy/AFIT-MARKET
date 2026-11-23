@@ -36,7 +36,7 @@ export default async function ApplyPage() {
     other: typeof meta.intended_other === 'string' ? meta.intended_other : '',
     place: typeof meta.vendor_place === 'string' ? meta.vendor_place : '',
   }
-  const commissionBps = Number((terms as { commission_bps?: number } | null)?.commission_bps ?? 450)
+  const commissionBps = Number((terms as { commission_bps?: number } | null)?.commission_bps ?? 500)
   const pending = (apps ?? []).find((a) => a.status === 'pending')
   return (
     <>

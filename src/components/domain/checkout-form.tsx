@@ -225,8 +225,9 @@ export function CheckoutForm({
                 <li className="flex justify-between gap-2">
                   <span>
                     Delivery
-                    {g.delivery_fee_collection === 'direct_to_rider' &&
-                      ' (paid to your rider after delivery)'}
+                    {g.delivery_fee_collection === 'direct_to_rider'
+                      ? ' (paid to your rider after delivery)'
+                      : ' (included in your payment)'}
                   </span>
                   <Money kobo={g.delivery_fee_kobo} />
                 </li>
@@ -238,7 +239,7 @@ export function CheckoutForm({
         {q.pay_now_items_kobo > 0 && (
           <dl className="space-y-1">
             <div className="flex justify-between">
-              <dt>{anyDoor ? 'To pay now' : 'Items'}</dt>
+              <dt>{anyDoor ? 'To pay now' : anyDelivery ? 'Items and delivery' : 'Items'}</dt>
               <dd>
                 <Money kobo={q.pay_now_items_kobo} />
               </dd>
@@ -276,8 +277,8 @@ export function CheckoutForm({
         </p>
         {closed && (
           <Alert tone="warning" title="Ordering opens soon">
-            AFIT Market is awaiting final approval from the AFIT board. Your cart is saved, and you can
-            order as soon as it is approved.
+            AFIT Market is awaiting final approval from the AFIT board. Your cart is saved, and you
+            can order as soon as it is approved.
           </Alert>
         )}
         <Button type="submit" variant="gold" disabled={pending || closed} className="w-full">
