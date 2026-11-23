@@ -53,9 +53,10 @@ export function ApplicationForm({
         id="commission-terms"
         className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm"
       >
-        <strong>Commission:</strong> AFIT Market keeps {pct(commissionBps)} of the product value of
-        each completed order (after any product discount). Delivery fees are not included. You can
-        see every order&apos;s commission on your Earnings page. No payout is enabled yet.
+        <strong>Commission:</strong> AFIT Market keeps {pct(commissionBps)} of the total of each
+        completed order (items after any product discount, plus the delivery fee when delivery is
+        chosen). You can see every order&apos;s commission on your Earnings page. Add your payout
+        account there once you are approved: it is where your money is paid.
       </p>
       <Checkbox
         label={`I agree to follow AFIT Market vendor rules, to keep my menu and prices accurate, and to the ${pct(commissionBps)} commission described above.`}

@@ -1,3 +1,4 @@
+import { VendorHowItWorks } from '@/components/domain/vendor-how-it-works'
 import type { Metadata } from 'next'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { Card, PageHeader } from '@/components/ui/card'
@@ -82,6 +83,9 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
           </div>
         )}
       </Card>
+      <div className="mt-6">
+        <VendorHowItWorks />
+      </div>
     </>
   )
 }

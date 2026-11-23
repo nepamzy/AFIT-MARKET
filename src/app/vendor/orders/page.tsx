@@ -12,6 +12,7 @@ import { Table, Td } from '@/components/ui/table'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
 import { Pager } from '@/components/ui/pager'
 import {
+  customerNamesFor,
   listItemsForOrders,
   listOrders,
   listOrdersPage,
@@ -30,19 +31,22 @@ function OrdersTable({
   orders,
   items,
   riders,
+  names,
 }: {
   caption: string
+  names: Map<string, string>
   orders: OrderRow[]
   items: Awaited<ReturnType<typeof listItemsForOrders>>
   riders: RiderTeamMember[]
 }) {
   return (
-    <Table caption={caption} head={['Order', 'Type', 'Items', 'Placed', 'Status', 'Next step']}>
+    <Table caption={caption} head={['Order', 'Customer', 'Type', 'Items', 'Placed', 'Status', 'Next step']}>
       {orders.map((o) => (
         <tr key={o.id}>
           <Td>
             <span className="font-semibold">{o.order_number}</span>
           </Td>
+          <Td>{names.get(o.customer_id) ?? 'Customer'}</Td>
           <Td>{o.fulfilment === 'delivery' ? 'Delivery' : 'Pickup'}</Td>
           <Td>
             <ul className="space-y-0.5 text-sm">
@@ -99,6 +103,7 @@ export default async function VendorOrders({
     : { orders: [] as OrderRow[], hasMore: false }
   const riders = vendor ? await listRiderTeam(vendor.id) : []
   const items = await listItemsForOrders([...open, ...done.orders].map((o) => o.id))
+  const names = await customerNamesFor([...open, ...done.orders].map((o) => o.customer_id))
   return (
     <>
       <AutoRefresh everySeconds={15} />
@@ -137,6 +142,7 @@ export default async function VendorOrders({
                 <OrdersTable
                   caption="Unfinished orders for your shop"
                   orders={open}
+                  names={names}
                   items={items}
                   riders={riders}
                 />
@@ -153,6 +159,7 @@ export default async function VendorOrders({
               <OrdersTable
                 caption="Finished orders for your shop"
                 orders={done.orders}
+                names={names}
                 items={items}
                 riders={riders}
               />
