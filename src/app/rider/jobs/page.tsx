@@ -16,6 +16,7 @@ import { CustomerContactCard } from '@/components/domain/customer-contact-card'
 import { OrderStatusPill } from '@/components/domain/order-status'
 import { Alert } from '@/components/ui/alert'
 import { Card, PageHeader } from '@/components/ui/card'
+import { customerNamesByOrder } from '@/server/modules/orders-and-state-machine/queries'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { MetricCard, MetricGrid } from '@/components/ui/metric-card'
 import { Stepper } from '@/components/ui/stepper'
@@ -58,6 +59,7 @@ export default async function Jobs() {
     (await createSupabaseServerClient()).rpc('my_rider_link'),
   ])
   const shop = (link.data as { vendor_name?: string } | null)?.vendor_name
+  const customerNames = await customerNamesByOrder(assignments.map((a) => a.order_id))
   return (
     <>
       <AutoRefresh everySeconds={assignments.some((a) => a.arrival_detected_at) ? 4 : 15} />
@@ -112,7 +114,10 @@ export default async function Jobs() {
           assignments.map((a) => (
             <Card key={a.assignment_id} className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-bold">
+                <span className="text-lg font-extrabold text-navy-900">
+                  {customerNames.get(a.order_id) ?? 'Customer'}
+                </span>
+                <span className="font-bold text-muted">
                   #{a.sequence} · {a.order_number}
                 </span>
                 <OrderStatusPill code={a.order_status} />

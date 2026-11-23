@@ -256,3 +256,23 @@ export async function customerNamesFor(customerIds: string[]): Promise<Map<strin
     if (p.display_name) out.set(p.id, p.display_name)
   return out
 }
+
+/**
+ * Customer names for orders a rider is already carrying (the order ids come from the rider's own assignments). Name only, so a
+ * rider with several deliveries can tell them apart.
+ */
+export async function customerNamesByOrder(orderIds: string[]): Promise<Map<string, string>> {
+  const ids = [...new Set(orderIds)].filter((id) => z.uuid().safeParse(id).success)
+  const out = new Map<string, string>()
+  if (ids.length === 0) return out
+  const sb = createSupabaseServiceClient()
+  const { data: orders } = await sb.from('orders').select('id, customer_id').in('id', ids)
+  const names = await customerNamesFor(
+    ((orders ?? []) as { id: string; customer_id: string }[]).map((o) => o.customer_id),
+  )
+  for (const o of (orders ?? []) as { id: string; customer_id: string }[]) {
+    const n = names.get(o.customer_id)
+    if (n) out.set(o.id, n)
+  }
+  return out
+}

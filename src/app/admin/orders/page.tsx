@@ -115,7 +115,14 @@ export default async function AdminOrders({
               </Link>
             ),
           },
-          { header: 'Customer', cell: (o) => names.get(o.customer_id) ?? 'Customer' },
+          {
+            header: 'Customer',
+            cell: (o) => (
+              <span className="font-extrabold text-navy-900">
+                {names.get(o.customer_id) ?? 'Customer'}
+              </span>
+            ),
+          },
           { header: 'Shop', cell: (o) => o.vendor_name },
           { header: 'Type', cell: (o) => (o.fulfilment === 'delivery' ? 'Delivery' : 'Pickup') },
           { header: 'Total', align: 'right', cell: (o) => <Money kobo={o.total_kobo} /> },

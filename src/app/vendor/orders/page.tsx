@@ -40,13 +40,20 @@ function OrdersTable({
   riders: RiderTeamMember[]
 }) {
   return (
-    <Table caption={caption} head={['Order', 'Customer', 'Type', 'Items', 'Placed', 'Status', 'Next step']}>
+    <Table
+      caption={caption}
+      head={['Order', 'Customer', 'Type', 'Items', 'Placed', 'Status', 'Next step']}
+    >
       {orders.map((o) => (
         <tr key={o.id}>
           <Td>
             <span className="font-semibold">{o.order_number}</span>
           </Td>
-          <Td>{names.get(o.customer_id) ?? 'Customer'}</Td>
+          <Td>
+            <span className="text-base font-extrabold text-navy-900">
+              {names.get(o.customer_id) ?? 'Customer'}
+            </span>
+          </Td>
           <Td>{o.fulfilment === 'delivery' ? 'Delivery' : 'Pickup'}</Td>
           <Td>
             <ul className="space-y-0.5 text-sm">
