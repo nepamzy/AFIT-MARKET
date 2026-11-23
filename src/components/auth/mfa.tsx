@@ -3,7 +3,7 @@ import { lagosDate } from '@/lib/time'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/fields'
+import { OtpCode } from '@/components/ui/otp-code'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -19,6 +19,7 @@ export function EnrollFlow({ kind, next }: { kind: 'primary' | 'backup'; next: s
   const [setup, setSetup] = useState<{ factorId: string; qr: string; secret: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const [code, setCode] = useState('')
 
   const begin = () =>
     start(async () => {
@@ -90,14 +91,15 @@ export function EnrollFlow({ kind, next }: { kind: 'primary' | 'backup'; next: s
               </code>
             </div>
           </div>
-          <Input
-            label="6-digit code"
+          <OtpCode
             name="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="\d{6}"
-            maxLength={6}
-            required
+            label="6-digit code from your authenticator app"
+            value={code}
+            onChange={setCode}
+            length={6}
+            status={done ? 'ok' : pending ? 'checking' : error ? 'bad' : 'idle'}
+            onComplete={(f) => f?.requestSubmit()}
+            autoFocus
           />
           <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? 'Checking…' : 'Confirm and finish'}
@@ -120,6 +122,7 @@ export function ChallengeForm({ factors, next }: { factors: FactorRow[]; next: s
   const [error, setError] = useState<string | null>(null)
   const verified = factors.filter((f) => f.status === 'verified')
   const [factorId, setFactorId] = useState(verified[0]?.id ?? '')
+  const [code, setCode] = useState('')
   const submit = (formData: FormData) =>
     start(async () => {
       setError(null)
@@ -153,14 +156,14 @@ export function ChallengeForm({ factors, next }: { factors: FactorRow[]; next: s
           ))}
         </fieldset>
       )}
-      <Input
-        label="6-digit code"
+      <OtpCode
         name="code"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        pattern="\d{6}"
-        maxLength={6}
-        required
+        label="6-digit code from your authenticator app"
+        value={code}
+        onChange={setCode}
+        length={6}
+        status={pending ? 'checking' : error ? 'bad' : 'idle'}
+        onComplete={(f) => f?.requestSubmit()}
         autoFocus
       />
       <Button type="submit" disabled={pending || !factorId} className="w-full">

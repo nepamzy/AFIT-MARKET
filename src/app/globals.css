@@ -443,3 +443,22 @@ body {
 .share-copy {
   background: var(--color-navy-800);
 }
+
+/* code entry (OtpCode): a short shake when a code is refused, and a pop for the check mark */
+@keyframes otp-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+@keyframes otp-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.otp-shake { animation: otp-shake 0.4s ease-in-out; }
+.otp-pop { animation: otp-pop 0.35s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .otp-shake, .otp-pop { animation: none; }
+}
