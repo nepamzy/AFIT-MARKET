@@ -179,6 +179,9 @@ export async function AppShell({
         <main id="main" className="mx-auto max-w-6xl px-4 py-6 pb-24 md:pb-10">
           {children}
           <ChannelCard className="mt-8" />
+          <p className="mt-6 text-center text-xs text-muted">
+            © {new Date().getFullYear()} AFIT Market. All rights reserved.
+          </p>
         </main>
       </div>
       <BottomNav items={items} moreHref={moreHref} />

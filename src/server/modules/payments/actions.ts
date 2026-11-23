@@ -49,6 +49,11 @@ async function startPayment(prep: Prep, email: string): Promise<string> {
   } catch (e) {
     if (!split) throw e
     logger.error('paystack refused the shop split; paying without it', { err: String(e) })
+    // keep Paystack's reason in the database so it can be read later (the host's logs only last an hour)
+    await svc
+      .from('payment_groups')
+      .update({ split_error: String(e).slice(0, 400) })
+      .eq('reference', prep.reference)
     await svc.rpc('payment_group_clear_split', { p_reference: prep.reference })
     init = await initializeTransaction({ ...base, split: null })
   }

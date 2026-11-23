@@ -36,8 +36,8 @@ export default function Payments() {
             payments.
           </li>
           <li>
-            Customers pay no platform fee. Shops pay a 4.5% commission on the product subtotal after
-            discounts, not on delivery.
+            Customers pay no platform fee. Shops pay a 5% commission on the order total (items after
+            discounts, plus delivery when chosen).
           </li>
           <li>We never show or store your card details; Paystack handles them.</li>
         </ul>

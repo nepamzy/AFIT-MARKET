@@ -93,7 +93,8 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   let idCard: Buffer | undefined
   // riders: matric number, phone number and the front and back of the NEW student ID card (only it has a QR code)
   let rider: { matric: string; phone: string; front: Buffer; back: Buffer } | undefined
-  if (intent === 'rider') {
+  // riders AND student shop owners must give a matric number and the front and back of the NEW student ID card
+  const readFullId = (): { error: string } | NonNullable<typeof rider> => {
     const matric = String(formData.get('studentId') ?? '').trim()
     if (!validStudentId(matric)) return { error: 'Enter your matric number.' }
     const phone = normalizePhone(String(formData.get('phone') ?? ''))
@@ -102,12 +103,20 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     if (!front.ok) return { error: 'Add a clear photo of the front of your ID card.' }
     const back = parseIdCard(String(formData.get('idCardBack') ?? ''))
     if (!back.ok) return { error: 'Add a clear photo of the back of your ID card.' }
-    if (!jpegHasQr(front.jpeg))
+    // the whole front first, then the sharp bottom-right piece the phone sent along (where the code is)
+    const cropRaw = String(formData.get('idCardQr') ?? '')
+    const crop = cropRaw ? parseIdCard(cropRaw) : null
+    if (!jpegHasQr(front.jpeg) && !(crop?.ok && jpegHasQr(crop.jpeg)))
       return {
         error:
           'We could not find the QR code on the front of your ID card. Only the new ID card has one. Use a clear, flat photo of the whole front.',
       }
-    rider = { matric, phone, front: front.jpeg, back: back.jpeg }
+    return { matric, phone, front: front.jpeg, back: back.jpeg }
+  }
+  if (intent === 'rider') {
+    const r = readFullId()
+    if ('error' in r) return { error: r.error }
+    rider = r
   }
   // During the beta a shop can only sign up with a personal invitation link, and the link works once.
   const inviteToken = String(formData.get('invite') ?? '').trim()
@@ -153,6 +162,9 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     if (vendorChoices.type === 'student') {
       const problem = readStudent()
       if (problem) return { error: problem }
+      const r = readFullId()
+      if ('error' in r) return { error: r.error }
+      rider = r
     }
   }
   // everyone: full name, phone number and date of birth (18 or older)

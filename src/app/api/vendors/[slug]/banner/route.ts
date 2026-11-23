@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
     rateLimit(`banner:ip:${await clientIp()}`, 60, 600),
     sb
       .from('vendors')
-      .select('id, name, status, categories(slug)')
+      .select('id, name, status, category_id')
       .eq('slug', slug)
       .maybeSingle(),
   ])
@@ -33,7 +33,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
       },
     })
   if (!v || v.status !== 'approved') return draw('', null)
-  const cat = (v.categories as unknown as { slug: string } | null)?.slug
+  const { data: c } = v.category_id
+    ? await sb.from('categories').select('slug').eq('id', v.category_id).maybeSingle()
+    : { data: null }
+  const cat = (c as { slug: string } | null)?.slug
   const { data: b } = await sb
     .from('vendor_banners')
     .select('jpeg, updated_at')

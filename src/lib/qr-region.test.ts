@@ -17,7 +17,7 @@ describe('findQrNearBottomRight', () => {
   it('falls back to the whole photo, and reports no code when there is none anywhere', () => {
     const none = vi.fn(() => null)
     expect(findQrNearBottomRight(none as never, px(800, 500), 800, 500)).toBe(false)
-    expect(none).toHaveBeenCalledTimes(5)
+    expect(none).toHaveBeenCalledTimes(7)
     const onlyWhole = vi.fn((_d: Uint8ClampedArray, w: number) =>
       w === 800 ? ({} as never) : null,
     )

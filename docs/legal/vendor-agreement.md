@@ -42,7 +42,7 @@ You may add riders for your own shop. Each is given a one-time sign-in code and 
 
 ## 7. Commission
 
-We keep a commission of **4.5% of the total of each completed order** (items after any product discount, plus the delivery fee when delivery is chosen), the same for delivery and pickup. The rate at completion is saved with the order. Customers pay no extra fee.
+We keep a commission of **5% of the total of each completed order** (items after any product discount, plus the delivery fee when delivery is chosen), the same for delivery and pickup. The rate at completion is saved with the order. Customers pay no extra fee.
 
 ## 8. Payouts
 

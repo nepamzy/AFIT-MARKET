@@ -11,6 +11,8 @@ const REGIONS: [x0: number, y0: number][] = [
   [0.35, 0.35],
   [0.55, 0.3],
   [0.2, 0.2],
+  [0.6, 0.6],
+  [0.45, 0.6],
 ]
 
 function crop(data: Uint8ClampedArray, w: number, h: number, x0: number, y0: number) {
