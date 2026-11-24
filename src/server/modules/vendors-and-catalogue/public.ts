@@ -111,3 +111,22 @@ export async function productHasPhoto(id: string): Promise<boolean> {
     .maybeSingle()
   return Boolean(data)
 }
+
+/** True when an approved shop has uploaded its own banner picture (so a shared shop link can show it). */
+export async function vendorHasBanner(slug: string): Promise<boolean> {
+  if (!/^[a-z0-9-]{2,60}$/.test(slug)) return false
+  const svc = createSupabaseServiceClient()
+  const { data: v } = await svc
+    .from('vendors')
+    .select('id')
+    .eq('slug', slug)
+    .eq('status', 'approved')
+    .maybeSingle()
+  if (!v) return false
+  const { data } = await svc
+    .from('vendor_banners')
+    .select('vendor_id')
+    .eq('vendor_id', v.id)
+    .maybeSingle()
+  return Boolean(data)
+}
