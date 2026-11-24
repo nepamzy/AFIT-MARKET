@@ -38,21 +38,32 @@ export function CheckoutForm({
   const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrdersAction, {})
   const [q, setQ] = useState<MultiQuote>(initial)
   const [choices, setChoices] = useState<Record<string, Choice>>({})
+  // shops left out of this checkout stay in the cart
+  const [skipped, setSkipped] = useState<Set<string>>(new Set())
   const [point, setPoint] = useState<string | null>(defaultPoint ?? points[0]?.id ?? null)
   const [, startTransition] = useTransition()
   const seq = useRef(0)
+  // every shop in the cart, as first quoted (the bill below only counts the shops that are included)
+  const [shops] = useState(initial.groups)
 
   const choiceOf = (id: string): Choice => choices[id] ?? 'pickup'
-  const anyDelivery = q.groups.some((g) => choiceOf(g.vendor_id) === 'delivery')
+  const isIn = (id: string) => !skipped.has(id)
+  const anyDelivery = shops.some((g) => isIn(g.vendor_id) && choiceOf(g.vendor_id) === 'delivery')
+  const nothingChosen = shops.every((g) => !isIn(g.vendor_id))
 
   // ask the database for the bill again whenever a choice changes
   useEffect(() => {
     const mine = ++seq.current
     startTransition(async () => {
-      const next = await quoteCheckoutAction(choices, point, true)
+      // only the shops in this checkout are named; with none left out, the quote covers every shop as before
+      const named: Record<string, Choice> = {}
+      if (skipped.size > 0)
+        for (const g of shops)
+          if (!skipped.has(g.vendor_id)) named[g.vendor_id] = choices[g.vendor_id] ?? 'pickup'
+      const next = await quoteCheckoutAction(skipped.size > 0 ? named : choices, point, true)
       if (next && mine === seq.current) setQ(next)
     })
-  }, [choices, point])
+  }, [choices, point, skipped, shops])
 
   const doorGroups = q.groups.filter((g) => g.pay_timing === 'door')
   const nowGroups = q.groups.filter((g) => g.pay_timing === 'now')
@@ -76,13 +87,53 @@ export function CheckoutForm({
           </Alert>
         )}
         <h2 className="text-lg font-extrabold text-navy-900">1. How do you want to get it?</h2>
-        {q.groups.map((g) => {
+        {shops.length > 1 && (
+          <p className="text-sm text-muted">
+            Tick the shops you want to check out now. Shops you leave out stay in your cart for
+            later.
+          </p>
+        )}
+        {shops.map((g) => {
           const mode = choiceOf(g.vendor_id)
+          if (!isIn(g.vendor_id))
+            return (
+              <label
+                key={g.vendor_id}
+                className="touch-target flex items-center gap-3 rounded-[var(--radius-card)] border-2 border-dashed border-line p-4 text-muted"
+              >
+                <input
+                  type="checkbox"
+                  checked={false}
+                  onChange={() =>
+                    setSkipped((prev) => {
+                      const next = new Set(prev)
+                      next.delete(g.vendor_id)
+                      return next
+                    })
+                  }
+                  className="size-5 accent-[var(--color-brand-700)]"
+                />
+                <span>
+                  <strong>{g.vendor_name}</strong> is left in your cart. Tick to add it back.
+                </span>
+              </label>
+            )
           return (
             <fieldset key={g.vendor_id} className="space-y-2">
-              <legend className="mb-1 font-bold text-navy-900">
-                {g.vendor_name}
-                {g.is_food && <span className="ml-2 text-sm font-normal text-muted">(food)</span>}
+              <legend className="mb-1 flex items-center gap-3 font-bold text-navy-900">
+                {shops.length > 1 && (
+                  <input
+                    type="checkbox"
+                    checked
+                    aria-label={`Include ${g.vendor_name} in this checkout`}
+                    onChange={() => setSkipped((prev) => new Set(prev).add(g.vendor_id))}
+                    className="size-5 accent-[var(--color-brand-700)]"
+                  />
+                )}
+                <span>
+                  {g.vendor_name}
+                  {g.is_food && <span className="ml-2 text-sm font-normal text-muted">(food)</span>}
+                </span>
               </legend>
               <label className={optionCls(mode === 'pickup')}>
                 <input
@@ -281,7 +332,12 @@ export function CheckoutForm({
             can order as soon as it is approved.
           </Alert>
         )}
-        <Button type="submit" variant="gold" disabled={pending || closed} className="w-full">
+        <Button
+          type="submit"
+          variant="gold"
+          disabled={pending || closed || nothingChosen}
+          className="w-full"
+        >
           {pending
             ? 'Placing order…'
             : q.groups.length > 1
