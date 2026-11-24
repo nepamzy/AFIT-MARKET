@@ -11,7 +11,10 @@ export function ApplicationForm({
   categories,
   commissionBps,
   defaults,
+  person,
 }: {
+  /** what we already know about the person (they can correct it) */
+  person?: { email?: string; fullName?: string; dob?: string }
   categories: Category[]
   commissionBps: number
   /** what the person already chose when signing up */
@@ -23,6 +26,34 @@ export function ApplicationForm({
       submitLabel="Submit application"
       pendingLabel="Sending…"
     >
+      <Input
+        label="Your full name"
+        name="fullName"
+        required
+        minLength={2}
+        maxLength={80}
+        autoComplete="name"
+        defaultValue={person?.fullName ?? ''}
+        hint="As it is on your ID."
+      />
+      <Input
+        label="Your email"
+        name="emailShown"
+        type="email"
+        readOnly
+        defaultValue={person?.email ?? ''}
+        hint="This is the email you signed up with. We use it to reach you about your shop."
+      />
+      <Input
+        label="Your date of birth"
+        name="dob"
+        type="date"
+        required
+        autoComplete="bday"
+        max={new Date().toISOString().slice(0, 10)}
+        defaultValue={person?.dob ?? ''}
+        hint="We only use this to make sure you are 18 or older."
+      />
       <Input label="Business name" name="businessName" required minLength={2} maxLength={80} />
       <VendorChoices categories={categories} defaults={defaults} showStudentNote askIdCard />
       <Input
