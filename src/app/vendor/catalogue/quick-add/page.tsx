@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Add from the list' }
 
 export default async function QuickAddPage() {
   const vendor = await getMyVendor()
-  if (!vendor || vendor.status !== 'approved')
+  if (!vendor || (vendor.status !== 'approved' && vendor.status !== 'pending'))
     return <EmptyState title="You cannot add items right now" />
   const items = startersFor(
     vendor.category_slugs?.length ? vendor.category_slugs : vendor.category_slug,

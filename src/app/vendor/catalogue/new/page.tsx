@@ -7,7 +7,7 @@ import { getMyVendor } from '@/server/modules/vendors-and-catalogue/vendor-queri
 export const metadata: Metadata = { title: 'Add an item' }
 export default async function NewProduct() {
   const vendor = await getMyVendor()
-  if (!vendor || vendor.status !== 'approved')
+  if (!vendor || (vendor.status !== 'approved' && vendor.status !== 'pending'))
     return <EmptyState title="You cannot add items right now" />
   return (
     <>
