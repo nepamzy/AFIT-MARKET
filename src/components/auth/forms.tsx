@@ -341,6 +341,37 @@ function PersonIcon({ kind }: { kind: PersonType }) {
   )
 }
 
+/**
+ * A shop owner who opens their used invitation link before confirming the email: ask for the address they signed up with, then show
+ * the code screen again (the code can be resent).
+ */
+export function ResumeConfirmEmail({ hint }: { hint: string }) {
+  const [email, setEmail] = useState('')
+  const [go, setGo] = useState(false)
+  if (go) return <SignUpDone email={email.trim().toLowerCase()} />
+  return (
+    <div className="space-y-3">
+      <Input
+        label="The email you signed up with"
+        name="resumeEmail"
+        type="email"
+        autoComplete="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        hint={`It looks like ${hint}.`}
+      />
+      <Button
+        type="button"
+        variant="gold"
+        disabled={!email.includes('@')}
+        onClick={() => setGo(true)}
+      >
+        Continue
+      </Button>
+    </div>
+  )
+}
+
 export function SignUpForm({
   categories = [],
   invite = '',

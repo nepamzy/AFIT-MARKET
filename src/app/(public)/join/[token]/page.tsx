@@ -4,7 +4,8 @@ import { Button, ButtonLink } from '@/components/ui/button'
 import { Card, PageHeader } from '@/components/ui/card'
 import { loadPrincipal } from '@/server/modules/identity-and-access/guard'
 import { claimInviteAction } from '@/server/modules/vendor-invites/actions'
-import { checkInvite } from '@/server/modules/vendor-invites/invites'
+import { checkInvite, inviteProgress } from '@/server/modules/vendor-invites/invites'
+import { ResumeConfirmEmail } from '@/components/auth/forms'
 
 const INVITE_TITLE = 'You are invited to sell on AFIT Market'
 const INVITE_TEXT =
@@ -34,6 +35,51 @@ export const dynamic = 'force-dynamic'
 export default async function JoinPage({ params }: { params: Promise<{ token: string }> }) {
   const token = (await params).token
   const [invite, who] = await Promise.all([checkInvite(token), loadPrincipal()])
+  // A link that was already used is not dead: it takes the shop owner back to where they stopped.
+  const progress = invite ? null : await inviteProgress(token)
+  if (progress) {
+    const [name, domain] = progress.email.split('@')
+    const hint = `${name?.slice(0, 2) ?? ''}***@${domain ?? ''}`
+    return (
+      <>
+        <PageHeader
+          title="Welcome back"
+          subtitle={progress.label ? `Invitation for: ${progress.label}` : 'Your shop invitation'}
+        />
+        <Card className="max-w-xl space-y-4">
+          {!progress.confirmed ? (
+            <>
+              <p>
+                You started your shop account but have not confirmed your email yet. Confirm it now
+                and your application goes through.
+              </p>
+              <ResumeConfirmEmail hint={hint} />
+            </>
+          ) : progress.applied || progress.has_shop ? (
+            <>
+              <p>
+                Your application is in. Sign in to open your shop, finish setting it up and see
+                where the approval stands.
+              </p>
+              <ButtonLink href={`/login?next=${encodeURIComponent('/vendor')}`} variant="gold">
+                Sign in to my shop
+              </ButtonLink>
+            </>
+          ) : (
+            <>
+              <p>
+                Your email is confirmed, but your application was not finished. Sign in and we take
+                you straight back to it.
+              </p>
+              <ButtonLink href={`/login?next=${encodeURIComponent('/apply')}`} variant="gold">
+                Sign in and finish my application
+              </ButtonLink>
+            </>
+          )}
+        </Card>
+      </>
+    )
+  }
   if (!invite)
     return (
       <>
