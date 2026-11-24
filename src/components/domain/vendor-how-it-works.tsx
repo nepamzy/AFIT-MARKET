@@ -29,6 +29,10 @@ export function VendorHowItWorks({ commissionPercent = 5 }: { commissionPercent?
           </li>
           <li>Build your menu with photos and prices.</li>
           <li>
+            Set your own <strong>delivery fee</strong>, up to ₦500. It is added to the
+            customer&apos;s payment and goes to you with the order. You can lower it any time.
+          </li>
+          <li>
             Customers order and pay. You have 15 hours to <strong>accept or decline</strong> each
             order, then you prepare it and mark it ready.
           </li>

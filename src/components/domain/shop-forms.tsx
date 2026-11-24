@@ -15,6 +15,7 @@ type Vendor = {
   contact_phone: string | null
   pickup_location_text: string | null
   prep_minutes: number
+  delivery_fee_kobo?: number
 }
 
 export function ProfileForm({ vendor, disabled }: { vendor: Vendor; disabled: boolean }) {
@@ -41,6 +42,13 @@ export function ProfileForm({ vendor, disabled }: { vendor: Vendor; disabled: bo
           defaultValue={vendor.pickup_location_text ?? ''}
           maxLength={200}
           hint="Describe it in words. Do not enter coordinates."
+        />
+        <Input
+          label="Your delivery fee (₦)"
+          name="deliveryFee"
+          inputMode="numeric"
+          defaultValue={String((vendor.delivery_fee_kobo ?? 50000) / 100)}
+          hint="What you charge for one delivery. The most allowed is ₦500. You can lower it any time."
         />
         <Input
           label="Typical preparation time (minutes)"
