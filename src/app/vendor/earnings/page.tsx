@@ -237,7 +237,12 @@ export default async function Earnings() {
               header: 'Payment',
               cell: (o) =>
                 o.payout_status === 'paid' ? (
-                  <Badge tone="success">Paid {o.payout_at ? day(o.payout_at) : ''}</Badge>
+                  <span className="space-y-1">
+                    <Badge tone="success">Paid {o.payout_at ? day(o.payout_at) : ''}</Badge>
+                    <span className="block text-xs text-muted">
+                      Your bank may show it on the next working day.
+                    </span>
+                  </span>
                 ) : o.payout_status === 'held' ? (
                   <Badge tone="warning">On hold: complaint open</Badge>
                 ) : o.payout_status === 'failed' ? (
