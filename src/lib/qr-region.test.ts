@@ -17,10 +17,16 @@ describe('findQrNearBottomRight', () => {
   it('falls back to the whole photo, and reports no code when there is none anywhere', () => {
     const none = vi.fn(() => null)
     expect(findQrNearBottomRight(none as never, px(800, 500), 800, 500)).toBe(false)
-    expect(none).toHaveBeenCalledTimes(7)
+    // every region and the whole photo are tried, each also at other sizes
+    expect(none.mock.calls.length).toBeGreaterThanOrEqual(7)
     const onlyWhole = vi.fn((_d: Uint8ClampedArray, w: number) =>
       w === 800 ? ({} as never) : null,
     )
     expect(findQrNearBottomRight(onlyWhole as never, px(800, 500), 800, 500)).toBe(true)
+  })
+  it('reads a small, soft code by trying it enlarged', () => {
+    // nothing is found at the photo's own size; the bottom-right piece reads once it is made bigger
+    const onlyBig = vi.fn((_d: Uint8ClampedArray, w: number) => (w >= 1000 ? ({} as never) : null))
+    expect(findQrNearBottomRight(onlyBig as never, px(800, 500), 800, 500)).toBe(true)
   })
 })
