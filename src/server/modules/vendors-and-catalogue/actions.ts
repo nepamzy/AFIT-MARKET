@@ -101,6 +101,17 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
     .update({ delivery_fee_kobo: fee })
     .eq('applicant_id', g.who.userId)
     .eq('status', 'pending')
+  // the shop (waiting for approval) was opened with the application: give it the same fee and automatic-ready choice
+  await createSupabaseServiceClient()
+    .from('vendors')
+    .update({
+      delivery_fee_kobo: fee,
+      ...(auto.value.enabled
+        ? { auto_ready_enabled: true, auto_ready_minutes: auto.value.minutes }
+        : {}),
+    })
+    .eq('owner_id', g.who.userId)
+    .eq('status', 'pending')
   if (auto.value.enabled) {
     const saved = await sb.rpc('application_set_auto_ready', {
       p_enabled: true,

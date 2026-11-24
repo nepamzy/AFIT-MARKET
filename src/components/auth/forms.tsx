@@ -7,7 +7,8 @@ import { useActionState, useState } from 'react'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { SignaturePad } from '@/components/domain/signature-pad'
 import { CodeBoxes } from '@/components/domain/code-boxes'
-import { Checkbox, Input } from '@/components/ui/fields'
+import { Checkbox, Input, Textarea } from '@/components/ui/fields'
+import { AutoReadyChoice } from '@/components/domain/auto-ready-choice'
 import {
   VendorChoices,
   vendorChoicesReady,
@@ -372,6 +373,12 @@ export function SignUpForm({
   const [signed, setSigned] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [vendorCode, setVendorCode] = useState('')
+  // a shop owner applies while signing up: the shop details
+  const [shopName, setShopName] = useState('')
+  const [shopAbout, setShopAbout] = useState('')
+  const [shopPickup, setShopPickup] = useState('')
+  const [shopFee, setShopFee] = useState('500')
+  const [shopAgree, setShopAgree] = useState(false)
   const interestCategories = categories.filter((c) => c.slug !== 'other')
   if (state.ok) return <SignUpDone email={state.email ?? ''} message={state.message} />
 
@@ -430,8 +437,19 @@ export function SignUpForm({
         return setProblem('Enter a valid Nigerian phone number, for example 0803 123 4567.')
       if (!dob) return setProblem('Enter your date of birth.')
       if (ageOf(dob) < 18) return setProblem('AFIT Market is only for people aged 18 and over.')
-      // only customers are asked what they would like to shop; shops and riders go straight on
-      return setStep(intent === 'customer' ? 3 : 4)
+      // customers pick what they would like to shop; shops give their shop details; riders go straight on
+      return setStep(intent === 'rider' ? 4 : 3)
+    }
+    if (step === 3 && isVendor) {
+      if (shopName.trim().length < 2) return setProblem('Enter your shop name.')
+      if (shopAbout.trim().length < 10)
+        return setProblem('Tell us what you sell (at least 10 characters).')
+      if (shopPickup.trim().length < 3)
+        return setProblem('Say where customers will collect their orders.')
+      if (!/^[0-9]{1,3}(\.[0-9]{1,2})?$/.test(shopFee.trim()) || Number(shopFee) > 500)
+        return setProblem('Your delivery fee must be from 0 to 500 naira.')
+      if (!shopAgree) return setProblem('Please tick the box to agree to the vendor rules.')
+      return setStep(4)
     }
     if (step === 3) {
       if (interests.length < MIN_PICKS)
@@ -443,11 +461,11 @@ export function SignUpForm({
       return setStep(5)
     }
   }
-  const wantsInterests = intent === 'customer'
+  const wantsInterests = intent !== 'rider'
   const titles = [
     'Who are you?',
     'About you',
-    'What would you like to shop?',
+    isVendor ? 'Your shop' : 'What would you like to shop?',
     'Your signature',
     'Your account',
   ]
@@ -527,8 +545,8 @@ export function SignUpForm({
             })}
           </div>
           <p className="relative z-10 mt-2 text-xs text-muted">
-            Choosing Vendor or Rider takes you to the application after you sign in; nothing is
-            switched on until it is approved.
+            Choosing Rider takes you to the rider application after you sign in. A shop applies
+            right here while it creates its account. Nothing is switched on until it is approved.
           </p>
           {noInvite && (
             <p
@@ -737,7 +755,66 @@ export function SignUpForm({
         </div>
       </div>
 
-      <div className={step === 3 ? 'space-y-4' : 'hidden'}>
+      {isVendor && (
+        <div className={step === 3 ? 'space-y-4' : 'hidden'}>
+          <Input
+            label="Business name"
+            name="businessName"
+            maxLength={80}
+            value={shopName}
+            onChange={(e) => setShopName(e.target.value)}
+          />
+          <Textarea
+            label="What do you sell?"
+            name="description"
+            maxLength={500}
+            value={shopAbout}
+            onChange={(e) => setShopAbout(e.target.value)}
+          />
+          <Input
+            label="Your delivery fee (₦)"
+            name="deliveryFee"
+            inputMode="numeric"
+            value={shopFee}
+            onChange={(e) => setShopFee(e.target.value)}
+            hint="What you charge for one delivery. The most allowed is ₦500. You can lower it later."
+          />
+          <Input
+            label="Where will customers collect orders?"
+            name="pickup"
+            maxLength={200}
+            value={shopPickup}
+            onChange={(e) => setShopPickup(e.target.value)}
+            hint="Describe the pickup spot in words. Do not enter coordinates."
+          />
+          <AutoReadyChoice />
+          <p
+            id="commission-terms"
+            className="rounded-[var(--radius-control)] bg-brand-50 px-3 py-2 text-sm"
+          >
+            <strong>Commission:</strong> AFIT Market keeps 5% of the total of each completed order
+            (items after any product discount, plus the delivery fee when delivery is chosen). You
+            can see every order&apos;s commission on your Earnings page. Add your payout account
+            there: it is where your money is paid.
+          </p>
+          <Checkbox
+            label="I agree to follow AFIT Market vendor rules, to keep my menu and prices accurate, and to the 5% commission described above."
+            name="accept"
+            aria-describedby="commission-terms"
+            checked={shopAgree}
+            onChange={(e) => setShopAgree(e.target.checked)}
+          />
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" onClick={() => setStep(2)}>
+              Back
+            </Button>
+            <Button type="button" onClick={goNext} className="flex-1">
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+      <div className={step === 3 && !isVendor ? 'space-y-4' : 'hidden'}>
         <InterestPicker
           categories={interestCategories}
           picked={interests}
@@ -841,7 +918,13 @@ export function SignUpForm({
             disabled={pending || (isRider && vendorCode.length < 6)}
             className="flex-1"
           >
-            {pending ? 'Creating account…' : 'Create account'}
+            {pending
+              ? isVendor
+                ? 'Sending your application…'
+                : 'Creating account…'
+              : isVendor
+                ? 'Apply and create my account'
+                : 'Create account'}
           </Button>
         </div>
         <p className="text-center text-sm text-muted">

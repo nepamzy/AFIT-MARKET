@@ -23,7 +23,8 @@ export default async function Catalogue() {
   if (!vendor) return <EmptyState title="No vendor account yet" />
   const products = await listProducts(vendor.id)
   const onSale = products.filter((p) => p.is_available && p.stock_quantity !== 0).length
-  const approved = vendor.status === 'approved'
+  // a shop waiting for approval can already set its menu up
+  const approved = vendor.status === 'approved' || vendor.status === 'pending'
   return (
     <>
       <PageHeader
@@ -114,11 +115,7 @@ export default async function Catalogue() {
                     <form action={toggleAvailabilityAction}>
                       <input type="hidden" name="productId" value={p.id} />
                       <input type="hidden" name="available" value={p.is_available ? '0' : '1'} />
-                      <Button
-                        type="submit"
-                        variant="secondary"
-                        disabled={vendor.status !== 'approved'}
-                      >
+                      <Button type="submit" variant="secondary" disabled={!approved}>
                         {p.is_available ? 'Mark sold out' : 'Put back on sale'}
                       </Button>
                     </form>
@@ -127,7 +124,7 @@ export default async function Catalogue() {
                       <Button
                         type="submit"
                         variant="ghost"
-                        disabled={vendor.status !== 'approved'}
+                        disabled={!approved}
                         aria-label={`Remove ${p.name} from menu`}
                       >
                         Remove

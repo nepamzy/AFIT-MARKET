@@ -26,7 +26,7 @@ export default async function ShopPage() {
   if (!vendor) return <EmptyState title="We could not load your shop" />
   const owner = me.staff_role === 'owner'
   const allCategories = owner ? await listCategories() : []
-  const disabled = me.status !== 'approved'
+  const disabled = me.status !== 'approved' && me.status !== 'pending'
   const auto = await getAutoReady(me.id)
   return (
     <>
@@ -38,7 +38,13 @@ export default async function ShopPage() {
       <MetricGrid>
         <MetricCard
           label="Shop status"
-          value={me.status === 'approved' ? 'Approved' : me.status}
+          value={
+            me.status === 'approved'
+              ? 'Approved'
+              : me.status === 'pending'
+                ? 'Waiting for approval'
+                : me.status
+          }
           icon="store"
           accent={me.status === 'approved' ? 'success' : 'gold'}
         />

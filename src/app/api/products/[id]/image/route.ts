@@ -47,7 +47,12 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   ])
   if (!allowed) return new NextResponse(null, { status: 429 })
   const p = data?.products as unknown as { status: string; vendors: { status: string } } | undefined
-  if (!data || !p || p.status !== 'active' || p.vendors.status !== 'approved') {
+  if (
+    !data ||
+    !p ||
+    p.status !== 'active' ||
+    (p.vendors.status !== 'approved' && p.vendors.status !== 'pending')
+  ) {
     // no photo: draw a picture that suits the product, chosen from its name and its shop's category
     const { data: prod } = await sb
       .from('products')
@@ -56,7 +61,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
       .maybeSingle()
     const v = prod?.vendors as unknown as
       { status: string; categories?: { slug: string } | null } | undefined
-    if (!prod || prod.status !== 'active' || v?.status !== 'approved')
+    if (!prod || prod.status !== 'active' || (v?.status !== 'approved' && v?.status !== 'pending'))
       return placeholder('general', cache)
     return placeholder(artKind(prod.name, v.categories?.slug), cache)
   }
