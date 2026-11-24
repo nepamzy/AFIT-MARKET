@@ -125,7 +125,7 @@ function SignUpDone({ email, message }: { email: string; message?: string }) {
           label="Confirmation code"
           value={emailCode}
           onChange={setEmailCode}
-          length={6}
+          length={8}
           max={8}
           status={confirming ? 'checking' : confirm.ok ? 'ok' : confirm.error ? 'bad' : 'idle'}
           autoFocus
@@ -134,7 +134,7 @@ function SignUpDone({ email, message }: { email: string; message?: string }) {
         <Button
           type="submit"
           variant="gold"
-          disabled={confirming || emailCode.length < 6}
+          disabled={confirming || emailCode.length < 8}
           className="w-full"
         >
           {confirming ? 'Checking…' : 'Confirm my email'}
