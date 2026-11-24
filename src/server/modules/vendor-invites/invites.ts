@@ -22,6 +22,24 @@ export async function checkInvite(token: string): Promise<{ label: string | null
   return (data as { label: string | null } | null) ?? null
 }
 
+export type InviteProgress = {
+  label: string | null
+  email: string
+  confirmed: boolean
+  applied: boolean
+  has_shop: boolean
+  draft_waiting: boolean
+}
+
+/** Where the person who used this link stopped (null when the link was never used, or was cancelled). */
+export async function inviteProgress(token: string): Promise<InviteProgress | null> {
+  if (!INVITE_TOKEN.test(token)) return null
+  const { data } = await createSupabaseServiceClient().rpc('vendor_invite_progress', {
+    p_token: token,
+  })
+  return (data as InviteProgress | null) ?? null
+}
+
 export type InviteRow = {
   id: string
   token: string

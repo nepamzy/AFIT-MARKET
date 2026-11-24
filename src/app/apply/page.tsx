@@ -6,12 +6,17 @@ import { Badge } from '@/components/ui/badge'
 import { Card, PageHeader } from '@/components/ui/card'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { redirect } from 'next/navigation'
+import { startShopFromSignup } from '@/server/modules/vendors-and-catalogue/shop-from-signup'
 import { listCategories } from '@/server/modules/vendors-and-catalogue/public'
 
 export const metadata: Metadata = { title: 'Sell on AFIT Market' }
 
 export default async function ApplyPage() {
   const sb = await createSupabaseServerClient()
+  // Someone who applied while signing up but whose application was cut off: finish it from the details they gave.
+  const { data: me } = await sb.auth.getUser()
+  if (me.user && (await startShopFromSignup(me.user)) === 'created') redirect('/vendor')
   const [{ data: apps }, cats, { data: mine }, { data: terms }] = await Promise.all([
     sb
       .from('vendor_applications')
