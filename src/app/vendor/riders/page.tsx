@@ -16,7 +16,8 @@ export default async function MyRiders() {
   const me = await getMyVendor()
   if (!me) return <EmptyState title="No vendor account yet" />
   const owner = me.staff_role === 'owner'
-  const ready = me.status === 'approved'
+  // a shop waiting for approval can already add its riders
+  const ready = me.status === 'approved' || me.status === 'pending'
   const [team, codes] = ready
     ? await Promise.all([
         listRiderTeam(me.id),
@@ -45,7 +46,7 @@ export default async function MyRiders() {
         </p>
       </Card>
       {!ready ? (
-        <EmptyState title="Available once your shop is approved" />
+        <EmptyState title="Not available while your shop is suspended" />
       ) : (
         <div className="space-y-8">
           {owner && (
