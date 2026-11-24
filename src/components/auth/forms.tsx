@@ -1,7 +1,5 @@
 'use client'
 import { OtpCode } from '@/components/ui/otp-code'
-import jsQR from 'jsqr'
-import { findQrNearBottomRight } from '@/lib/qr-region'
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
 import { Button, ButtonLink } from '@/components/ui/button'
@@ -201,95 +199,10 @@ async function shrinkToJpeg(file: File): Promise<string | null> {
   }
 }
 
-/** A canvas as a JPEG that stays under the size the server accepts (about 650 KB). */
-function jpegUnderLimit(c: HTMLCanvasElement): string | null {
-  for (const q of [0.92, 0.8, 0.65, 0.5, 0.35]) {
-    const url = c.toDataURL('image/jpeg', q)
-    if (url.length < 640_000) return url
-  }
-  return null
-}
-
-/**
- * The same photo as it will be sent (shrunk), and whether a QR code can be read in it. Only the NEW student ID card has one, at
- * the BOTTOM RIGHT of the front. The search uses the phone's own barcode reader when it has one and looks hardest at the
- * bottom-right part of the ORIGINAL (full size) photo; that sharp bottom-right piece is also sent, so the server can read it too.
- */
-async function readCard(
-  file: File,
-): Promise<{ url: string; qr: boolean; crop: string | null } | null> {
+/** The ID card photo as it will be sent (shrunk). There is no QR check: an administrator looks at the card. */
+async function readCard(file: File): Promise<{ url: string } | null> {
   const url = await shrinkToJpeg(file)
-  if (!url) return null
-  try {
-    const bmp = await createImageBitmap(file)
-    // the bottom-right 60% x 60% of the original photo, at most 1100 px wide
-    const sx = Math.floor(bmp.width * 0.4)
-    const sy = Math.floor(bmp.height * 0.4)
-    const sw = bmp.width - sx
-    const sh = bmp.height - sy
-    const k = Math.min(1, 1800 / Math.max(sw, sh))
-    const c = document.createElement('canvas')
-    c.width = Math.max(1, Math.round(sw * k))
-    c.height = Math.max(1, Math.round(sh * k))
-    const g = c.getContext('2d')!
-    g.drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height)
-    let qr = false
-    // where the phone's own reader saw the code (in the ORIGINAL photo): a close-up of it is what the server reads
-    let tight: string | null = null
-    try {
-      const BD = (
-        window as unknown as {
-          BarcodeDetector?: new (o: object) => {
-            detect: (
-              i: ImageBitmapSource,
-            ) => Promise<{ boundingBox: { x: number; y: number; width: number; height: number } }[]>
-          }
-        }
-      ).BarcodeDetector
-      if (BD) {
-        const found = await new BD({ formats: ['qr_code'] }).detect(c)
-        qr = found.length > 0
-        const b = found[0]?.boundingBox
-        if (b) {
-          // a square around the code with a clear margin, cut from the full-size photo
-          const side = Math.max(b.width, b.height) / k
-          const pad = side * 0.4
-          const cx = sx + (b.x + b.width / 2) / k
-          const cy = sy + (b.y + b.height / 2) / k
-          const half = side / 2 + pad
-          const x0 = Math.max(0, Math.floor(cx - half))
-          const y0 = Math.max(0, Math.floor(cy - half))
-          const x1 = Math.min(bmp.width, Math.ceil(cx + half))
-          const y1 = Math.min(bmp.height, Math.ceil(cy + half))
-          const kk = Math.min(1, 900 / Math.max(x1 - x0, y1 - y0))
-          const t = document.createElement('canvas')
-          t.width = Math.max(1, Math.round((x1 - x0) * kk))
-          t.height = Math.max(1, Math.round((y1 - y0) * kk))
-          t.getContext('2d')!.drawImage(bmp, x0, y0, x1 - x0, y1 - y0, 0, 0, t.width, t.height)
-          tight = jpegUnderLimit(t)
-        }
-      }
-    } catch {
-      /* no barcode reader on this phone: the code below does the work */
-    }
-    const d = g.getImageData(0, 0, c.width, c.height)
-    if (!qr) qr = findQrNearBottomRight(jsQR, d.data, d.width, d.height)
-    if (!qr) {
-      const img = new Image()
-      img.src = url
-      await img.decode()
-      const c2 = document.createElement('canvas')
-      c2.width = img.naturalWidth
-      c2.height = img.naturalHeight
-      const g2 = c2.getContext('2d')!
-      g2.drawImage(img, 0, 0)
-      const d2 = g2.getImageData(0, 0, c2.width, c2.height)
-      qr = findQrNearBottomRight(jsQR, d2.data, d2.width, d2.height)
-    }
-    return { url, qr, crop: tight ?? jpegUnderLimit(c) }
-  } catch {
-    return { url, qr: false, crop: null }
-  }
+  return url ? { url } : null
 }
 
 /** A Nigerian mobile number as people type it: 0803 123 4567 or +234 803 123 4567. */
@@ -424,7 +337,6 @@ export function SignUpForm({
   const [studentId, setStudentId] = useState('')
   const [idCard, setIdCard] = useState<string | null>(null)
   const [idBack, setIdBack] = useState<string | null>(null)
-  const [idQrCrop, setIdQrCrop] = useState<string | null>(null)
   const [phone, setPhone] = useState('')
   const [fullName, setFullName] = useState('')
   const [dob, setDob] = useState('')
@@ -435,7 +347,6 @@ export function SignUpForm({
     other: '',
     place: '',
   })
-  const [frontQr, setFrontQr] = useState<'none' | 'ok' | 'noqr'>('none')
   const [signed, setSigned] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [vendorCode, setVendorCode] = useState('')
@@ -453,9 +364,9 @@ export function SignUpForm({
   const isStudent =
     (intent === 'customer' && personType === 'student') ||
     (isVendor && vendor.vendorType === 'student')
-  // riders and student shop owners must add the front (with its QR code) and the back of the new ID card
+  // riders and student shop owners must add the front and the back of the ID card
   const needsFullId = isRider || (isVendor && vendor.vendorType === 'student')
-  const riderReady = studentId.trim().length >= 3 && !!idCard && !!idBack && frontQr === 'ok'
+  const riderReady = studentId.trim().length >= 3 && !!idCard && !!idBack
   const step1Ready = isRider
     ? riderReady
     : isVendor
@@ -489,10 +400,6 @@ export function SignUpForm({
       if (needsFullId) {
         if (studentId.trim().length < 3) return setProblem('Enter your matric number.')
         if (!idCard) return setProblem('Add a clear photo of the front of your ID card.')
-        if (frontQr !== 'ok')
-          return setProblem(
-            'The front of your ID card must show the QR code. Only the new ID card has one.',
-          )
         if (!idBack) return setProblem('Add a clear photo of the back of your ID card.')
       }
       return setStep(2)
@@ -563,7 +470,6 @@ export function SignUpForm({
       <input type="hidden" name="phone" value={phone} />
       <input type="hidden" name="interests" value={JSON.stringify(interests)} />
       {needsFullId && idBack && <input type="hidden" name="idCardBack" value={idBack} />}
-      {needsFullId && idQrCrop && <input type="hidden" name="idCardQr" value={idQrCrop} />}
       {isVendor && vendor.vendorType === 'student' && (
         <input type="hidden" name="personType" value="student" />
       )}
@@ -720,29 +626,14 @@ export function SignUpForm({
                   const f = e.target.files?.[0]
                   setProblem(null)
                   setIdCard(null)
-                  setIdQrCrop(null)
-                  setFrontQr('none')
                   if (!f) return
                   const r = await readCard(f)
                   if (!r) return setProblem('That photo could not be used. Try another one.')
                   setIdCard(r.url)
-                  setIdQrCrop(r.crop)
-                  setFrontQr(r.qr ? 'ok' : 'noqr')
                 }}
               />
-              {frontQr === 'ok' && (
-                <p role="status" className="text-sm font-medium text-success-700">
-                  QR code found on the front of your card.
-                </p>
-              )}
-              {frontQr === 'noqr' && (
-                <p role="alert" className="text-sm font-medium text-danger-700">
-                  We cannot see a QR code on the front of this card. Only the new ID card has one.
-                  Take a clear, flat photo of the whole front, or use your new card.
-                </p>
-              )}
               <p className="text-xs text-muted">
-                Take it flat, in good light, with all four corners and the QR code showing.
+                Take it flat, in good light, with all four corners showing.
               </p>
             </div>
             <div className="space-y-1">
