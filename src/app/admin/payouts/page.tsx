@@ -29,7 +29,10 @@ const STATUS: Record<string, [string, Tone]> = {
   scheduled: ['Waiting for the report window to close (midnight)', 'info'],
   held: ['On hold: complaint or refund open', 'warning'],
   processing: ['Sent to Paystack', 'brand'],
-  paid: ['Paid', 'success'],
+  paid: [
+    'Paid (a split payment reaches the bank on Paystack’s settlement day, usually the next working day)',
+    'success',
+  ],
   failed: ['Failed, will retry', 'danger'],
   skipped: ['Nothing to pay', 'neutral'],
 }
