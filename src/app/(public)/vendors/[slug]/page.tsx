@@ -15,7 +15,7 @@ import { pageParam, vendorReviews } from '@/server/modules/engagement/queries'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { WEEKDAYS, hoursByDay } from '@/server/modules/vendors-and-catalogue/hours'
 import { ShareButtons } from '@/components/domain/share-buttons'
-import { getMenu } from '@/server/modules/vendors-and-catalogue/public'
+import { getMenu, vendorHasBanner } from '@/server/modules/vendors-and-catalogue/public'
 
 const SITE = process.env.SITE_URL ?? 'https://afit-market.vercel.app'
 
@@ -28,7 +28,11 @@ export async function generateMetadata({
   if (!menu) return { title: 'Vendor' }
   const { vendor } = menu
   const description = `${vendor.name}${vendor.category ? `: ${vendor.category}` : ''} on AFIT Market. Ready in about ${vendor.prep_minutes} minutes.`
-  const image = { url: '/brand/share.jpg', width: 1200, height: 630, alt: vendor.name }
+  // a shared shop link shows the shop's own banner when it has uploaded one, otherwise the AFIT Market picture
+  const slug = (await params).slug
+  const image = (await vendorHasBanner(slug))
+    ? { url: `/api/vendors/${slug}/banner`, width: 1200, height: 375, alt: vendor.name }
+    : { url: '/brand/share.jpg', width: 1200, height: 630, alt: vendor.name }
   return {
     title: vendor.name,
     description,
