@@ -55,6 +55,15 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
   const { listCategories } = await import('./public')
   const choices = parseVendorChoices(fd, await listCategories())
   if (!choices.ok) return failed(choices.error)
+  // the owner's own details: full name, phone and date of birth (18 or older)
+  const { parseSignupDetails } = await import('@/server/modules/identity-and-access/signup-details')
+  const { saveProfileDetails } = await import('@/server/modules/identity-and-access/identity')
+  const details = parseSignupDetails({
+    fullName: String(fd.get('fullName') ?? ''),
+    phone: String(fd.get('phone') ?? ''),
+    dateOfBirth: String(fd.get('dob') ?? ''),
+  })
+  if (!details.ok) return failed(details.error)
   const auto = parseAutoReady(fd)
   if (!auto.ok) return failed(auto.error)
   const fee = deliveryFeeKobo(fd.get('deliveryFee'))
@@ -67,6 +76,7 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
     if (saved.error)
       return dbFailed(saved.error, 'We could not save your ID card pictures. Please try again.')
   }
+  if (g.who.userId) await saveProfileDetails(g.who.userId, { ...details, interestIds: [] })
   const sb = await createSupabaseServerClient()
   const { error } = await sb.rpc('submit_vendor_application', {
     p_business_name: text(fd, 'businessName', 80),

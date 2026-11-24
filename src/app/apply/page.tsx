@@ -5,6 +5,7 @@ import type { VendorChoicesState } from '@/components/domain/vendor-choices'
 import { Badge } from '@/components/ui/badge'
 import { Card, PageHeader } from '@/components/ui/card'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { listCategories } from '@/server/modules/vendors-and-catalogue/public'
 
 export const metadata: Metadata = { title: 'Sell on AFIT Market' }
@@ -37,6 +38,18 @@ export default async function ApplyPage() {
     other: typeof meta.intended_other === 'string' ? meta.intended_other : '',
     place: typeof meta.vendor_place === 'string' ? meta.vendor_place : '',
   }
+  const { data: pd } = who.user
+    ? await createSupabaseServiceClient()
+        .from('profile_details')
+        .select('full_name, date_of_birth')
+        .eq('user_id', who.user.id)
+        .maybeSingle()
+    : { data: null }
+  const person = {
+    email: who.user?.email ?? '',
+    fullName: pd?.full_name ?? '',
+    dob: pd?.date_of_birth ?? '',
+  }
   const commissionBps = Number((terms as { commission_bps?: number } | null)?.commission_bps ?? 500)
   const pending = (apps ?? []).find((a) => a.status === 'pending')
   return (
@@ -67,7 +80,12 @@ export default async function ApplyPage() {
         </Card>
       ) : (
         <Card className="max-w-xl">
-          <ApplicationForm categories={cats} commissionBps={commissionBps} defaults={defaults} />
+          <ApplicationForm
+            categories={cats}
+            commissionBps={commissionBps}
+            defaults={defaults}
+            person={person}
+          />
         </Card>
       )}
       {!mine && !pending && (
