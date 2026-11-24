@@ -60,7 +60,7 @@ export default async function EditProduct({
         <ProductForm
           vendorId={vendor.id}
           product={product}
-          disabled={vendor.status !== 'approved'}
+          disabled={vendor.status !== 'approved' && vendor.status !== 'pending'}
           hasPhoto={Boolean(photoRow)}
         />
       </Card>
