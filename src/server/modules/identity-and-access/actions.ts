@@ -31,7 +31,6 @@ import {
   PERSON_TYPES,
   saveProfileDetails,
   hasSignature,
-  jpegHasQr,
   normalizePhone,
   parseIdCard,
   saveRiderIdentity,
@@ -108,14 +107,6 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     if (!front.ok) return { error: 'Add a clear photo of the front of your ID card.' }
     const back = parseIdCard(String(formData.get('idCardBack') ?? ''))
     if (!back.ok) return { error: 'Add a clear photo of the back of your ID card.' }
-    // the whole front first, then the sharp bottom-right piece the phone sent along (where the code is)
-    const cropRaw = String(formData.get('idCardQr') ?? '')
-    const crop = cropRaw ? parseIdCard(cropRaw) : null
-    if (!jpegHasQr(front.jpeg) && !(crop?.ok && jpegHasQr(crop.jpeg)))
-      return {
-        error:
-          'We could not find the QR code on the front of your ID card. Only the new ID card has one. Use a clear, flat photo of the whole front.',
-      }
     return { matric, phone, front: front.jpeg, back: back.jpeg }
   }
   if (intent === 'rider') {
