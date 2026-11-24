@@ -16,11 +16,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
   const sb = createSupabaseServiceClient()
   const [allowed, { data: v }] = await Promise.all([
     rateLimit(`banner:ip:${await clientIp()}`, 60, 600),
-    sb
-      .from('vendors')
-      .select('id, name, status, category_id')
-      .eq('slug', slug)
-      .maybeSingle(),
+    sb.from('vendors').select('id, name, status, category_id').eq('slug', slug).maybeSingle(),
   ])
   if (!allowed) return new NextResponse(null, { status: 429 })
   const draw = (name: string, cat?: string | null) =>
@@ -32,7 +28,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ slug: strin
         'Content-Security-Policy': CSP,
       },
     })
-  if (!v || v.status !== 'approved') return draw('', null)
+  // a shop waiting for approval can still see its own banner while it sets the shop up
+  if (!v || (v.status !== 'approved' && v.status !== 'pending')) return draw('', null)
   const { data: c } = v.category_id
     ? await sb.from('categories').select('slug').eq('id', v.category_id).maybeSingle()
     : { data: null }

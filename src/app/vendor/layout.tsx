@@ -31,6 +31,16 @@ export default async function Layout({ children }: { children: ReactNode }) {
           make changes. Contact support.
         </p>
       )}
+      {vendor?.status === 'pending' && (
+        <p
+          role="status"
+          className="mb-4 rounded-[var(--radius-control)] border-l-4 border-gold-500 bg-gold-50 px-4 py-3 font-semibold"
+        >
+          Welcome to your shop. Your application is waiting for final approval. You can set your
+          shop up now (banner, hours, items, payout account), but customers cannot see it or order
+          from it until it is approved.
+        </p>
+      )}
       {vendor?.status === 'approved' && (
         <>
           <VendorLocationBeacon />

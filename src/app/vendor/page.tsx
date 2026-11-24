@@ -84,8 +84,12 @@ export default async function VendorHome() {
         subtitle="Your shop at a glance. Every figure comes from your real orders."
         actions={
           <>
-            <Badge tone={approved ? 'success' : 'danger'}>
-              {approved ? 'Approved' : 'Suspended'}
+            <Badge tone={approved ? 'success' : vendor.status === 'pending' ? 'warning' : 'danger'}>
+              {approved
+                ? 'Approved'
+                : vendor.status === 'pending'
+                  ? 'Waiting for approval'
+                  : 'Suspended'}
             </Badge>
             <ButtonLink href="/vendor/catalogue/new" variant="gold">
               Add an item
@@ -133,11 +137,13 @@ export default async function VendorHome() {
         <Card className="space-y-3">
           <h2 className="text-lg font-extrabold text-navy-900">Shop status</h2>
           <p>
-            {!approved
-              ? 'Your shop is suspended. Customers cannot order.'
-              : closed
-                ? 'You have paused orders. Customers can see your shop but cannot order.'
-                : 'You are taking orders during your opening hours.'}
+            {vendor.status === 'pending'
+              ? 'Your shop is waiting for final approval. Customers cannot see it or order yet.'
+              : !approved
+                ? 'Your shop is suspended. Customers cannot order.'
+                : closed
+                  ? 'You have paused orders. Customers can see your shop but cannot order.'
+                  : 'You are taking orders during your opening hours.'}
           </p>
           <form action={setClosedAction} className="space-y-2">
             <input type="hidden" name="vendorId" value={vendor.id} />

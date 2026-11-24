@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { serverEnv } from '@/lib/env'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { notifyWelcome } from '@/server/modules/engagement/dispatch'
+import { startShopFromSignup } from '@/server/modules/vendors-and-catalogue/shop-from-signup'
 
 /** Email confirmation landing: exchanges the one-time token hash, then sends the user to sign in. */
 export async function GET(request: NextRequest) {
@@ -14,7 +15,11 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
   if (error) return NextResponse.redirect(new URL('/login?error=1', base))
   if (data.user?.email) notifyWelcome(data.user.email)
+  // A shop owner who applied while signing up: the application and the pending shop are made now.
+  const started = data.user ? await startShopFromSignup(data.user) : 'none'
   // Do not keep the confirmation session: the user signs in normally (password + MFA).
   await supabase.auth.signOut({ scope: 'local' })
-  return NextResponse.redirect(new URL('/login?confirmed=1', base))
+  return NextResponse.redirect(
+    new URL(started === 'created' ? '/shop-applied' : '/login?confirmed=1', base),
+  )
 }

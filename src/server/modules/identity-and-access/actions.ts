@@ -41,6 +41,11 @@ import {
   validStudentId,
   type PersonType,
 } from './identity'
+import {
+  parseShopDraft,
+  startShopFromSignup,
+  type ShopDraft,
+} from '@/server/modules/vendors-and-catalogue/shop-from-signup'
 import { experienceOf, homeFor, isPrivilegedRole, safeNextPath, signUpOutcome } from './policy'
 import { clientIp, rateLimit, recordSecurityEvent, sha256Hex } from './security'
 
@@ -174,6 +179,13 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     dateOfBirth: String(formData.get('dob') ?? ''),
   })
   if (!details.ok) return { error: details.error }
+  // a shop owner applies right here: the shop details are checked now and kept with the new account
+  let shopDraft: ShopDraft | undefined
+  if (vendorChoices) {
+    const sd = parseShopDraft(formData, vendorChoices, details.phone)
+    if (!sd.ok) return { error: sd.error }
+    shopDraft = sd.draft
+  }
   // only customers are asked what they would like to shop (shops and riders are not)
   let interestIds: string[] = []
   if (intent === 'customer') {
@@ -216,11 +228,19 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
           ...(vendorChoices.place ? { vendor_place: vendorChoices.place } : {}),
         }
       : {}),
+    ...(shopDraft ? { shop: shopDraft } : {}),
   }
   const mail = mailConfig()
   const supabase = await createSupabaseServerClient()
   let error: { code?: string; status?: number } | null = null
-  let data: { session?: unknown; user?: { id: string } | null } | null = null
+  let data: {
+    session?: unknown
+    user?: {
+      id: string
+      email?: string | null
+      user_metadata?: Record<string, unknown> | null
+    } | null
+  } | null = null
   let newUserId: string | null = null
   let sentByUs = false
   if (mail) {
@@ -310,6 +330,8 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   // E-mail confirmation is switched off in the provider settings: the person is already signed in.
   if (outcome === 'signed_in') {
     notifyWelcome(email)
+    if (intent === 'vendor' && data?.user && (await startShopFromSignup(data.user)) === 'created')
+      redirect('/shop-applied')
     redirect(applicationPathFor(intent) ?? '/')
   }
   // Same message whether or not the address already exists (prevents account enumeration).
@@ -321,7 +343,7 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
         ? 'Check your email. We sent you a confirmation code.'
         : intent === 'rider'
           ? 'Check your email. We sent you a confirmation code. After you confirm and sign in, you will be a rider for your shop.'
-          : `Check your email. We sent you a confirmation code. After you confirm and sign in, you will be taken to the ${intent} application.`,
+          : 'Check your email. We sent you a confirmation code. Your shop application is sent as soon as you confirm it.',
   }
 }
 
@@ -478,9 +500,11 @@ export async function confirmEmailCodeAction(
     const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type })
     if (!error && data.user) {
       notifyWelcome(email)
+      // A shop owner who applied while signing up: the application and the pending shop are made now.
+      const started = await startShopFromSignup(data.user)
       // Do not keep the confirmation session: the person signs in normally (password, and the second step if set).
       await supabase.auth.signOut({ scope: 'local' })
-      redirect('/login?confirmed=1')
+      redirect(started === 'created' ? '/shop-applied' : '/login?confirmed=1')
     }
   }
   return {
