@@ -36,7 +36,8 @@ export default async function Earnings() {
     account_masked?: string
   } | null
   const owner = vendor.staff_role === 'owner'
-  const banks = owner && !bank?.set ? await vendorBankChoices() : []
+  // the list is needed both to add an account and to change it
+  const banks = owner ? await vendorBankChoices() : []
   return (
     <>
       <PageHeader
