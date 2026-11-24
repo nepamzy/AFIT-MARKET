@@ -30,6 +30,14 @@ import { buildHoursJson } from './hours'
 import { parseOptionGroups } from './options'
 import { parseVendorChoices } from './vendor-choices'
 
+/** A delivery fee typed in naira, 0 to 500 (the most any shop may charge), as kobo. null when it is missing or out of range. */
+function deliveryFeeKobo(raw: FormDataEntryValue | null): number | null {
+  const t = String(raw ?? '').trim()
+  if (!/^[0-9]{1,3}(\.[0-9]{1,2})?$/.test(t)) return null
+  const kobo = Math.round(Number(t) * 100)
+  return kobo >= 0 && kobo <= 50000 ? kobo : null
+}
+
 const uuid = z.uuid()
 const VENDOR = { roles: ['vendor_owner', 'vendor_staff'] as const, aal: 'aal2' as const }
 const ADMIN = { roles: ['platform_admin'] as const, aal: 'aal2' as const }
@@ -49,6 +57,8 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
   if (!choices.ok) return failed(choices.error)
   const auto = parseAutoReady(fd)
   if (!auto.ok) return failed(auto.error)
+  const fee = deliveryFeeKobo(fd.get('deliveryFee'))
+  if (fee === null) return failed('Enter your delivery fee: from 0 to 500 naira.')
   // a student sends pictures of the new ID card; they are saved first, so an application never exists without them
   if (choices.type === 'student') {
     const card = parseIdCard(fd)
@@ -75,6 +85,12 @@ export async function submitApplicationAction(_p: ActionState, fd: FormData): Pr
       error,
       'Please check the form: name 2-80 characters, a valid phone number, a description of at least 10 characters.',
     )
+  // the shop's own delivery fee travels with the application and becomes the shop's fee when it is approved
+  await createSupabaseServiceClient()
+    .from('vendor_applications')
+    .update({ delivery_fee_kobo: fee })
+    .eq('applicant_id', g.who.userId)
+    .eq('status', 'pending')
   if (auto.value.enabled) {
     const saved = await sb.rpc('application_set_auto_ready', {
       p_enabled: true,
@@ -221,6 +237,14 @@ export async function saveProfileAction(_p: ActionState, fd: FormData): Promise<
     p_prep: int(fd, 'prep') ?? 20,
   })
   if (error) return dbFailed(error, 'Check the phone number and preparation time (1-240 minutes).')
+  const fee = deliveryFeeKobo(fd.get('deliveryFee'))
+  if (fee === null) return failed('Your delivery fee must be from 0 to 500 naira.')
+  const feeSaved = await sb.rpc('vendor_set_delivery_fee', { p_vendor: v, p_kobo: fee })
+  if (feeSaved.error)
+    return dbFailed(
+      feeSaved.error,
+      'Only the shop owner can change the delivery fee (0 to 500 naira).',
+    )
   revalidatePath('/vendor/profile')
   return done('Profile saved.')
 }

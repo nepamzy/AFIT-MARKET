@@ -41,6 +41,14 @@ export function ApplicationForm({
         maxLength={500}
       />
       <Input
+        label="Your delivery fee (₦)"
+        name="deliveryFee"
+        required
+        inputMode="numeric"
+        defaultValue="500"
+        hint="What you charge for one delivery. The most allowed is ₦500. You can lower it later."
+      />
+      <Input
         label="Where will customers collect orders?"
         name="pickup"
         required

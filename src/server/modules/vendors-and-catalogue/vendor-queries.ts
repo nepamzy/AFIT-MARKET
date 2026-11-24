@@ -92,7 +92,7 @@ export async function getShop(vendorId: string) {
     sb
       .from('vendors')
       .select(
-        'id, name, slug, description, contact_phone, pickup_location_text, prep_minutes, temporarily_closed, status',
+        'id, name, slug, description, contact_phone, pickup_location_text, prep_minutes, temporarily_closed, status, delivery_fee_kobo',
       )
       .eq('id', vendorId)
       .maybeSingle(),
