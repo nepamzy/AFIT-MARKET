@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSplit } from './split'
+import { buildSplit, describeSplit } from './split'
 
 describe('buildSplit', () => {
   it('adds the shares of the same sub-account together and keeps the main account out', () => {
@@ -27,5 +27,20 @@ describe('buildSplit', () => {
     expect(buildSplit([{ subaccount: 'ACCT_aaaaaaaa', share_kobo: 0 }], 100_000)).toBeNull()
     expect(buildSplit([{ subaccount: 'ACCT_aaaaaaaa', share_kobo: 100_000 }], 100_000)).toBeNull()
     expect(buildSplit([{ subaccount: 'ACCT_aaaaaaaa', share_kobo: 100_001 }], 100_000)).toBeNull()
+  })
+})
+
+describe('describeSplit', () => {
+  it('lists the amount, what the main account keeps and every share, with no secrets', () => {
+    const split = buildSplit(
+      [
+        { subaccount: 'ACCT_aaaaaaaa', share_kobo: 95_500 },
+        { subaccount: 'ACCT_bbbbbbbb', share_kobo: 47_750 },
+      ],
+      160_000,
+    )!
+    expect(describeSplit(split, 160_000)).toBe(
+      'flat/account amount=160000 shares_total=143250 main_keeps=16750 [ACCT_aaaaaaaa=95500, ACCT_bbbbbbbb=47750]',
+    )
   })
 })

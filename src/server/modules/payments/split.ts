@@ -31,3 +31,14 @@ export function buildSplit(shares: unknown, amountKobo: number): PaystackSplit |
     subaccounts: [...byAccount].map(([subaccount, share]) => ({ subaccount, share })),
   }
 }
+
+/**
+ * The request numbers behind a split, in one short line: the payment amount (kobo), what is left for the main account and
+ * each sub-account's share. Stored next to Paystack's refusal reason so support can be shown exactly what was sent (it holds
+ * no keys and no bank details, only the ACCT_ codes and amounts).
+ */
+export function describeSplit(split: PaystackSplit, amountKobo: number): string {
+  const total = split.subaccounts.reduce((sum, s) => sum + s.share, 0)
+  const shares = split.subaccounts.map((s) => `${s.subaccount}=${s.share}`).join(', ')
+  return `${split.type}/${split.bearer_type} amount=${amountKobo} shares_total=${total} main_keeps=${amountKobo - total} [${shares}]`
+}

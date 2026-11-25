@@ -18,7 +18,7 @@ import {
 import { applyPaymentEvent } from './apply'
 import { verifyToCall } from './events'
 import { initializeTransaction, verifyTransaction } from './paystack'
-import { buildSplit } from './split'
+import { buildSplit, describeSplit } from './split'
 import { ensureSubaccounts } from './subaccounts'
 
 type Prep = {
@@ -48,11 +48,12 @@ async function startPayment(prep: Prep, email: string): Promise<string> {
     init = await initializeTransaction({ ...base, split })
   } catch (e) {
     if (!split) throw e
-    logger.error('paystack refused the shop split; paying without it', { err: String(e) })
-    // keep Paystack's reason in the database so it can be read later (the host's logs only last an hour)
+    const sent = describeSplit(split, base.amountKobo)
+    logger.error('paystack refused the shop split; paying without it', { err: String(e), sent })
+    // keep Paystack's reason AND the numbers we sent in the database so they can be read later (the host's logs only last an hour)
     await svc
       .from('payment_groups')
-      .update({ split_error: String(e).slice(0, 400) })
+      .update({ split_error: `${String(e).slice(0, 250)} | sent: ${sent}`.slice(0, 900) })
       .eq('reference', prep.reference)
     await svc.rpc('payment_group_clear_split', { p_reference: prep.reference })
     init = await initializeTransaction({ ...base, split: null })
