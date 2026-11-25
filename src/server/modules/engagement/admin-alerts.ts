@@ -31,6 +31,7 @@ export type AdminAlertEvent =
   | { type: 'contact_message' }
   | { type: 'delivery_fee'; step: 'reported' | 'confirmed' | 'disputed' }
   | { type: 'payout_failed'; count: number }
+  | { type: 'subaccount_created'; shopName: string }
 
 export type AdminAlertConfig = { apiKey: string; to: string; from: string; fromName: string }
 export type AdminAlertResult = 'sent' | 'disabled' | 'capped' | 'failed'
@@ -89,6 +90,7 @@ const ALERT_EMOJI: Record<AdminAlertEvent['type'], string> = {
   contact_message: '\u2709\uFE0F',
   delivery_fee: '\uD83D\uDEB2',
   payout_failed: '\u26A0\uFE0F',
+  subaccount_created: '\uD83C\uDFE6',
 }
 
 /** Subject and body for an event. Pure function: nothing here touches the network or the environment. */
@@ -163,6 +165,15 @@ export function buildAdminAlert(
         'If this keeps happening, check the Paystack balance and the shop bank details.',
       )
       link = '/admin/payouts'
+      break
+    case 'subaccount_created':
+      subject = '[AFIT Market] Verify a new shop sub-account in Paystack'
+      lines.push(
+        `Shop: ${clean(event.shopName, 80)}`,
+        'A Paystack sub-account was just created for this shop. Paystack holds the first payout to a sub-account until you verify it.',
+        'In the Paystack dashboard open Subaccounts, select it and press "Verify Subaccounts".',
+      )
+      link = '/admin/vendors'
       break
     case 'support_case':
       subject = '[AFIT Market] New support report'

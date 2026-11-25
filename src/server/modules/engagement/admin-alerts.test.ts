@@ -112,6 +112,19 @@ describe('delivery fee alerts', () => {
   })
 })
 
+describe('sub-account verification alert', () => {
+  it('names the shop, tells the owner to verify it in Paystack and cleans the shop name', () => {
+    const m = buildAdminAlert(
+      { type: 'subaccount_created', shopName: 'Nick\n"s Kitchen' },
+      'https://x.test/',
+    )
+    expect(m.subject).toBe('[AFIT Market] Verify a new shop sub-account in Paystack')
+    expect(m.text).toContain('Shop: Nick "s Kitchen')
+    expect(m.text).toMatch(/Verify Subaccounts/)
+    expect(m.text).toContain('https://x.test/admin/vendors')
+  })
+})
+
 describe('sending', () => {
   const ev: AdminAlertEvent = { type: 'rider_application' }
   beforeEach(() => vi.clearAllMocks())
