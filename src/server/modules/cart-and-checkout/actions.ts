@@ -8,7 +8,8 @@ import { z } from 'zod'
 import { describeProblems, friendlyDbError, parseProblems } from '@/lib/db-errors'
 import { mockPaymentsAllowed } from '@/lib/env'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { getMultiQuote, type MultiQuote } from './queries'
+import { belowMinimum, MIN_ORDER_MESSAGE } from '@/lib/min-order'
+import { getMultiQuote, getQuote, type MultiQuote } from './queries'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
 import {
   dbFailed,
@@ -85,6 +86,8 @@ export async function placeOrderAction(_p: CheckoutState, fd: FormData): Promise
   if (key.length < 8 || key.length > 80) return failed('Please reload the page and try again.')
   if (!(await rateLimit(`checkout:${gated.who.userId}`, 600, 20)))
     return failed('Too many attempts. Please wait a few minutes.')
+  const single = await getQuote(fulfilment, point)
+  if (single && belowMinimum(single.total_kobo)) return failed(MIN_ORDER_MESSAGE)
   const sb = await createSupabaseServerClient()
   const { data, error } = await sb.rpc('create_order', {
     p_fulfilment: fulfilment,
@@ -150,6 +153,9 @@ export async function placeOrdersAction(_p: CheckoutState, fd: FormData): Promis
   // the rider reads one line on arrival: the outfit, then (if given) where the customer is
   const place = text(fd, 'place', 25)
   const clothing = wantsDelivery ? (place ? `${outfit} | At: ${place}` : outfit) : null
+  const quote = await getMultiQuote(choices, point, true)
+  if (quote && belowMinimum(quote.groups.reduce((sum, g) => sum + Number(g.total_kobo), 0)))
+    return failed(MIN_ORDER_MESSAGE)
   const sb = await createSupabaseServerClient()
   const { data, error } = await sb.rpc('create_orders', {
     p_choices: choices,

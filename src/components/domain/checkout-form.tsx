@@ -2,6 +2,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
+import { belowMinimum, MIN_ORDER_MESSAGE } from '@/lib/min-order'
 import { Icon } from '@/components/ui/icons'
 import { Input, Select } from '@/components/ui/fields'
 import { Money } from '@/components/ui/money'
@@ -50,6 +51,8 @@ export function CheckoutForm({
   const isIn = (id: string) => !skipped.has(id)
   const anyDelivery = shops.some((g) => isIn(g.vendor_id) && choiceOf(g.vendor_id) === 'delivery')
   const nothingChosen = shops.every((g) => !isIn(g.vendor_id))
+  const tooSmall =
+    !nothingChosen && belowMinimum(q.groups.reduce((sum, g) => sum + Number(g.total_kobo), 0))
 
   // ask the database for the bill again whenever a choice changes
   useEffect(() => {
@@ -332,10 +335,11 @@ export function CheckoutForm({
             can order as soon as it is approved.
           </Alert>
         )}
+        {tooSmall && <Alert tone="warning">{MIN_ORDER_MESSAGE}</Alert>}
         <Button
           type="submit"
           variant="gold"
-          disabled={pending || closed || nothingChosen}
+          disabled={pending || closed || nothingChosen || tooSmall}
           className="w-full"
         >
           {pending
