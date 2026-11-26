@@ -1,6 +1,7 @@
 import 'server-only'
 import { logger } from '@/lib/logger'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
 import { decryptField } from '@/server/security/field-crypto'
 import { PaymentsUnavailable, createSubaccount, setSubaccountPercent } from './paystack'
 
@@ -66,6 +67,8 @@ export async function ensureSubaccounts(vendorIds: string[]): Promise<void> {
           commissionPercent: percent,
         })
         await sb.rpc('payout_set_subaccount', { p_vendor: b.vendor_id, p_code: code })
+        // Paystack holds a new sub-account's first payout until the owner verifies it in the dashboard: tell the owner now
+        notifyAdmin({ type: 'subaccount_created', shopName: b.vendors?.name ?? 'a shop' })
       } catch (e) {
         if (e instanceof PaymentsUnavailable) return
         logger.error('shop sub-account not created', { err: String(e).slice(0, 160) })

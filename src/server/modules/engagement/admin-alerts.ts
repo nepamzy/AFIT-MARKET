@@ -31,6 +31,7 @@ export type AdminAlertEvent =
   | { type: 'contact_message' }
   | { type: 'delivery_fee'; step: 'reported' | 'confirmed' | 'disputed' }
   | { type: 'payout_failed'; count: number }
+  | { type: 'subaccount_created'; shopName: string }
 
 export type AdminAlertConfig = { apiKey: string; to: string; from: string; fromName: string }
 export type AdminAlertResult = 'sent' | 'disabled' | 'capped' | 'failed'
@@ -89,6 +90,7 @@ const ALERT_EMOJI: Record<AdminAlertEvent['type'], string> = {
   contact_message: '\u2709\uFE0F',
   delivery_fee: '\uD83D\uDEB2',
   payout_failed: '\u26A0\uFE0F',
+  subaccount_created: '\uD83C\uDFE6',
 }
 
 /** Subject and body for an event. Pure function: nothing here touches the network or the environment. */
@@ -98,6 +100,9 @@ export function buildAdminAlert(
   now: Date = new Date(),
 ): { subject: string; text: string; html: string } {
   const lines: string[] = []
+  const extraDetails: Array<[string, string]> = []
+  // an event may send the owner somewhere other than the admin area (for example the Paystack dashboard)
+  let external: { label: string; url: string } | null = null
   let subject: string
   let link = '/admin'
   switch (event.type) {
@@ -164,6 +169,23 @@ export function buildAdminAlert(
       )
       link = '/admin/payouts'
       break
+    case 'subaccount_created':
+      subject = '[AFIT Market] Verify a new shop sub-account in Paystack'
+      lines.push(
+        `A Paystack sub-account was just created for ${clean(event.shopName, 80)}.`,
+        'Paystack holds the first payout to a new sub-account until you verify it, so please do this before the shop gets its first order.',
+        'In Paystack open Subaccounts, tick the new one and press "Verify Subaccounts". The held payout is released the next working day.',
+      )
+      extraDetails.push(
+        ['Shop', clean(event.shopName, 80)],
+        ['What to do', 'Verify the sub-account'],
+      )
+      external = {
+        label: 'Open Paystack Subaccounts',
+        url: 'https://dashboard.paystack.com/v2/subaccounts',
+      }
+      link = '/admin/vendors'
+      break
     case 'support_case':
       subject = '[AFIT Market] New support report'
       lines.push(`Case: ${ident(event.caseNo, 30)}`, `Type: ${ident(event.kind, 30)}`)
@@ -178,8 +200,8 @@ export function buildAdminAlert(
     emoji: ALERT_EMOJI[event.type],
     heading: subject.replace(/^\[AFIT Market\]\s*/, ''),
     paragraphs: lines,
-    details: [['Time (Lagos)', when]],
-    button: { label: 'Open in the admin area', url: `${base}${link}` },
+    details: [...extraDetails, ['Time (Lagos)', when]],
+    button: external ?? { label: 'Open in the admin area', url: `${base}${link}` },
     note: 'Automatic alert from AFIT Market.',
     siteUrl,
   })
@@ -190,7 +212,7 @@ export function buildAdminAlert(
       ...lines,
       '',
       `Time (Lagos): ${when}`,
-      `Open: ${base}${link}`,
+      `Open: ${external?.url ?? `${base}${link}`}`,
       '',
       'Automatic alert from AFIT Market.',
     ].join('\n'),

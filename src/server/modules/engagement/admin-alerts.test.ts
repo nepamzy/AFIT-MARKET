@@ -112,6 +112,25 @@ describe('delivery fee alerts', () => {
   })
 })
 
+describe('sub-account verification alert', () => {
+  it('names the shop, says how to verify it and links to the Paystack sub-accounts page', () => {
+    const m = buildAdminAlert(
+      { type: 'subaccount_created', shopName: 'Nick\n\"s Kitchen' },
+      'https://x.test/',
+    )
+    expect(m.subject).toBe('[AFIT Market] Verify a new shop sub-account in Paystack')
+    expect(m.text).toContain('Nick \"s Kitchen')
+    expect(m.text).toMatch(/Verify Subaccounts/)
+    expect(m.text).toContain('Open: https://dashboard.paystack.com/v2/subaccounts')
+    expect(m.html).toContain('Open Paystack Subaccounts')
+    expect(m.html).toContain('AFIT')
+  })
+  it('keeps the admin-area button for every other alert', () => {
+    const m = buildAdminAlert({ type: 'payout_failed', count: 1 }, 'https://x.test/')
+    expect(m.text).toContain('Open: https://x.test/admin/payouts')
+  })
+})
+
 describe('sending', () => {
   const ev: AdminAlertEvent = { type: 'rider_application' }
   beforeEach(() => vi.clearAllMocks())
