@@ -45,24 +45,24 @@ export default async function Earnings() {
         title="Earnings"
         subtitle="What your completed orders add up to after AFIT Market's commission."
       />
-      <Alert tone="info" plain title="You are paid automatically">
-        You are paid automatically when the day your order is completed ends (midnight, Nigeria
-        time), so the customer has time to report a problem. Payments are sent every morning at 7:00
-        am, and you get a message in the app when yours has been sent. A complaint that is still
-        open holds that payment until it is settled.
+      <Alert tone="info" plain title="Your share is split to your bank">
+        When a customer pays, Paystack splits the payment: your share goes straight to your bank
+        account and AFIT Market keeps its commission. It reaches your bank on Paystack&apos;s
+        settlement day, usually the next working day. You get a message in the app when a split has
+        been made.
         {s.payout.status === 'automatic' && (
           <span className="mt-1 block" data-testid="payout-summary">
-            Paid so far: <Money kobo={s.payout.paid_kobo ?? 0} /> ({s.payout.paid_orders ?? 0}{' '}
-            order(s)). Waiting: {s.payout.scheduled_orders ?? 0}. On hold for a complaint:{' '}
-            {s.payout.held_orders ?? 0}.
+            Split to you so far: <Money kobo={s.payout.paid_kobo ?? 0} /> (
+            {s.payout.paid_orders ?? 0} order(s)). Waiting: {s.payout.scheduled_orders ?? 0}. On
+            hold for a complaint: {s.payout.held_orders ?? 0}.
             {(s.payout.failed_orders ?? 0) > 0 &&
-              ` ${s.payout.failed_orders} payment(s) did not go through and will be tried again. Check your payout account below.`}
-            {s.payout.next_at ? ` Next payment from ${day(s.payout.next_at)}.` : ''}
+              ` ${s.payout.failed_orders} split(s) did not go through and will be tried again. Check your bank account below.`}
+            {s.payout.next_at ? ` Next split from ${day(s.payout.next_at)}.` : ''}
           </span>
         )}
       </Alert>
 
-      <Section title="Payout account" className="mt-4">
+      <Section title="Your bank account for splits" className="mt-4">
         <Card className="space-y-3" data-testid="payout-account">
           {bank?.set ? (
             <>
@@ -75,7 +75,7 @@ export default async function Earnings() {
               {owner ? (
                 <details className="rounded-lg border border-line p-3">
                   <summary className="cursor-pointer font-semibold text-brand-700">
-                    Change payout account
+                    Change bank account
                   </summary>
                   <div className="mt-3 space-y-2">
                     <p className="text-sm text-muted">
@@ -94,7 +94,7 @@ export default async function Earnings() {
               <VendorBankForm banks={banks} />
             </>
           ) : (
-            <p className="text-muted">The shop owner has not added a payout account yet.</p>
+            <p className="text-muted">The shop owner has not added a bank account yet.</p>
           )}
         </Card>
       </Section>
@@ -239,7 +239,7 @@ export default async function Earnings() {
               cell: (o) =>
                 o.payout_status === 'paid' ? (
                   <span className="space-y-1">
-                    <Badge tone="success">Paid {o.payout_at ? day(o.payout_at) : ''}</Badge>
+                    <Badge tone="success">Split {o.payout_at ? day(o.payout_at) : ''}</Badge>
                     <span className="block text-xs text-muted">
                       Your bank may show it on the next working day.
                     </span>
@@ -247,17 +247,17 @@ export default async function Earnings() {
                 ) : o.payout_status === 'held' ? (
                   <Badge tone="warning">On hold: complaint open</Badge>
                 ) : o.payout_status === 'failed' ? (
-                  <Badge tone="danger">Will be tried again</Badge>
+                  <Badge tone="danger">Not split, will be tried again</Badge>
                 ) : o.payout_status === 'skipped' ? (
                   <Badge tone="neutral">Nothing to pay</Badge>
                 ) : o.payout_status ? (
                   <Badge tone="neutral">
                     {o.payout_at && isPast(o.payout_at)
-                      ? 'Being sent: next morning run, 7:00 am'
+                      ? 'Being split: next morning run, 7:00 am'
                       : `Due ${o.payout_at ? lagosDateTime(o.payout_at) : 'soon'}`}
                   </Badge>
                 ) : (
-                  <span className="text-muted">Before automatic payments</span>
+                  <span className="text-muted">Before splits</span>
                 ),
             },
           ]}

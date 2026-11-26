@@ -34,7 +34,7 @@ const ROLES = [
       'Apply once. An administrator reviews every shop before it opens.',
       'Add items with photos, prices and options.',
       'Accept, prepare and hand over with a simple code.',
-      'See your earnings and add a verified payout account.',
+      'See your earnings and add a verified bank account for your splits.',
     ],
     cta: { href: '/apply', label: 'Open a shop' },
     where: 'Shops',

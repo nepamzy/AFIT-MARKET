@@ -109,7 +109,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
           role="note"
           className="rounded-[var(--radius-control)] border-l-4 border-danger-700 bg-danger-50 px-3 py-2 font-bold text-danger-700"
         >
-          Add your account details for payout. This is essential.
+          Add your bank account details so Paystack can split your share to it. This is essential.
         </p>
         {who.authenticated ? (
           <form action={claimInviteAction}>
