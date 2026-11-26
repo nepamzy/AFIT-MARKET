@@ -18,6 +18,7 @@ import {
 import { applyPaymentEvent } from './apply'
 import { verifyToCall } from './events'
 import { initializeTransaction, verifyTransaction } from './paystack'
+import { belowMinimum, MIN_ORDER_MESSAGE } from '@/lib/min-order'
 import { buildSplit, describeSplit } from './split'
 import { ensureSubaccounts } from './subaccounts'
 
@@ -82,6 +83,7 @@ export async function payWithPaystackAction(_p: ActionState, fd: FormData): Prom
   const { data, error } = await sb.rpc('payment_prepare', { p_order: orderId })
   if (error) return dbFailed(error)
   const prep = data as Prep
+  if (belowMinimum(Number(prep.amount_kobo))) return failed(MIN_ORDER_MESSAGE)
   const { data: u } = await sb.auth.getUser()
   const email = u.user?.email
   if (!email) return failed('Please sign in again.')
@@ -111,6 +113,7 @@ export async function payCheckoutAction(_p: ActionState, fd: FormData): Promise<
   const { data, error } = await sb.rpc('payment_prepare_checkout', { p_checkout: checkoutId })
   if (error) return dbFailed(error)
   const prep = data as Prep
+  if (belowMinimum(Number(prep.amount_kobo))) return failed(MIN_ORDER_MESSAGE)
   const { data: u } = await sb.auth.getUser()
   const email = u.user?.email
   if (!email) return failed('Please sign in again.')

@@ -33,12 +33,19 @@ describe('buildHoursJson', () => {
   it('an empty form means closed every day', () =>
     expect(buildHoursJson(fd({}))).toEqual({ hours: [] }))
   it.each([
-    [{ d1_open: 'on', d1_from: '18:00', d1_to: '08:00' }, /after opening/],
     [{ d1_open: 'on', d1_from: '8am', d1_to: '9pm' }, /like 08:00/],
     [{ d1_open: 'on' }, /like 08:00/],
     [{ d1_open: 'on', d1_from: '08:00', d1_to: '12:00', d1_from2: '13:00' }, /like 08:00/],
     [{ d1_open: 'on', d1_from: '25:00', d1_to: '26:00' }, /like 08:00/],
   ])('rejects %j', (o, msg) => expect(JSON.stringify(buildHoursJson(fd(o)))).toMatch(msg))
+  it('takes any times as they are, including closing after midnight and open all night', () => {
+    expect(buildHoursJson(fd({ d5_open: 'on', d5_from: '18:00', d5_to: '02:00' }))).toEqual({
+      hours: [{ weekday: 5, opens: '18:00', closes: '02:00' }],
+    })
+    expect(buildHoursJson(fd({ d0_open: 'on', d0_from: '00:00', d0_to: '00:00' }))).toEqual({
+      hours: [{ weekday: 0, opens: '00:00', closes: '00:00' }],
+    })
+  })
   it('hoursByDay groups and sorts', () => {
     expect(
       hoursByDay([

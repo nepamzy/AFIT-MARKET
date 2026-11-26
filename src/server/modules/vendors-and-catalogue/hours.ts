@@ -25,7 +25,7 @@ export function buildHoursJson(fd: FormData): { hours: Interval[] } | { error: s
       if (i === 1 && !from && !to) continue
       if (!T.test(from) || !T.test(to))
         return { error: `${WEEKDAYS[d]}: enter opening and closing times like 08:00 and 18:00.` }
-      if (from >= to) return { error: `${WEEKDAYS[d]}: closing time must be after opening time.` }
+      // any times are taken as they are: a closing time that is not later than the opening time means after midnight
       hours.push({ weekday: d, opens: from, closes: to })
       any = true
     }

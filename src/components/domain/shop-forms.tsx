@@ -79,7 +79,8 @@ export function HoursForm({
       <fieldset disabled={disabled} className="space-y-3">
         <legend className="text-sm text-muted">
           Times are Nigeria time (WAT), 24-hour clock. Tick a day to open it. A second range is
-          optional (for a lunch break).
+          optional (for a lunch break). Any time works: a closing time earlier than the opening time
+          means the shop closes after midnight (for example 18:00 to 02:00).
         </legend>
         {WEEKDAYS.map((d, i) => {
           const r = byDay[i] ?? []
