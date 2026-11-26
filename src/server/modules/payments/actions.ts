@@ -15,6 +15,7 @@ import {
   gate,
   type ActionState,
 } from '@/server/modules/shared/action-helpers'
+import { notifyAdmin } from '@/server/modules/engagement/admin-alerts'
 import { applyPaymentEvent } from './apply'
 import { verifyToCall } from './events'
 import { initializeTransaction, verifyTransaction } from './paystack'
@@ -51,6 +52,7 @@ async function startPayment(prep: Prep, email: string): Promise<string> {
     if (!split) throw e
     const sent = describeSplit(split, base.amountKobo)
     logger.error('paystack refused the shop split; paying without it', { err: String(e), sent })
+    notifyAdmin({ type: 'split_refused', reason: String(e) })
     // keep Paystack's reason AND the numbers we sent in the database so they can be read later (the host's logs only last an hour)
     await svc
       .from('payment_groups')

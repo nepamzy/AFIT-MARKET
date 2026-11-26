@@ -24,8 +24,8 @@ export function VendorHowItWorks({ commissionPercent = 5 }: { commissionPercent?
           <li>Create your shop account with your invitation link.</li>
           <li>Send your shop details. We check them and give you final approval.</li>
           <li>
-            <strong>Add your account details for payout.</strong> This is essential: it is where
-            your money is paid. You can change it later.
+            <strong>Add your bank account details.</strong> This is essential: Paystack splits your
+            share of every sale to this account. You can change it later.
           </li>
           <li>Build your menu with photos and prices.</li>
           <li>
@@ -42,8 +42,8 @@ export function VendorHowItWorks({ commissionPercent = 5 }: { commissionPercent?
             when the customer has it.
           </li>
           <li>
-            Your money is paid to your payout account after the order is completed, unless a
-            customer has reported a problem with it. Then it waits until that is settled.
+            Your share is split to your bank account by Paystack when the customer pays, and it
+            reaches your bank on Paystack’s settlement day, usually the next working day.
           </li>
         </ol>
       </section>

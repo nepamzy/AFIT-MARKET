@@ -21,7 +21,7 @@ export default function ShopApplied() {
         <ul className="list-disc space-y-1 pl-6">
           <li>your shop banner and opening hours</li>
           <li>your items and their prices</li>
-          <li>your payout account (this is essential, so we can pay you)</li>
+          <li>your bank account for splits (this is essential, so your share can reach you)</li>
         </ul>
         <p
           role="note"

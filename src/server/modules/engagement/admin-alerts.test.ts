@@ -131,6 +131,23 @@ describe('sub-account verification alert', () => {
   })
 })
 
+describe('split alerts', () => {
+  it('says a shop split failed, in words about splits', () => {
+    const m = buildAdminAlert({ type: 'payout_failed', count: 2 }, 'https://x.test/')
+    expect(m.subject).toBe('[AFIT Market] A shop split did not go through')
+    expect(m.text).toContain('2 split(s) failed')
+  })
+  it('warns when Paystack refuses a split, with its reason and what to do', () => {
+    const m = buildAdminAlert(
+      { type: 'split_refused', reason: 'Error: Subaccount not verified\nnew line' },
+      'https://x.test/',
+    )
+    expect(m.subject).toBe('[AFIT Market] Paystack refused a shop split')
+    expect(m.text).toContain('Reason from Paystack: Error: Subaccount not verified new line')
+    expect(m.text).toContain('pay the shop by hand')
+  })
+})
+
 describe('sending', () => {
   const ev: AdminAlertEvent = { type: 'rider_application' }
   beforeEach(() => vi.clearAllMocks())

@@ -31,6 +31,7 @@ export type AdminAlertEvent =
   | { type: 'contact_message' }
   | { type: 'delivery_fee'; step: 'reported' | 'confirmed' | 'disputed' }
   | { type: 'payout_failed'; count: number }
+  | { type: 'split_refused'; reason: string }
   | { type: 'subaccount_created'; shopName: string }
 
 export type AdminAlertConfig = { apiKey: string; to: string; from: string; fromName: string }
@@ -90,6 +91,7 @@ const ALERT_EMOJI: Record<AdminAlertEvent['type'], string> = {
   contact_message: '\u2709\uFE0F',
   delivery_fee: '\uD83D\uDEB2',
   payout_failed: '\u26A0\uFE0F',
+  split_refused: '\u26A0\uFE0F',
   subaccount_created: '\uD83C\uDFE6',
 }
 
@@ -162,10 +164,19 @@ export function buildAdminAlert(
       link = '/admin/delivery-fee-payments'
       break
     case 'payout_failed':
-      subject = '[AFIT Market] A shop payout did not go through'
+      subject = '[AFIT Market] A shop split did not go through'
       lines.push(
-        `${Math.max(1, Math.floor(event.count))} payout(s) failed. They will be tried again automatically.`,
-        'If this keeps happening, check the Paystack balance and the shop bank details.',
+        `${Math.max(1, Math.floor(event.count))} split(s) failed. They will be tried again automatically.`,
+        'If this keeps happening, check that the shop’s Paystack sub-account is verified and its bank details are right.',
+      )
+      link = '/admin/payouts'
+      break
+    case 'split_refused':
+      subject = '[AFIT Market] Paystack refused a shop split'
+      lines.push(
+        'Paystack would not split a customer’s payment between the shops, so the payment went through to your main account without the split.',
+        'The shop’s share is still in your Paystack balance. Check that each shop has a verified sub-account and correct bank details, then pay the shop by hand if needed.',
+        `Reason from Paystack: ${clean(event.reason, 200)}`,
       )
       link = '/admin/payouts'
       break

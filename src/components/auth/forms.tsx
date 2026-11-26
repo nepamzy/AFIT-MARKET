@@ -751,8 +751,8 @@ export function SignUpForm({
           >
             <strong>Commission:</strong> AFIT Market keeps 5% of the total of each completed order
             (items after any product discount, plus the delivery fee when delivery is chosen). You
-            can see every order&apos;s commission on your Earnings page. Add your payout account
-            there: it is where your money is paid.
+            can see every order&apos;s commission on your Earnings page. Add your bank account
+            there: Paystack splits your share of every sale to it.
           </p>
           <Checkbox
             label="I agree to follow AFIT Market vendor rules, to keep my menu and prices accurate, and to the 5% commission described above."
