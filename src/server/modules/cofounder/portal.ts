@@ -27,6 +27,8 @@ export type PortalApplication = {
   category: string | null
   applicant_name: string
   approved_by_name: string | null
+  cofounder_note: string | null
+  cofounder_note_at: string | null
   items: number
   riders: number
 }
@@ -44,3 +46,23 @@ export const portalStatement = () =>
   rpc<{ settings: CofounderSettings; months: CofounderMonth[]; income: Income[] }>(
     'cofounder_statement_data',
   )
+
+export type PortalInvite = {
+  id: string
+  token: string
+  label: string | null
+  created_at: string
+  used_at: string | null
+  revoked_at: string | null
+  shop_name: string | null
+  shop_status: string | null
+}
+export type PortalCase = {
+  case_no: string
+  case_type: string
+  status: string
+  created_at: string
+  description: string
+}
+export const portalInvites = () => rpc<PortalInvite[]>('cofounder_list_invites')
+export const portalCases = () => rpc<PortalCase[]>('cofounder_list_cases')
