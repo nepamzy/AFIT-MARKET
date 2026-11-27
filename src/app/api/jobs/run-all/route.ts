@@ -4,7 +4,6 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { jobAuthorized } from '@/server/jobs/auth'
 import { drainNotifications } from '@/server/modules/engagement/dispatch'
 import { settleAutoRefunds } from '@/server/modules/refunds/auto'
-import { releasePayouts } from '@/server/modules/payouts/release'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -45,15 +44,6 @@ async function run(req: Request) {
     const refunds = await settleAutoRefunds(20)
     return { ready: ready.data ?? 0, declined: declined.data ?? 0, ...refunds }
   })
-  try {
-    const r = await releasePayouts(25)
-    report['release-payouts'] = r
-    await sb.rpc('record_job_run', { p_job: 'release-payouts', p_ok: !r.unavailable, p_detail: r })
-  } catch (e) {
-    logger.error('scheduled job failed', { job: 'release-payouts', err: String(e).slice(0, 160) })
-    report['release-payouts'] = 'failed'
-    await sb.rpc('record_job_run', { p_job: 'release-payouts', p_ok: false, p_detail: {} })
-  }
   return NextResponse.json({ ok: true, report })
 }
 
