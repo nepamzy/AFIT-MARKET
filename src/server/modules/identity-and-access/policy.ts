@@ -11,6 +11,7 @@ export type AppRole =
   | 'support_agent'
   | 'finance_admin'
   | 'platform_admin'
+  | 'cofounder'
 
 export const ALL_ROLES: AppRole[] = [
   'customer',
@@ -20,12 +21,16 @@ export const ALL_ROLES: AppRole[] = [
   'support_agent',
   'finance_admin',
   'platform_admin',
+  'cofounder',
 ]
 /**
  * Staff roles must use the second sign-in step (mirrors the DB). Everyone else may switch it on from their
  * account page; once they have, it is enforced for them too.
  */
 export const isPrivilegedRole = (r: AppRole) =>
+  r === 'platform_admin' || r === 'finance_admin' || r === 'support_agent' || r === 'cofounder'
+
+const isAdminRole = (r: AppRole) =>
   r === 'platform_admin' || r === 'finance_admin' || r === 'support_agent'
 
 /** Roles that belong to a shop or a rider. An account holding one of these lives in that area, not in the customer area. */
@@ -33,10 +38,11 @@ export const isBusinessRole = (r: AppRole) =>
   r === 'vendor_owner' || r === 'vendor_staff' || r === 'rider'
 
 /** Which interface a person works in. Exactly one, so a shop or a rider never lands on the customer screens. */
-export type Experience = 'admin' | 'vendor' | 'rider' | 'customer'
+export type Experience = 'admin' | 'cofounder' | 'vendor' | 'rider' | 'customer'
 
 export const experienceOf = (who: Pick<Principal, 'roles'>): Experience => {
-  if (who.roles.some(isPrivilegedRole)) return 'admin'
+  if (who.roles.some(isAdminRole)) return 'admin'
+  if (who.roles.includes('cofounder')) return 'cofounder'
   if (who.roles.some((r) => r === 'vendor_owner' || r === 'vendor_staff')) return 'vendor'
   if (who.roles.includes('rider')) return 'rider'
   return 'customer'
@@ -44,7 +50,13 @@ export const experienceOf = (who: Pick<Principal, 'roles'>): Experience => {
 
 /** Where each experience starts, and where a wrong-area visit is sent back to. */
 export const homeFor = (e: Experience): string =>
-  ({ admin: '/admin', vendor: '/vendor', rider: '/rider', customer: '/products' })[e]
+  ({
+    admin: '/admin',
+    cofounder: '/cofounder',
+    vendor: '/vendor',
+    rider: '/rider',
+    customer: '/products',
+  })[e]
 
 export type Principal = {
   authenticated: boolean
@@ -125,6 +137,7 @@ export const ROUTE_POLICIES: RoutePolicy[] = [
   },
   { prefix: '/admin/roles', requirement: { roles: ['platform_admin'], aal: 'aal2' } },
   { prefix: '/admin/cofounder', requirement: { roles: ['platform_admin'], aal: 'aal2' } },
+  { prefix: '/cofounder', requirement: { roles: ['cofounder'], aal: 'aal2' } },
   { prefix: '/admin/applications', requirement: { roles: ['platform_admin'], aal: 'aal2' } },
   { prefix: '/admin/vendors', requirement: { roles: ['platform_admin'], aal: 'aal2' } },
   { prefix: '/admin/delivery-points', requirement: { roles: ['platform_admin'], aal: 'aal2' } },

@@ -523,7 +523,7 @@ async function finishSignIn(next: string, intent?: unknown): Promise<never> {
     if (home === 'vendor' || home === 'rider') next = homeFor(home)
   }
   // Staff land in Administration.
-  if (staff && next === '/') next = '/admin'
+  if (staff && next === '/') next = homeFor(experienceOf(who))
   // Everyone who signs deliveries needs a saved signature to compare against. Accounts made before this existed are
   // asked for one right after sign-in (staff accounts do not sign deliveries).
   if (who.userId && !staff && !(await hasSignature(who.userId)))

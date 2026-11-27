@@ -76,3 +76,12 @@ export const ADMIN_NAV: NavItem[] = [
   { href: '/notifications', label: 'Notifications', icon: 'bell', group: 'Account' },
   { href: '/admin/cofounder', label: 'Co-founder analytics', icon: 'chart', group: 'Co-founder' },
 ]
+
+/** The co-founder's own area: the shop pipeline, first reviews, and his statement. */
+export const COFOUNDER_NAV: NavItem[] = [
+  { href: '/cofounder', label: 'Home', icon: 'home' },
+  { href: '/cofounder/applications', label: 'Shop applications', icon: 'file' },
+  { href: '/cofounder/statement', label: 'My statement', icon: 'coins' },
+  { href: '/notifications', label: 'Notifications', icon: 'bell' },
+  { href: '/account', label: 'Account', icon: 'user' },
+]
