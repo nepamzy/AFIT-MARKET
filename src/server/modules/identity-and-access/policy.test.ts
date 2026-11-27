@@ -250,3 +250,25 @@ describe('one experience per person', () => {
     expect(homeFor('admin')).toBe('/admin')
   })
 })
+
+describe('co-founder role', () => {
+  const policy = (path: string) => policyFor(path)!.requirement
+  it('works in its own area at the second step', () => {
+    expect(experienceOf(who(['cofounder'], 'aal2'))).toBe('cofounder')
+    expect(homeFor('cofounder')).toBe('/cofounder')
+    expect(decideAccess(policy('/cofounder/applications'), who(['cofounder'], 'aal2')).allow).toBe(
+      true,
+    )
+  })
+  it('must use the second sign-in step', () => {
+    expect(isPrivilegedRole('cofounder')).toBe(true)
+    expect(decideAccess(policy('/cofounder'), who(['cofounder'], 'aal1', false)).allow).toBe(false)
+  })
+  it('is kept out of Administration, including the owner-only analytics board', () => {
+    for (const path of ['/admin', '/admin/applications', '/admin/cofounder', '/admin/payments'])
+      expect(decideAccess(policy(path), who(['cofounder'], 'aal2')).allow).toBe(false)
+  })
+  it('keeps the owner out of the co-founder area by role, not by guess', () => {
+    expect(decideAccess(policy('/cofounder'), who(['platform_admin'], 'aal2')).allow).toBe(false)
+  })
+})

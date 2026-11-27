@@ -32,7 +32,7 @@ export default async function VendorsAdmin({
   const sb = await createSupabaseServerClient()
   let query = sb
     .from('vendors')
-    .select('id, name, slug, status, created_at')
+    .select('id, name, slug, status, created_at, approved_by_name')
     .order('created_at', { ascending: false })
     .limit(100)
   if (tab[2]) query = query.eq('status', tab[2])
@@ -109,6 +109,11 @@ export default async function VendorsAdmin({
                   <p className="font-mono text-xs text-muted">
                     {v.slug} · joined {lagosDate(v.created_at)}
                   </p>
+                  {v.approved_by_name && (
+                    <p className="text-sm font-semibold text-brand-700">
+                      Approved by {v.approved_by_name}
+                    </p>
+                  )}
                 </div>
               </div>
               <form action={setVendorStatusAction} className="flex flex-wrap items-end gap-3">

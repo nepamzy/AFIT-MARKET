@@ -39,6 +39,7 @@ export function RoleForm() {
           'support_agent',
           'finance_admin',
           'platform_admin',
+          'cofounder',
         ].map((r) => (
           <option key={r} value={r}>
             {r.replace('_', ' ')}
