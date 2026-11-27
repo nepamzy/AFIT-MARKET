@@ -6,7 +6,6 @@ import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { FieldCryptoError, encryptField } from '@/server/security/field-crypto'
 import { rateLimit } from '@/server/modules/identity-and-access/security'
-import { releasePayouts } from '@/server/modules/payouts/release'
 import { ensureSubaccounts } from '@/server/modules/payments/subaccounts'
 import {
   PaymentsUnavailable,
@@ -97,7 +96,7 @@ export async function saveVendorBankAction(_p: ActionState, fd: FormData): Promi
   if (error) {
     return dbFailed(error, 'The account could not be saved. Please try again.')
   }
-  // the shop now has somewhere to be paid: send whatever is already due, without waiting for the daily run
+  // the shop now has somewhere to be paid: its splits go to the new account
   const old = (saved ?? {}) as { old_subaccount?: string | null; old_recipient?: string | null }
   after(async () => {
     // a changed account: the former one is removed from Paystack, then the new one is set up
@@ -110,7 +109,6 @@ export async function saveVendorBankAction(_p: ActionState, fd: FormData): Promi
         logger.error('old transfer recipient not deleted', { err: String(e) }),
       )
     await ensureSubaccounts([me.id])
-    await releasePayouts(25).catch(() => undefined)
   })
   revalidatePath('/vendor/earnings')
   return done('Verified and saved.')
