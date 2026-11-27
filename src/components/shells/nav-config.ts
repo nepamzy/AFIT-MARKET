@@ -81,6 +81,8 @@ export const ADMIN_NAV: NavItem[] = [
 export const COFOUNDER_NAV: NavItem[] = [
   { href: '/cofounder', label: 'Home', icon: 'home' },
   { href: '/cofounder/applications', label: 'Shop applications', icon: 'file' },
+  { href: '/cofounder/invites', label: 'Shop invitations', icon: 'mail' },
+  { href: '/cofounder/cases', label: 'Support cases', icon: 'help' },
   { href: '/cofounder/statement', label: 'My statement', icon: 'coins' },
   { href: '/notifications', label: 'Notifications', icon: 'bell' },
   { href: '/account', label: 'Account', icon: 'user' },

@@ -39,7 +39,9 @@ export default async function DeliveryLocations() {
         subtitle="Where each delivery ended, saved the moment the order was handed over."
       />
       {rows.length === 0 ? (
-        <EmptyState title="No deliveries recorded yet">Each completed delivery will appear here.</EmptyState>
+        <EmptyState title="No deliveries recorded yet">
+          Each completed delivery will appear here.
+        </EmptyState>
       ) : (
         <Card className="overflow-x-auto p-0 sm:p-0">
           <table className="w-full text-left text-sm">
@@ -57,7 +59,9 @@ export default async function DeliveryLocations() {
               {rows.map((r) => (
                 <tr key={r.order_id} className="border-t border-line">
                   <td className="p-3">{lagosDateTime(r.recorded_at)}</td>
-                  <td className="p-3 font-mono text-xs">{r.order_number ?? r.order_id.slice(0, 8)}</td>
+                  <td className="p-3 font-mono text-xs">
+                    {r.order_number ?? r.order_id.slice(0, 8)}
+                  </td>
                   <td className="p-3">
                     {r.vendor_name ?? '—'}
                     <br />

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CofounderAlertPopup } from '@/components/domain/cofounder-alert-popup'
 import { AppShell } from '@/components/shells/app-shell'
 import { ADMIN_NAV } from '@/components/shells/nav-config'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -16,6 +17,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
       moreHref="/admin/menu"
       theme="navy"
     >
+      <CofounderAlertPopup />
       {children}
     </AppShell>
   )

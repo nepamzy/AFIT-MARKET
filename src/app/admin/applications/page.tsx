@@ -22,7 +22,7 @@ export default async function Applications({
     sb
       .from('vendor_applications')
       .select(
-        'id, applicant_id, business_name, contact_phone, description, pickup_location_text, status, decision_reason, created_at, category_id, extra_category_ids, other_category, vendor_type, shop_place',
+        'id, applicant_id, business_name, contact_phone, description, pickup_location_text, status, decision_reason, created_at, category_id, extra_category_ids, other_category, vendor_type, shop_place, cofounder_note',
       )
       .order('created_at', { ascending: false })
       .limit(50),
@@ -92,6 +92,11 @@ export default async function Applications({
                 <p className="text-sm">
                   <strong>Pickup:</strong> {a.pickup_location_text}
                 </p>
+                {a.cofounder_note && (
+                  <p className="rounded-[var(--radius-control)] bg-warning-50 px-3 py-2 text-sm">
+                    <strong>Note from your co-founder:</strong> {a.cofounder_note}
+                  </p>
+                )}
                 <p className="text-sm" data-testid="application-who">
                   <strong>Who:</strong>{' '}
                   {a.vendor_type === 'student'

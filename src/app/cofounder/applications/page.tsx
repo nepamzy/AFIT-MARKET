@@ -5,7 +5,8 @@ import { Card, PageHeader } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/states'
 import { formatNaira } from '@/lib/money'
 import { lagosDate } from '@/lib/time'
-import { approveShopAction } from '@/server/modules/cofounder/portal-actions'
+import { Textarea } from '@/components/ui/fields'
+import { approveShopAction, sendBackAction } from '@/server/modules/cofounder/portal-actions'
 import { portalApplications } from '@/server/modules/cofounder/portal'
 
 export const metadata: Metadata = { title: 'Shop applications' }
@@ -65,6 +66,29 @@ export default async function CofounderApplications() {
               >
                 <input type="hidden" name="applicationId" value={a.id} />
               </ActionForm>
+              {a.cofounder_note && (
+                <p className="rounded-[var(--radius-control)] bg-warning-50 px-3 py-2 text-sm">
+                  Sent to the founder: {a.cofounder_note}
+                </p>
+              )}
+              <details>
+                <summary className="cursor-pointer font-semibold text-brand-700">
+                  Send back to the founder with a note
+                </summary>
+                <ActionForm
+                  action={sendBackAction}
+                  submitLabel="Send to the founder"
+                  pendingLabel="Sending…"
+                >
+                  <input type="hidden" name="applicationId" value={a.id} />
+                  <Textarea
+                    label="What should the founder look at?"
+                    name="note"
+                    maxLength={300}
+                    required
+                  />
+                </ActionForm>
+              </details>
             </Card>
           ))}
         </div>
