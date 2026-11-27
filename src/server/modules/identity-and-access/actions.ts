@@ -46,6 +46,10 @@ import {
   type ShopDraft,
 } from '@/server/modules/vendors-and-catalogue/shop-from-signup'
 import { experienceOf, homeFor, isPrivilegedRole, safeNextPath, signUpOutcome } from './policy'
+import {
+  checkCofounderInvite,
+  consumeCofounderInvite,
+} from '@/server/modules/cofounder/signup-link'
 import { clientIp, rateLimit, recordSecurityEvent, sha256Hex } from './security'
 
 export type FormState = { ok?: boolean; error?: string; message?: string; email?: string }
@@ -70,7 +74,7 @@ const signUpSchema = z
     adult: z.literal('on', { error: 'Confirm that you are 18 years old or older to register.' }),
     // What the person wants to do here. It only decides which application page they are shown after signing in;
     // it never grants a role (vendors and riders are approved by an administrator).
-    intent: z.enum(['customer', 'vendor', 'rider']).catch('customer'),
+    intent: z.enum(['customer', 'vendor', 'rider', 'cofounder']).catch('customer'),
   })
   .refine((v) => v.password === v.confirm, {
     message: 'Passwords do not match.',
@@ -110,6 +114,21 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     return { matric, phone, front: front.jpeg, back: back.jpeg }
   }
   if (intent === 'rider') {
+    const r = readFullId()
+    if ('error' in r) return { error: r.error }
+    rider = r
+  }
+  // The co-founder signs up with a personal link that works once. The account has no special access until the owner
+  // grants the role; the link only decides who may create it.
+  const cofounderToken = String(formData.get('invite') ?? '').trim()
+  if (intent === 'cofounder') {
+    if (!(await rateLimit(`cofounderlink:ip:${await clientIp()}`, 3600, 20)))
+      return { error: TOO_MANY }
+    if (!(await checkCofounderInvite(cofounderToken)))
+      return {
+        error:
+          'This sign-up link is missing, already used or cancelled. Ask the founder for a new one.',
+      }
     const r = readFullId()
     if ('error' in r) return { error: r.error }
     rider = r
@@ -307,6 +326,10 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     })
     if (used.error || used.data !== true) logger.warn('shop invitation not applied at sign-up')
   }
+  if (!error && newUserId && intent === 'cofounder') {
+    if (!(await consumeCofounderInvite(cofounderToken, newUserId)))
+      logger.warn('co-founder link not applied at sign-up')
+  }
   // The code links the new rider to the shop (the shop vouches for them). If it was used a moment ago by someone else, the
   // rider can type another code later under Deliver on AFIT Market.
   if (!error && newUserId && intent === 'rider' && shopCode) {
@@ -332,9 +355,11 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
     message:
       intent === 'customer'
         ? 'Check your email. We sent you a confirmation code.'
-        : intent === 'rider'
-          ? 'Check your email. We sent you a confirmation code. After you confirm and sign in, you will be a rider for your shop.'
-          : 'Check your email. We sent you a confirmation code. Your shop application is sent as soon as you confirm it.',
+        : intent === 'cofounder'
+          ? 'Check your email. We sent you a confirmation code. After you confirm, the founder will switch on your access.'
+          : intent === 'rider'
+            ? 'Check your email. We sent you a confirmation code. After you confirm and sign in, you will be a rider for your shop.'
+            : 'Check your email. We sent you a confirmation code. Your shop application is sent as soon as you confirm it.',
   }
 }
 
@@ -506,8 +531,16 @@ export async function confirmEmailCodeAction(
 }
 
 /** Where a person who signed up as a vendor or rider continues (their application). Everyone else: null. */
-function applicationPathFor(intent: unknown): '/apply' | '/rider-apply' | null {
-  return intent === 'vendor' ? '/apply' : intent === 'rider' ? '/rider-apply' : null
+function applicationPathFor(
+  intent: unknown,
+): '/apply' | '/rider-apply' | '/cofounder-waiting' | null {
+  return intent === 'vendor'
+    ? '/apply'
+    : intent === 'rider'
+      ? '/rider-apply'
+      : intent === 'cofounder'
+        ? '/cofounder-waiting'
+        : null
 }
 
 /** After a password was accepted: staff and people with an authenticator go to the second step; others are in. */
@@ -515,7 +548,14 @@ async function finishSignIn(next: string, intent?: unknown): Promise<never> {
   const who = await loadPrincipal()
   const staff = who.roles.some(isPrivilegedRole)
   // Someone who signed up to sell or deliver is taken to that application until they hold the role.
-  const holds = intent === 'vendor' ? 'vendor_owner' : intent === 'rider' ? 'rider' : null
+  const holds =
+    intent === 'vendor'
+      ? 'vendor_owner'
+      : intent === 'rider'
+        ? 'rider'
+        : intent === 'cofounder'
+          ? 'cofounder'
+          : null
   if (next === '/' && holds && !who.roles.includes(holds)) next = applicationPathFor(intent) ?? next
   // A shop or a rider starts in its own area, never on the customer screens.
   if (next === '/') {

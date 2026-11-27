@@ -11,11 +11,15 @@ import { computeBoard } from '@/lib/cofounder'
 import { formatNaira } from '@/lib/money'
 import { lagosDate } from '@/lib/time'
 import {
+  createCofounderInviteAction,
   markCofounderPaidAction,
+  revokeCofounderInviteAction,
   saveCofounderMonthAction,
   saveCofounderSettingsAction,
 } from '@/server/modules/cofounder/actions'
-import { cofounderData } from '@/server/modules/cofounder/queries'
+import { cofounderData, cofounderInvites } from '@/server/modules/cofounder/queries'
+import { InviteLinkActions } from '@/components/domain/invite-links'
+import { serverEnv } from '@/lib/env'
 
 export const metadata: Metadata = { title: 'Co-founder analytics' }
 export const dynamic = 'force-dynamic'
@@ -25,7 +29,8 @@ const pct = (bps: number) => `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`
 const EVENT_TONE = { statement: 'brand', cofounder: 'warning', school: 'warning' } as const
 
 export default async function CofounderAnalytics() {
-  const data = await cofounderData()
+  const [data, invites] = await Promise.all([cofounderData(), cofounderInvites()])
+  const site = serverEnv().SITE_URL.replace(/\/+$/, '')
   if (!data)
     return (
       <EmptyState title="We could not load this board" icon="alert">
@@ -312,6 +317,76 @@ export default async function CofounderAnalytics() {
           </Section>
         </>
       )}
+
+      <Section
+        title="Co-founder sign-up link"
+        description="A personal link for him only. It works once. He signs up with his normal details, ID card and signature; his account has no access until you grant the co-founder role under Roles. Revoke that role to suspend him, grant it again to switch him back on."
+      >
+        <Card className="space-y-3">
+          <ActionForm
+            action={createCofounderInviteAction}
+            submitLabel="Make a new link"
+            pendingLabel="Making…"
+            variant="gold"
+          >
+            <p className="text-sm text-muted">
+              A new link cancels any link that has not been used.
+            </p>
+          </ActionForm>
+          {invites.length === 0 ? (
+            <p className="text-muted">No link yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {invites.map((i) => {
+                const url = `${site}/join/cofounder/${i.token}`
+                const open = !i.used_at && !i.revoked_at
+                return (
+                  <li
+                    key={i.id}
+                    className="space-y-1 rounded-[var(--radius-control)] border border-line p-3"
+                  >
+                    <p className="flex flex-wrap items-center gap-2">
+                      <Badge tone={i.used_at ? 'success' : i.revoked_at ? 'neutral' : 'warning'}>
+                        {i.used_at ? 'Used' : i.revoked_at ? 'Cancelled' : 'Waiting'}
+                      </Badge>
+                      <span className="text-sm text-muted">
+                        made {lagosDate(i.created_at)}
+                        {i.used_at ? `, used ${lagosDate(i.used_at)}` : ''}
+                      </span>
+                    </p>
+                    {i.used_at && (
+                      <p className="text-sm">
+                        Account made{i.used_by_name ? ` by ${i.used_by_name}` : ''}. Find it in
+                        Users, check the ID card, then grant the co-founder role in Roles
+                        {i.used_by ? ` (user ID ${i.used_by})` : ''}.
+                      </p>
+                    )}
+                    {open && (
+                      <>
+                        <p className="break-all font-mono text-xs">{url}</p>
+                        <InviteLinkActions
+                          url={url}
+                          label={null}
+                          text="Your personal co-founder sign-up link for AFIT Market. It works once:"
+                        />
+                        <form action={revokeCofounderInviteAction}>
+                          <input type="hidden" name="inviteId" value={i.id} />
+                          <button
+                            type="submit"
+                            className="text-sm font-semibold text-danger-700 underline"
+                          >
+                            Cancel this link
+                          </button>
+                        </form>
+                      </>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Card>
+      </Section>
 
       <Section
         title="Agreement settings"

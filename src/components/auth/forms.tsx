@@ -177,7 +177,7 @@ function SignUpDone({ email, message }: { email: string; message?: string }) {
   )
 }
 
-type Intent = 'customer' | 'vendor' | 'rider'
+type Intent = 'customer' | 'vendor' | 'rider' | 'cofounder'
 type PersonType = 'student' | 'military' | 'lecturer' | 'other'
 
 /** Shrinks a photo to a JPEG small enough to send with the form (about 500 KB at most). */
@@ -223,7 +223,8 @@ const ageOf = (dob: string) => {
   return a
 }
 
-const ROLE_HELP: Record<Intent, [string, string]> = {
+type ChosenIntent = Exclude<Intent, 'cofounder'>
+const ROLE_HELP: Record<ChosenIntent, [string, string]> = {
   customer: ['Customer', 'Buy food and items and get them delivered or ready for pickup.'],
   vendor: [
     'Vendor',
@@ -324,7 +325,10 @@ export function SignUpForm({
   categories = [],
   invite = '',
   vendorInviteOnly = false,
+  cofounderInvite = '',
 }: {
+  /** The co-founder's personal sign-up link: the form is then the co-founder's and nothing else can be chosen. */
+  cofounderInvite?: string
   categories?: CategoryChoice[]
   /** A valid personal invitation link token (shop sign-up). */
   invite?: string
@@ -332,7 +336,9 @@ export function SignUpForm({
 }) {
   const [state, action, pending] = useActionState(signUpAction, initial)
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1)
-  const [intent, setIntent] = useState<Intent>(invite ? 'vendor' : 'customer')
+  const [intent, setIntent] = useState<Intent>(
+    cofounderInvite ? 'cofounder' : invite ? 'vendor' : 'customer',
+  )
   const [personType, setPersonType] = useState<PersonType | null>(null)
   const [studentId, setStudentId] = useState('')
   const [idCard, setIdCard] = useState<string | null>(null)
@@ -359,7 +365,9 @@ export function SignUpForm({
   const interestCategories = categories.filter((c) => c.slug !== 'other')
   if (state.ok) return <SignUpDone email={state.email ?? ''} message={state.message} />
 
-  const isRider = intent === 'rider'
+  const isCofounder = intent === 'cofounder'
+  // the co-founder gives the same details a rider does (matric number, ID card front and back, signature) but no shop code
+  const isRider = intent === 'rider' || isCofounder
   const isVendor = intent === 'vendor'
   const isStudent =
     (intent === 'customer' && personType === 'student') ||
@@ -411,7 +419,7 @@ export function SignUpForm({
       if (!dob) return setProblem('Enter your date of birth.')
       if (ageOf(dob) < 18) return setProblem('AFIT Market is only for people aged 18 and over.')
       // customers pick what they would like to shop; shops give their shop details; riders go straight on
-      return setStep(intent === 'rider' ? 4 : 3)
+      return setStep(isRider ? 4 : 3)
     }
     if (step === 3 && isVendor) {
       if (shopName.trim().length < 2) return setProblem('Enter your shop name.')
@@ -434,7 +442,7 @@ export function SignUpForm({
       return setStep(5)
     }
   }
-  const wantsInterests = intent !== 'rider'
+  const wantsInterests = !isRider
   const titles = [
     'Who are you?',
     'About you',
@@ -461,7 +469,9 @@ export function SignUpForm({
         </p>
       )}
       <input type="hidden" name="intent" value={intent} />
-      {invite && <input type="hidden" name="invite" value={invite} />}
+      {(cofounderInvite || invite) && (
+        <input type="hidden" name="invite" value={cofounderInvite || invite} />
+      )}
       {intent === 'customer' && personType && (
         <input type="hidden" name="personType" value={personType} />
       )}
@@ -475,13 +485,15 @@ export function SignUpForm({
       )}
 
       <div className={step === 1 ? 'space-y-4' : 'hidden'}>
-        <fieldset className="relative isolate overflow-hidden rounded-[var(--radius-control)] border border-line bg-accent-50/60 p-3">
+        <fieldset
+          className={`relative isolate overflow-hidden rounded-[var(--radius-control)] border border-line bg-accent-50/60 p-3 ${cofounderInvite ? 'hidden' : ''}`}
+        >
           <Watermark />
           <legend className="relative z-10 px-1 text-sm font-bold text-navy-900">
             I want to use AFIT Market as a
           </legend>
           <div className="relative z-10 grid gap-2 sm:grid-cols-3">
-            {(Object.keys(ROLE_HELP) as Intent[]).map((value) => {
+            {(Object.keys(ROLE_HELP) as ChosenIntent[]).map((value) => {
               return (
                 <label
                   key={value}
@@ -604,7 +616,11 @@ export function SignUpForm({
         {needsFullId && (
           <div className="space-y-3 rounded-[var(--radius-control)] border border-line p-3">
             <p className="font-semibold text-navy-900">
-              {isRider ? 'Rider details' : 'Student shop owner details'}
+              {isCofounder
+                ? 'Your details'
+                : isRider
+                  ? 'Rider details'
+                  : 'Student shop owner details'}
             </p>
             <Input
               label="Matric number"
@@ -834,7 +850,7 @@ export function SignUpForm({
           autoComplete="new-password"
           required
         />
-        {isRider && (
+        {intent === 'rider' && (
           <div
             className="space-y-2 rounded-[var(--radius-control)] border-2 border-gold-400 p-3"
             data-testid="vendor-code"
@@ -872,7 +888,7 @@ export function SignUpForm({
           </Button>
           <Button
             type="submit"
-            disabled={pending || (isRider && vendorCode.length < 6)}
+            disabled={pending || (intent === 'rider' && vendorCode.length < 6)}
             className="flex-1"
           >
             {pending

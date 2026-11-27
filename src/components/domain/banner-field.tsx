@@ -64,7 +64,7 @@ export function BannerField({
         <img
           src={showing}
           alt="Your shop banner"
-          className="aspect-[16/5] w-full max-w-2xl rounded-[var(--radius-card)] border border-line object-cover"
+          className="h-auto w-full max-w-2xl rounded-[var(--radius-card)] border border-line"
         />
         <input
           ref={input}
