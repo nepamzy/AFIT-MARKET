@@ -132,3 +132,26 @@ export async function markCofounderPaidAction(_p: ActionState, fd: FormData): Pr
   revalidatePath('/admin/cofounder')
   return done('Recorded as paid.')
 }
+
+/** Makes the co-founder's personal sign-up link (it works once). A new link cancels an unused one. */
+export async function createCofounderInviteAction(
+  _p: ActionState,
+  _fd: FormData,
+): Promise<ActionState> {
+  const g = await owner()
+  if ('state' in g) return g.state
+  const sb = await createSupabaseServerClient()
+  const { error } = await sb.rpc('admin_create_cofounder_invite')
+  if (error) return dbFailed(error)
+  revalidatePath('/admin/cofounder')
+  return done('The link is ready below.')
+}
+
+export async function revokeCofounderInviteAction(fd: FormData): Promise<void> {
+  const id = String(fd.get('inviteId') ?? '')
+  if (!/^[0-9a-f-]{36}$/.test(id)) return
+  const g = await owner()
+  if ('state' in g) return
+  await (await createSupabaseServerClient()).rpc('admin_revoke_cofounder_invite', { p_id: id })
+  revalidatePath('/admin/cofounder')
+}

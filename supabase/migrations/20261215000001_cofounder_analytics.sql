@@ -3,7 +3,7 @@
 
 create table public.cofounder_settings (
   id boolean primary key default true check (id),
-  cofounder_name text not null default 'Emediong Etim' check (char_length(cofounder_name) between 2 and 80),
+  cofounder_name text not null default 'Co-founder' check (char_length(cofounder_name) between 2 and 80),
   signing_date date,
   graduation_date date,
   stake_bps int not null default 1000 check (stake_bps between 1 and 5000),

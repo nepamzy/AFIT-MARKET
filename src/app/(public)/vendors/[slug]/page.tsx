@@ -75,7 +75,7 @@ export default async function VendorPage({
         ]}
       />
       <div className="mb-6 overflow-hidden rounded-[var(--radius-card)] border border-line bg-card shadow-[var(--shadow-card)]">
-        <ShopBanner slug={slug} className="aspect-[16/5]" />
+        <ShopBanner slug={slug} />
         <div className="flex flex-wrap items-start justify-between gap-3 p-5">
           <div className="min-w-0">
             <h1 className="text-3xl font-extrabold tracking-tight text-navy-900">{vendor.name}</h1>

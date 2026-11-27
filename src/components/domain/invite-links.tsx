@@ -3,9 +3,20 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 /** Copy one invitation link, or send it on WhatsApp. */
-export function InviteLinkActions({ url, label }: { url: string; label: string | null }) {
+export function InviteLinkActions({
+  url,
+  label,
+  text,
+}: {
+  url: string
+  label: string | null
+  /** A different message to send on WhatsApp (the link is added at the end). */
+  text?: string
+}) {
   const [copied, setCopied] = useState(false)
-  const message = `${label ? `Hello ${label}. ` : ''}You are invited to sell on AFIT Market (beta). This personal link works once: ${url}`
+  const message = text
+    ? `${text} ${url}`
+    : `${label ? `Hello ${label}. ` : ''}You are invited to sell on AFIT Market (beta). This personal link works once: ${url}`
   return (
     <span className="flex flex-wrap items-center gap-2">
       <Button

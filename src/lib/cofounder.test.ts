@@ -7,7 +7,7 @@ import {
 } from './cofounder'
 
 const settings: CofounderSettings = {
-  cofounder_name: 'Emediong Etim',
+  cofounder_name: 'Co-founder',
   signing_date: '2026-12-10',
   graduation_date: '2027-03-31',
   stake_bps: 1000,
