@@ -33,6 +33,7 @@ export type AdminAlertEvent =
   | { type: 'payout_failed'; count: number }
   | { type: 'split_refused'; reason: string }
   | { type: 'subaccount_created'; shopName: string }
+  | { type: 'cofounder'; title: string; text: string }
 
 export type AdminAlertConfig = { apiKey: string; to: string; from: string; fromName: string }
 export type AdminAlertResult = 'sent' | 'disabled' | 'capped' | 'failed'
@@ -93,6 +94,7 @@ const ALERT_EMOJI: Record<AdminAlertEvent['type'], string> = {
   payout_failed: '\u26A0\uFE0F',
   split_refused: '\u26A0\uFE0F',
   subaccount_created: '\uD83C\uDFE6',
+  cofounder: '\uD83E\uDD1D',
 }
 
 /** Subject and body for an event. Pure function: nothing here touches the network or the environment. */
@@ -196,6 +198,11 @@ export function buildAdminAlert(
         url: 'https://dashboard.paystack.com/v2/subaccounts',
       }
       link = '/admin/vendors'
+      break
+    case 'cofounder':
+      subject = `[AFIT Market] ${clean(event.title, 60)}`
+      lines.push(clean(event.text, 200))
+      link = '/admin/cofounder'
       break
     case 'support_case':
       subject = '[AFIT Market] New support report'

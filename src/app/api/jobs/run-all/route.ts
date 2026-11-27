@@ -4,6 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 import { jobAuthorized } from '@/server/jobs/auth'
 import { drainNotifications } from '@/server/modules/engagement/dispatch'
 import { settleAutoRefunds } from '@/server/modules/refunds/auto'
+import { sendCofounderReminders } from '@/server/modules/cofounder/reminders'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -36,6 +37,7 @@ async function run(req: Request) {
     if (error) throw new Error(error.code)
     return 'done'
   })
+  await step('cofounder-reminders', () => sendCofounderReminders())
   await step('dispatch-notifications', () => drainNotifications(40))
   await step('settle-refunds', async () => {
     // timers that normally run every minute inside the database: run once a day here as a fallback
