@@ -74,4 +74,5 @@ export const ADMIN_NAV: NavItem[] = [
   { href: '/account', label: 'My account', icon: 'user', group: 'Account' },
   { href: '/account/security', label: 'Security', icon: 'shield', group: 'Account' },
   { href: '/notifications', label: 'Notifications', icon: 'bell', group: 'Account' },
+  { href: '/admin/cofounder', label: 'Co-founder analytics', icon: 'chart', group: 'Co-founder' },
 ]
